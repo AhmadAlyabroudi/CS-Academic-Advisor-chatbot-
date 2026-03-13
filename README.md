@@ -15,6 +15,6 @@ Graduation project for Computer Science students at Jordan University of Science
 - Authentication: Firebase
 
 ## Team Members
-Razan mohaidat
-ahmad alyabroudi
-candle nimri
+- Razan mohaidat
+- Ahmad alyabroudi
+- Candle nimri
