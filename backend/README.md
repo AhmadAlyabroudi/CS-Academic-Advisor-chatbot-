@@ -1,18 +1,21 @@
 # CS Academic Advisor Chatbot - Backend
 
-This backend application uses FastAPI to provide a dummy endpoint and SQLAlchemy for database management with automigration.
+This backend application uses FastAPI to provide a simplified student management system with a layered architecture.
 
 ## Features
-- **FastAPI Endpoint**: A "Hello World" endpoint is available at the root URL (`/`) and a `/my_endpoint` to retrieve all users.
+- **FastAPI Endpoints**: 
+  - Root URL (`/`): Returns a "Hello World" message.
+  - `/students`: Retrieves all students from the database.
+  - `/login`: Simple authentication endpoint for student login.
 - **API Documentation**: Interactive API documentation (Swagger UI) is available at `/docs`.
-- **SQLAlchemy Automigration**: A dummy `User` class is defined, and tables are automatically created on startup using SQLite.
-- **Seeding**: The application automatically seeds the database with 5 dummy students on startup if the database is empty.
-- **Port**: The server listens on port 8000.
+- **SQLAlchemy Automigration**: Tables are automatically created on startup using SQLite.
+- **Seeding**: The application automatically seeds the database with initial student records (including a test account `anas@cs-gp.com`) if the database is empty.
+- **Simplified Architecture**: Logic is organized into Controllers, Models, Schemas, and Core database configuration.
 
 ## Installation
 To install the required dependencies:
 ```bash
-pip install fastapi uvicorn sqlalchemy
+pip install fastapi uvicorn sqlalchemy pydantic[email]
 ```
 
 ## Running the Application
@@ -22,41 +25,50 @@ python app.py
 ```
 The server will be available at `http://localhost:8000`.
 
-## Database and Automigration
-The application is configured to use SQLite (`test.db`). 
+## Database
+The application is configured to use SQLite (`test.db`).
 
-### Automigration
-Automigration happens automatically whenever you run the application. The line `Base.metadata.create_all(bind=engine)` in `app.py` ensures that all defined SQLAlchemy models (like the `User` class) are created as tables in the database if they don't already exist.
-
-### Viewing the Dummy Table Locally
-To see the `users` table created by the dummy class, you can use the `sqlite3` command-line tool:
+### Viewing the Students Table Locally
+To see the `students` table, you can use the `sqlite3` command-line tool:
 
 1. Open the database:
    ```bash
    sqlite3 test.db
    ```
-2. List the tables to verify `users` exists:
+2. List the tables:
    ```sql
    .tables
    ```
-3. View the table schema:
+3. Query the table:
    ```sql
-   PRAGMA table_info(users);
+   SELECT * FROM students;
    ```
-4. Query the table:
-   ```sql
-   SELECT * FROM users;
-   ```
-5. Exit `sqlite3`:
-   ```sql
-   .exit
-   ```
-   
+
+## Test Account
+- **Email**: anas@cs-gp.com
+- **Password**: HelloWorld
+
+### Free time topics
+- SOAP
+- RPC
+
 
 ### Anas Notes
+We use JSON for REST
 1- JSON
-    3 simple data types for values (Number, String, Boolean) or array of any of these. other values will be discussed later
+    3 simple data types for values (Number, String, Boolean) or array of any of these or Array of Objects.
     {
         "KEY" : "Value",
         KEY : VALUE
     }
+
+
+
+# GET , POST, PUT, PATCH, DELETE -- API HTTP Methods
+######
+# GET -> Retrieve Data
+# POST -> Write Data
+# PUT -> Update an attribute
+# PATCH -> Update One or Multi attributes
+# DELETE -> Delete
+
