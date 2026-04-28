@@ -4,6 +4,8 @@ from app.models.student import Student
 from app.api.student_controller import router as student_router
 from app.models.cs_faculty_info import CsFacultyInfo
 from app.api.faculty_controller import router as faculty_router
+from app.models.course import Course
+from app.api.course_controller import router as course_router
 
 # FastAPI app
 app = FastAPI(
@@ -20,19 +22,22 @@ Base.metadata.create_all(bind=engine)
 def seed():
     db = SessionLocal()
     try:
+        # --- إضافة الطلاب ---
         students_data = [
             Student(
-                university_id="166001",
-                email="amalyabroudi22@cit.just.edu.jo",
-                first_name="Ahmad",
-                last_name="Alyabroudi",
+                university_id="160309",
+                email="rymohaidat22@cit.just.edu.jo",
+                first_name="Razan",
+                last_name="Mohaidat",
                 password="2004",
-                phone_number="0795753919",
+                phone_number="0776690165",
                 academic_standing="fourth year"
             )
         ]
         for student in students_data:
             db.merge(student)
+
+        # --- إضافة الدكاترة ---
         faculty_data = [
             CsFacultyInfo(
                 email="yahyah@just.edu.jo",
@@ -43,24 +48,49 @@ def seed():
         ]
         for member in faculty_data:
             db.merge(member)
+
+        # --- 2. إضافة الكورسات (New Seeding) ---
+        # ملاحظة: student_id يجب أن يطابق university_id الموجود أعلاه
+        courses_data = [
+            Course(
+                code="CS101",
+                name="Introduction to Programming",
+                prerequisites="None",
+                plan_type="Compulsory",
+                credit_hours="3",
+                year_and_semester="1st Year - 1st Sem",
+            ),
+            Course(
+                code="SE103 ",
+                name="Introduction to IT",
+                prerequisites="None",
+                plan_type="Compulsory",
+                credit_hours="3",
+                year_and_semester="1st Year - 1st Sem",
+            )
+        ]
+        for course in courses_data:
+            db.merge(course)
+
         db.commit()
+        print("All data (Students, Faculty, Courses) synced successfully!")
+
     except Exception as e:
         db.rollback()
-        print(f"Error: {e}")
+        print(f"Error during seeding: {e}")
     finally:
         db.close()
 
 
+# تنفيذ السدينج
 seed()
 
-# Register routes
+# 3. تسجيل جميع الرواترز (Routes)
 app.include_router(student_router)
 app.include_router(faculty_router)
+app.include_router(course_router)  # إضافة راوتر الكورسات هنا
 
 
 @app.get("/", tags=["Root"])
 def read_root():
-    """
-    Returns a simple hello world message.
-    """
     return {"Hello": "Root"}
