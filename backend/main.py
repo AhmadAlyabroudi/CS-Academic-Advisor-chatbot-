@@ -13,7 +13,6 @@ app = FastAPI(
 )
 
 # Automigrate (create tables)
-# ملاحظة: هذا السطر ينشئ الجداول إذا لم تكن موجودة
 Base.metadata.create_all(bind=engine)
 
 
@@ -21,7 +20,6 @@ Base.metadata.create_all(bind=engine)
 def seed():
     db = SessionLocal()
     try:
-        # قسم الطلاب
         students_data = [
             Student(
                 university_id="166001",  # المفتاح الأساسي
@@ -34,20 +32,17 @@ def seed():
             )
         ]
         for student in students_data:
-            db.merge(student)  # يمنع التكرار بناءً على university_id
-
-        # قسم الدكاترة
+            db.merge(student)
         faculty_data = [
             CsFacultyInfo(
-                email="yahyah@just.edu.jo",  # المفتاح الأساسي
+                email="yahyah@just.edu.jo",
                 name="Dr. yahya tashtoush",
                 office_location="A1L2",
                 office_hours="Sun-Tue-Thu 09:00-12:00"
             )
         ]
         for member in faculty_data:
-            db.merge(member)  # يمنع التكرار بناءً على email
-
+            db.merge(member)
         db.commit()
     except Exception as e:
         db.rollback()
@@ -56,7 +51,6 @@ def seed():
         db.close()
 
 
-# استدعاء الدالة عند تشغيل السيرفر
 seed()
 
 # Register routes
