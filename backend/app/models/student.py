@@ -10,3 +10,4 @@ class Student(Base):
     email = Column(String)
     password = Column(String)
     phone = Column(String)
+    academic_standing = Column(String)

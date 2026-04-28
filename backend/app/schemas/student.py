@@ -6,6 +6,7 @@ class StudentBase(BaseModel):
     last_name: str
     email: str
     phone: Optional[str] = None
+    academic_standing: Optional[str] = None
 
 class StudentCreate(StudentBase):
     password: str

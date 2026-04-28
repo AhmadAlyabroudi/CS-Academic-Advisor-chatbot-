@@ -3,6 +3,8 @@ from fastapi import FastAPI
 from app.core.database import engine, Base, SessionLocal
 from app.models.student import Student
 from app.api.student_controller import router as student_router
+from app.models.cs_faculty_info import CsFacultyInfo
+from app.api.faculty_controller import router as faculty_router
 
 # FastAPI app
 app = FastAPI(
@@ -28,13 +30,27 @@ def seed():
             ]
             db.add_all(students)
             db.commit()
+            # Seed Faculty
+            if db.query(CsFacultyInfo).count() == 0:
+                faculty_members = [
+                    CsFacultyInfo(
+                        name="Dr. Malak abdullah ",
+                        email="mabdullah@just.edu.jo",
+                        office_location="A1L3",
+                        office_hours="Sun–Tue-thu 9:00-11:00"
+                    )
+                ]
+                db.add_all(faculty_members)
+                db.commit()
     finally:
+
         db.close()
 
 seed()
 
 # Register routes
 app.include_router(student_router)
+app.include_router(faculty_router)
 
 @app.get("/", tags=["Root"])
 def read_root():
