@@ -22,7 +22,7 @@ def seed():
     try:
         students_data = [
             Student(
-                university_id="166001",  # المفتاح الأساسي
+                university_id="166001",
                 email="amalyabroudi22@cit.just.edu.jo",
                 first_name="Ahmad",
                 last_name="Alyabroudi",
