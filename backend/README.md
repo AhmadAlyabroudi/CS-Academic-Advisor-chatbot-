@@ -33,7 +33,7 @@ To see the `students` table, you can use the `sqlite3` command-line tool:
 
 1. Open the database:
    ```bash
-   sqlite3 test.db
+   sqlite3 Project.db
    ```
 2. List the tables:
    ```sql
