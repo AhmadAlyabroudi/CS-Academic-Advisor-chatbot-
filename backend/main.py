@@ -100,7 +100,7 @@ app.mount("/frontend", StaticFiles(directory="../frontend"), name="frontend")
 @app.get("/", response_class=HTMLResponse)
 def login_page():
     try:
-        with open("../frontend/index.html", "r", encoding="utf-8") as file:
+        with open("../frontend/mainpage.html", "r", encoding="utf-8") as file:
             return file.read()
     except FileNotFoundError:
-        return "index.html not found in frontend directory"
+        return "mainpage.html not found in frontend directory"
