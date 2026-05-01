@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status,Form
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.models.student import Student
@@ -16,18 +16,19 @@ def get_students(db: Session = Depends(get_db)):
     return students
 
 @router.post("/login", tags=["Authentication"])
-def login(student_login: StudentLogin, db: Session = Depends(get_db)):
-    """
-    Simple student login endpoint.
-    """
-    student = db.query(Student).filter(Student.email == student_login.email).first()
+def login(
+    email: str = Form(...),
+    password: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    student = db.query(Student).filter(Student.email == email).first()
 
-# TODO:  Compared hashed passwords instead of plain strings. Hint: Apply it on seeding first so u can test it.
-    if not student or student.password != student_login.password:
+    if not student or student.password != password:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
         )
-    return {"message": "Login successful", "student_id": student.id}
+
+    return {"message": "Login successful", "student_id": student.university_id}
 
 

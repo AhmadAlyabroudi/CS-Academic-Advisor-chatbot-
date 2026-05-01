@@ -1,4 +1,6 @@
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
 from app.core.database import engine, Base, SessionLocal
 from app.models.student import Student
 from app.api.student_controller import router as student_router
@@ -91,6 +93,14 @@ app.include_router(faculty_router)
 app.include_router(course_router)  # إضافة راوتر الكورسات هنا
 
 
-@app.get("/", tags=["Root"])
-def read_root():
-    return {"Hello": "Root"}
+# Mount static files
+app.mount("/frontend", StaticFiles(directory="../frontend"), name="frontend")
+
+
+@app.get("/", response_class=HTMLResponse)
+def login_page():
+    try:
+        with open("../frontend/index.html", "r", encoding="utf-8") as file:
+            return file.read()
+    except FileNotFoundError:
+        return "index.html not found in frontend directory"
