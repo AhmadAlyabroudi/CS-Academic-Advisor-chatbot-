@@ -320,6 +320,7 @@ def seed():
         verification_data = [
             StudentVerification(email="ymtashtoush@cit.just.edu.jo",  university_id="160991"),
             StudentVerification(email="test@cit.just.edu.jo", university_id="160000"),
+            StudentVerification(email="test2@cit.just.edu.jo", university_id="166666"),
         ]
         for v in verification_data:
             existing_v = db.query(StudentVerification).filter_by(email=v.email).first()

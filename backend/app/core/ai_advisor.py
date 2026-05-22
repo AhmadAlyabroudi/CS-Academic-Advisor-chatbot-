@@ -1,16 +1,3 @@
-"""
-Hybrid AI Academic Advisor — LangChain Orchestration Layer
-
-Pipeline (matches the flowchart in Ai integration tool flowchart.png):
-  1. Embed student query  →  Google gemini-embedding-001
-  2. Semantic search       →  Pinecone vector index (JUST CS knowledge base)
-  3. Threshold gate        →  score ≥ 0.7 → Official Mode, else → General Mode
-  4. Prompt construction   →  Official: grounded in retrieved university chunks
-                              General:  free-form AI assistant fallback
-  5. LLM generation        →  Gemini 2.0 Flash (via LangChain)
-  6. Tagged response       →  source = "official" | "general"
-"""
-
 import os
 import logging
 from typing import Optional
@@ -65,8 +52,8 @@ class HybridAdvisorChain:
         from pinecone._client import Pinecone  # v9 lazy-exports via __init__.__getattr__
         from langchain_core.messages import HumanMessage
 
-        gemini_key = os.getenv("GEMINI_API_KEY", "AIzaSyA6xqRb1IwbCSfIRAwiRaKhxHFtpe0A0Wc")
-        pinecone_key = os.getenv("PINECONE_API_KEY", "pcsk_5ZhAg2_PzMVddVpLTJaRTvVkXCfa3Q8rafiUi6Lr4zHRwwrSuz3S191zBVKwJZDWuoLtkw")
+        gemini_key = os.getenv("GEMINI_API_KEY", "")
+        pinecone_key = os.getenv("PINECONE_API_KEY", "")
         index_name = os.getenv("PINECONE_INDEX_NAME", "just-cs-advisor")
 
         if not gemini_key:
@@ -103,9 +90,9 @@ class HybridAdvisorChain:
 
         Returns:
             {
-                "answer":     str,
-                "source":     "official" | "general",
-                "confidence": float,   # top Pinecone similarity score
+                "answer": str,
+                " source":"official"| "general",
+                "confidence": float,# top Pinecone similarity score
             }
         """
         # Phase 1 — embed the query
@@ -163,7 +150,7 @@ _init_attempted: bool = False
 def get_advisor() -> Optional[HybridAdvisorChain]:
     """
     Return the singleton HybridAdvisorChain, or None if API keys are absent.
-    Logs a warning (not an error) when keys are missing so the app starts
+    Logs a warning (not an error) when keys are : missing so the app starts
     normally and degrades gracefully.
     """
     global _advisor_instance, _init_attempted
