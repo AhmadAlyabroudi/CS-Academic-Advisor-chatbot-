@@ -49,8 +49,6 @@ def upgrade() -> None:
         sa.Column('email', sa.String(), nullable=False),
         sa.Column('university_id', sa.String(), nullable=False),
         sa.PrimaryKeyConstraint('id'),
-        sa.UniqueConstraint('email'),
-        sa.UniqueConstraint('university_id'),
     )
     op.create_index('ix_student_verification_email', 'student_verification', ['email'], unique=True)
     op.create_index('ix_student_verification_university_id', 'student_verification', ['university_id'], unique=True)
@@ -172,7 +170,7 @@ def downgrade() -> None:
     op.drop_table('students')
     op.drop_index('ix_student_verification_university_id', table_name='student_verification')
     op.drop_index('ix_student_verification_email', table_name='student_verification')
-    op.drop_table('student_verification')
+    op.drop_table('student_verification')  # PK only — unique enforced via indexes above
     op.drop_index('ix_courses_code', table_name='courses')
     op.drop_table('courses')
     op.drop_index('ix_cs_faculty_info_email', table_name='cs_faculty_info')
