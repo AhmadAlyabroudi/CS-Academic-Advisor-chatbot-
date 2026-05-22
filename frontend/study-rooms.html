@@ -21,6 +21,8 @@
         <p class="section-desc" style="text-align:center;margin-left:auto;margin-right:auto">Connect with fellow university students, create private rooms, or join an existing room session. Success is better together!</p>
       </div>
       <!-- Search -->
+      <!-- Search -->
+      <!-- Search -->
       <div class="study-search animate-in-delay">
         <div class="search-bar">
           <i class="fas fa-search"></i>
@@ -81,7 +83,7 @@
 
 <!-- Socket.IO client for real-time lobby updates -->
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-<script src="sidebar.js?v=8"></script>
+<script src="sidebar.js?v=6"></script>
 <script>
 const studentId = localStorage.getItem("student_id") || "";
 let allRoomsData = [];
@@ -127,7 +129,7 @@ document.addEventListener("DOMContentLoaded", () => {
             // Notify lobby of the new room
             socket.emit('room_created', {});
             // Redirect creator into the new room
-            window.location.href = `/room?id=${result.room_id}&type=Private`;
+            window.location.href = `room.html?id=${result.room_id}&type=Private`;
         } catch (err) {
             alert("Error creating room.");
         }
@@ -218,7 +220,7 @@ async function joinRoom(roomId, roomType) {
             method: "POST",
             body: formData
         });
-        window.location.href = `/room?id=${roomId}&type=${roomType}`;
+        window.location.href = `room.html?id=${roomId}&type=${roomType}`;
     } catch (err) {
         alert("Error joining room.");
     }
