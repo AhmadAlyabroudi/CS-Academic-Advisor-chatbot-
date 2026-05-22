@@ -1,29 +1,64 @@
-# Python
+# ── Python ────────────────────────────────────────────────────────────────────
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-venv/
-.env
-
-# Flask
-instance/
-
-# Node / React
-node_modules/
-build/
+*.pyd
+.Python
+*.egg-info/
 dist/
+build/
+.eggs/
 
-# IDEs
+# ── Virtual environments ──────────────────────────────────────────────────────
+venv/
+.venv/
+env/
+ENV/
+
+# ── Environment / secrets ─────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.key
+
+# ── Test / linting cache ──────────────────────────────────────────────────────
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# ── SQLite dev databases (keep backend/Project.db) ───────────────────────────
+test.db
+*.test.db
+database/*.db
+!backend/Project.db
+
+# ── Alembic ──────────────────────────────────────────────────────────────────
+# (keep migration scripts; ignore generated __pycache__ inside)
+
+# ── Node / frontend tooling ───────────────────────────────────────────────────
+node_modules/
+
+# ── IDE configs ───────────────────────────────────────────────────────────────
 .vscode/
 .idea/
+*.iml
 
-# OS files
+# ── OS files ──────────────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
+desktop.ini
 
-# Logs
+# ── Logs ──────────────────────────────────────────────────────────────────────
 *.log
+logs/
 
-# MySQL dumps
-*.sql.gz
+# ── Misc ──────────────────────────────────────────────────────────────────────
+*.bak
+*.tmp
+*.swp
+*.swo
+~$*

@@ -490,7 +490,7 @@ function updateMemberCount() {
 
 // ─── Page init ────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
-  if (!roomId || !roomType) { window.location.href = 'study-rooms.html'; return; }
+  if (!roomId || !roomType) { window.location.href = '/study-rooms'; return; }
 
   // Fetch ICE server config from backend
   try {
@@ -708,7 +708,7 @@ async function leaveRoom() {
   fd.append('room_id', roomId); fd.append('room_type', roomType); fd.append('student_id', studentId);
   await fetch('/rooms/leave', { method: 'POST', body: fd }).catch(() => {});
   socket.emit('room_created', {}); // trigger lobby refresh
-  window.location.href = 'study-rooms.html';
+  window.location.href = '/study-rooms';
 }
 
 async function terminateRoom() {
@@ -717,7 +717,7 @@ async function terminateRoom() {
     await fetch(`/rooms/${roomType}/${roomId}?student_id=${studentId}`, { method: 'DELETE' });
     sessionStorage.removeItem('active_meeting');
     socket.emit('room_created', {}); // trigger lobby refresh
-    window.location.href = 'study-rooms.html';
+    window.location.href = '/study-rooms';
   } catch (_) { alert('Error terminating room.'); }
 }
 
