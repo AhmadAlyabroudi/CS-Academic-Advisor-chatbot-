@@ -8,10 +8,7 @@ set -euo pipefail
 APP_DIR="/var/www/justadvisor"
 VENV="$APP_DIR/venv/bin"
 
-echo "[deploy] Pulling latest code..."
 cd "$APP_DIR"
-git fetch origin main
-git reset --hard origin/main
 
 echo "[deploy] Installing / updating Python dependencies..."
 "$VENV/pip" install --upgrade pip
