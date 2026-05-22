@@ -16,12 +16,8 @@ def get_roadmap(student_id: str, db: Session = Depends(get_db)):
     if not roadmap_items:
         return []
 
-    seen_codes = set()
     result = []
     for item in roadmap_items:
-        if item.course_code in seen_codes:
-            continue
-        seen_codes.add(item.course_code)
         course = db.query(Course).filter(Course.code == item.course_code).first()
         if course:
             result.append({
