@@ -95,7 +95,9 @@
   </div>
 
   <script>
-    document.body.classList.add('dark-mode');
+    if (localStorage.getItem('theme') === 'dark') {
+      document.body.classList.add('dark-mode');
+    }
     if (localStorage.getItem('student_id')) {
       window.location.href = '/chatbot';
     }
