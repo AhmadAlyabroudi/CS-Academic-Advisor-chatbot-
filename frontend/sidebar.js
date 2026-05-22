@@ -1,21 +1,21 @@
-// Sidebar component – injects sidebar HTML, highlights active page, handles dark mode
+// Sidebar component - injects sidebar HTML and highlights active page
 (async function() {
-  // Always dark-first
-  document.body.classList.add('dark-mode');
-
+  if (localStorage.getItem('theme') === 'dark') {
+    document.body.classList.add('dark-mode');
+  }
   const currentPage = window.location.pathname.split('/').pop() || 'index.html';
-
+  
   // Auth Guard
   const studentId = localStorage.getItem('student_id');
   if (!studentId && currentPage !== 'index.html' && currentPage !== '') {
-    window.location.href = '/';
+    window.location.href = 'index.html';
     return;
   }
-
+  
   // Fetch user info
-  let userName = 'Student';
-  let displayId = 'ID: Unknown';
-
+  let userName = "Student";
+  let displayId = "ID: Unknown";
+  
   if (studentId) {
     try {
       const res = await fetch(`/student/${studentId}`);
@@ -24,33 +24,31 @@
         userName = `${student.first_name} ${student.last_name}`;
         displayId = `ID: ${student.university_id}`;
       } else {
+        // If token/ID is invalid, force logout
         localStorage.removeItem('student_id');
-        window.location.href = '/';
+        window.location.href = 'index.html';
         return;
       }
     } catch (err) {
-      console.error('Failed to load user info for sidebar');
+      console.error("Failed to load user info for sidebar");
     }
   }
-
+  
   const menuItems = [
-    { icon: 'fa-comment-dots',       label: 'Active Session', href: '/chatbot',  id: 'chatbot'  },
-    { icon: 'fa-clock-rotate-left',  label: 'Chat History',   href: '/history',  id: 'history'  },
+    { icon: 'fa-comment-dots', label: 'Active Session', href: 'chatbot.html', id: 'chatbot' },
+    { icon: 'fa-clock-rotate-left', label: 'Chat History', href: '#', id: 'history' },
   ];
-
+  
   const uniLinks = [
-    { icon: 'fa-earth-americas', label: 'Course Roadmap',   href: '/roadmap',      id: 'roadmap'      },
-    { icon: 'fa-calculator',     label: 'GPA Calculator',   href: '/gpa',          id: 'gpa'          },
-    { icon: 'fa-door-open',      label: 'Study Rooms',      href: '/study-rooms',  id: 'study-rooms'  },
-    { icon: 'fa-users',          label: 'Faculty Info',     href: '/faculty',      id: 'faculty'      },
-    { icon: 'fa-book',           label: 'Courses Catalog',  href: '/courses',      id: 'courses'      },
+    { icon: 'fa-earth-americas', label: 'Course Roadmap', href: 'roadmap.html', id: 'roadmap' },
+    { icon: 'fa-calculator', label: 'GPA Calculator', href: 'gpa.html', id: 'gpa' },
+    { icon: 'fa-door-open', label: 'Study Rooms', href: 'study-rooms.html', id: 'study-rooms' },
+    { icon: 'fa-users', label: 'Faculty Info', href: 'faculty.html', id: 'faculty' },
+    { icon: 'fa-book', label: 'Courses Catalog', href: 'courses.html', id: 'courses' },
   ];
 
-  // Match active page against both clean and .html variants
   function isActive(href) {
-    const clean = href.replace(/^\//, '');
-    const html  = clean + '.html';
-    return currentPage === html || currentPage === clean || window.location.pathname === href;
+    return currentPage === href;
   }
 
   function buildItems(items) {
@@ -68,7 +66,7 @@
         <p>Student Portal AI</p>
       </div>
     </div>
-    <button class="btn-new" onclick="window.location.href='/chatbot'">
+    <button class="btn-new" onclick="window.location.href='chatbot.html'">
       <i class="fas fa-plus"></i> New Consultation
     </button>
     <div class="menu-label">MENU</div>
@@ -81,7 +79,7 @@
         <div class="user-name">${userName}</div>
         <div class="user-id">${displayId}</div>
       </div>
-      <a href="/profile" class="chevron"><i class="fas fa-chevron-right"></i></a>
+      <a href="profile.html" class="chevron"><i class="fas fa-chevron-right"></i></a>
     </div>
   `;
 
@@ -90,7 +88,7 @@
     sidebar.innerHTML = sidebarHTML;
   }
 
-  // Top bar (landing pages)
+  // Top bar
   const topbar = document.querySelector('.top-bar');
   if (topbar) {
     topbar.innerHTML = `
@@ -99,10 +97,10 @@
         <span>JUST Advisor</span>
       </div>
       <div class="tb-links">
-        <a href="/">Home</a>
-        <a href="/about">About</a>
-        <a href="/features">Features</a>
-        <button class="btn-ask" onclick="window.location.href='/chatbot'">
+        <a href="javascript:void(0)" onclick="window.location.href='index.html'">Home</a>
+        <a href="javascript:void(0)" onclick="window.location.href='about.html'">About</a>
+        <a href="javascript:void(0)" onclick="window.location.href='features.html'">Features</a>
+        <button class="btn-ask" onclick="window.location.href='chatbot.html'">
           <i class="fas fa-robot"></i> Ask AI Advisor
         </button>
       </div>
@@ -126,7 +124,7 @@
           </div>
         </div>
         <div class="footer-bottom">
-          <p>&copy; 2025 JUST Academic Advisor. All rights reserved.</p>
+          <p>&copy; 2024 JUST Academic Advisor. All rights reserved.</p>
         </div>
       </div>
     `;
@@ -139,14 +137,13 @@
     });
   });
 
-  // ── PERSISTENT MEETING WIDGET ──────────────────────────────────────────────
+  // PERSISTENT MEETING WIDGET
   function _esc(str) {
     const d = document.createElement('div');
     d.textContent = String(str ?? '');
     return d.innerHTML;
   }
-
-  const activeMeeting = JSON.parse(sessionStorage.getItem('active_meeting') || 'null');
+  const activeMeeting = JSON.parse(sessionStorage.getItem('active_meeting'));
   if (activeMeeting && currentPage !== 'room.html') {
     const widget = document.createElement('div');
     widget.id = 'miniMeetingWidget';
@@ -164,7 +161,7 @@
       color: white;
       animation: slideIn 0.3s ease-out;
     `;
-
+    
     widget.innerHTML = `
       <style>
         @keyframes slideIn { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
@@ -189,8 +186,8 @@
       <div class="mini-video-preview">
         <video id="miniVideo" autoplay playsinline muted></video>
         <div id="miniPlaceholder" style="position:absolute; top:0; left:0; width:100%; height:100%; display:flex; align-items:center; justify-content:center; flex-direction:column; background:#1e293b;">
-          <i class="fas fa-video-slash" style="font-size:1.5rem; color:#475569; margin-bottom:0.5rem;"></i>
-          <span style="font-size:0.75rem; color:#475569;">${_esc(activeMeeting.name)}</span>
+            <i class="fas fa-video-slash" style="font-size:1.5rem; color:#475569; margin-bottom:0.5rem;"></i>
+            <span style="font-size:0.75rem; color:#475569;">${_esc(activeMeeting.name)}</span>
         </div>
       </div>
       <div class="mini-title">${_esc(activeMeeting.name)}</div>
@@ -199,36 +196,42 @@
         <button class="mini-btn btn-quit" id="quitMiniMeeting">Leave</button>
       </div>
     `;
-
+    
     document.body.appendChild(widget);
 
+    // Auto-start mini-camera if it was active in the meeting
     const miniVideo = document.getElementById('miniVideo');
     const miniPlaceholder = document.getElementById('miniPlaceholder');
     let miniStream = null;
-
+    
     if (activeMeeting.cam) {
-      navigator.mediaDevices.getUserMedia({ video: true, audio: false })
-        .then(stream => {
-          miniStream = stream;
-          miniVideo.srcObject = stream;
-          miniPlaceholder.style.display = 'none';
-        })
-        .catch(() => {});
+        navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+            .then(stream => {
+                miniStream = stream;
+                miniVideo.srcObject = stream;
+                miniPlaceholder.style.display = 'none';
+            })
+            .catch(() => {
+                console.log("Camera access denied or not available for mini-widget");
+            });
     }
 
     document.getElementById('returnToMeeting').addEventListener('click', () => {
-      if (miniStream) miniStream.getTracks().forEach(t => t.stop());
-      window.location.href = `/room?id=${activeMeeting.id}&type=${activeMeeting.type}`;
+        if (miniStream) {
+            miniStream.getTracks().forEach(track => track.stop());
+        }
+        window.location.href = `room.html?id=${activeMeeting.id}&type=${activeMeeting.type}`;
     });
-
+    
     document.getElementById('quitMiniMeeting').addEventListener('click', async () => {
-      const formData = new FormData();
-      formData.append('room_id', activeMeeting.id);
-      formData.append('room_type', activeMeeting.type);
-      formData.append('student_id', studentId);
-      await fetch('/rooms/leave', { method: 'POST', body: formData });
-      sessionStorage.removeItem('active_meeting');
-      widget.remove();
+        const formData = new FormData();
+        formData.append("room_id", activeMeeting.id);
+        formData.append("room_type", activeMeeting.type);
+        formData.append("student_id", studentId);
+        
+        await fetch("/rooms/leave", { method: "POST", body: formData });
+        sessionStorage.removeItem('active_meeting');
+        widget.remove();
     });
   }
 })();
