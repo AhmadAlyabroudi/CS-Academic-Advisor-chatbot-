@@ -6,17 +6,15 @@
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 
 :root{
-  /* Dark-first design – body.dark-mode (always applied) reinforces these */
-  --accent-yellow:#FFE082;--navy:#0a0a0a;--navy-light:#111111;--navy-mid:#161616;
-  --yellow:#FFE082;--yellow-hover:#FFCA28;--white:#ffffff;--card-bg:#1a1a1a;--page-bg:#0f0f0f;
-  --gray-50:#111111;--gray-100:#1e1e1e;--gray-200:#2a2a2a;--gray-300:#3a3a3a;
-  --gray-400:#6b7280;--gray-500:#6b7280;--gray-600:#9ca3af;--gray-700:#c9d1d9;
-  --dark-text:#f1f5f9;
-  /* Semantic aliases used across components */
-  --bg-card:#1a1a1a;--bg-elevated:#0f0f0f;--text-primary:#f1f5f9;--text-muted:#6b7280;
+  --accent-yellow:#FFE082;--navy:#0f172a;--navy-light:#1e293b;--navy-mid:#1e293b;
+  --yellow:#F59E0B;--yellow-hover:#D97706;--white:#ffffff;--card-bg:#ffffff;--page-bg:#f5f7fa;
+  --gray-50:#f9fafb;--gray-100:#f3f4f6;--gray-200:#e5e7eb;--gray-300:#d1d5db;
+  --gray-400:#9ca3af;--gray-500:#6b7280;--gray-600:#4b5563;--gray-700:#374151;
+  --dark-text:#0f172a;
+  --bg-card:#ffffff;--bg-elevated:#f5f7fa;--text-primary:#0f172a;--text-muted:#6b7280;
   --accent:#6366f1;
   --radius-sm:6px;--radius-md:10px;--radius-lg:16px;--radius-xl:20px;
-  --shadow-card:0 4px 24px rgba(0,0,0,.6);--shadow-hover:0 8px 32px rgba(0,0,0,.8);
+  --shadow-card:0 2px 12px rgba(0,0,0,.08);--shadow-hover:0 4px 24px rgba(0,0,0,.14);
   --transition:.25s ease;
   --sidebar-w:240px;
 }
@@ -28,7 +26,7 @@ body.dark-mode {
   --gray-50:#111111;--gray-100:#1e1e1e;--gray-200:#2a2a2a;--gray-300:#3a3a3a;
   --gray-400:#6b7280;--gray-500:#6b7280;--gray-600:#9ca3af;--gray-700:#c9d1d9;
   --dark-text:#f1f5f9;--text-primary:#f1f5f9;--text-muted:#6b7280;
-  --navy:#0a0a0a;
+  --navy:#0a0a0a;--navy-light:#111111;--navy-mid:#161616;
   --yellow:#FFE082;--yellow-hover:#FFCA28;
   --shadow-card:0 8px 24px rgba(0,0,0,.7);--shadow-hover:0 12px 32px rgba(0,0,0,.9);
 }

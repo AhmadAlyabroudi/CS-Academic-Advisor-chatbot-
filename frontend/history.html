@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="Chat History – Review your past AI advisor consultations."/>
+  <title>Chat History | JUST Advisor</title>
+  <link rel="stylesheet" href="styles.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+</head>
+<body>
+<div class="page-with-sidebar">
+  <aside class="sidebar"></aside>
+  <div class="main-content">
+    <div class="top-bar"></div>
+    <div class="content-area">
+      <div class="section-badge"><i class="fas fa-clock-rotate-left"></i> CHAT HISTORY</div>
+      <h1 class="section-title">Past <span>Consultations</span></h1>
+      <p class="section-desc">Browse your previous conversations with the AI advisor, grouped by session.</p>
+
+      <div id="historyContainer" style="max-width:780px; margin:0 auto;">
+        <p style="text-align:center; padding:2rem; color:var(--text-muted);">Loading history...</p>
+      </div>
+    </div>
+    <footer class="site-footer"></footer>
+  </div>
+</div>
+
+<style>
+.session-card {
+  background: var(--bg-card);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  margin-bottom: 1rem;
+  overflow: hidden;
+  transition: border-color var(--transition);
+}
+.session-card:hover { border-color: var(--gray-300); }
+.session-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  user-select: none;
+}
+.session-header:hover { background: var(--gray-100); }
+.session-meta { display: flex; align-items: center; gap: 0.75rem; }
+.session-icon {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(255,224,130,0.12);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--yellow); font-size: 14px; flex-shrink: 0;
+}
+.session-title { font-weight: 600; font-size: 14px; color: var(--dark-text); }
+.session-date { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.session-count { font-size: 12px; color: var(--text-muted); }
+.session-chevron { color: var(--text-muted); transition: transform 0.2s; }
+.session-card.open .session-chevron { transform: rotate(180deg); }
+.session-messages { display: none; padding: 0 1.25rem 1.25rem; border-top: 1px solid var(--gray-200); }
+.session-card.open .session-messages { display: block; }
+.msg-row { display: flex; gap: 0.75rem; padding: 0.75rem 0; border-bottom: 1px solid var(--gray-100); }
+.msg-row:last-child { border-bottom: none; }
+.msg-avatar {
+  width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700;
+}
+.msg-avatar.user { background: rgba(99,102,241,0.15); color: #6366f1; }
+.msg-avatar.bot  { background: rgba(255,224,130,0.15); color: var(--yellow); }
+.msg-body { flex: 1; }
+.msg-role { font-size: 11px; font-weight: 600; color: var(--text-muted); margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.05em; }
+.msg-text { font-size: 13px; color: var(--dark-text); line-height: 1.6; white-space: pre-wrap; }
+.msg-time { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+.source-badge { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 999px; margin-left: 6px; vertical-align: middle; }
+.source-badge.rag  { background: rgba(99,102,241,0.15); color: #818cf8; }
+.source-badge.gemini { background: rgba(255,224,130,0.12); color: var(--yellow); }
+.empty-state { text-align: center; padding: 4rem 2rem; color: var(--text-muted); }
+.empty-state i { font-size: 2.5rem; margin-bottom: 1rem; opacity: 0.4; }
+.empty-state p { font-size: 14px; }
+.empty-state a { color: var(--yellow); text-decoration: none; font-weight: 600; }
+</style>
+
+<script src="sidebar.js?v=8"></script>
+<script>
+const studentId = localStorage.getItem('student_id') || '';
+
+function esc(str) {
+  const d = document.createElement('div');
+  d.textContent = String(str ?? '');
+  return d.innerHTML;
+}
+
+function formatDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return d.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+function groupIntoSessions(messages) {
+  if (!messages.length) return [];
+  const GAP_MS = 60 * 60 * 1000;
+  const sessions = [];
+  let current = [messages[0]];
+  for (let i = 1; i < messages.length; i++) {
+    const prev = new Date(messages[i - 1].timestamp);
+    const curr = new Date(messages[i].timestamp);
+    if (curr - prev > GAP_MS) { sessions.push(current); current = []; }
+    current.push(messages[i]);
+  }
+  sessions.push(current);
+  return sessions.reverse();
+}
+
+function toggleSession(card) {
+  card.classList.toggle('open');
+}
+
+function renderSessions(sessions) {
+  const container = document.getElementById('historyContainer');
+  if (!sessions.length) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <i class="fas fa-comments"></i>
+        <h3 style="color:var(--dark-text);margin-bottom:8px;">No conversations yet</h3>
+        <p>Start a new consultation with the AI advisor.</p>
+        <p style="margin-top:12px;"><a href="/chatbot">Open AI Advisor →</a></p>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = '';
+  sessions.forEach((msgs, idx) => {
+    const first = msgs[0];
+    const last  = msgs[msgs.length - 1];
+    const preview = msgs.find(m => m.role === 'user')?.message || 'Consultation';
+    const previewText = preview.length > 60 ? preview.slice(0, 60) + '…' : preview;
+    const dateLabel = formatDate(first.timestamp);
+    const msgCount = msgs.length;
+
+    const card = document.createElement('div');
+    card.className = 'session-card animate-in';
+    card.innerHTML = `
+      <div class="session-header" onclick="this.closest('.session-card').classList.toggle('open')">
+        <div class="session-meta">
+          <div class="session-icon"><i class="fas fa-comment-dots"></i></div>
+          <div>
+            <div class="session-title">${esc(previewText)}</div>
+            <div class="session-date">${dateLabel}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:1rem;">
+          <span class="session-count">${msgCount} message${msgCount !== 1 ? 's' : ''}</span>
+          <i class="fas fa-chevron-down session-chevron"></i>
+        </div>
+      </div>
+      <div class="session-messages">
+        ${msgs.map(m => {
+          const isUser = m.role === 'user';
+          const srcBadge = m.source ? `<span class="source-badge ${m.source === 'rag' ? 'rag' : 'gemini'}">${esc(m.source.toUpperCase())}</span>` : '';
+          return `
+            <div class="msg-row">
+              <div class="msg-avatar ${isUser ? 'user' : 'bot'}">${isUser ? 'U' : 'AI'}</div>
+              <div class="msg-body">
+                <div class="msg-role">${isUser ? 'You' : 'JUST Advisor'}${srcBadge}</div>
+                <div class="msg-text">${esc(m.message)}</div>
+                <div class="msg-time">${formatDate(m.timestamp)}</div>
+              </div>
+            </div>`;
+        }).join('')}
+      </div>`;
+    container.appendChild(card);
+  });
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  if (!studentId) {
+    document.getElementById('historyContainer').innerHTML = `
+      <div class="empty-state">
+        <i class="fas fa-lock"></i>
+        <h3 style="color:var(--dark-text);margin-bottom:8px;">Please log in</h3>
+        <p><a href="/">Sign in</a> to view your chat history.</p>
+      </div>`;
+    return;
+  }
+
+  try {
+    const res = await fetch(`/chat/history/${studentId}`);
+    if (!res.ok) throw new Error('Failed to load history');
+    const messages = await res.json();
+    const sessions = groupIntoSessions(messages);
+    renderSessions(sessions);
+  } catch (err) {
+    document.getElementById('historyContainer').innerHTML = `
+      <div class="empty-state">
+        <i class="fas fa-exclamation-triangle"></i>
+        <p style="color:#ef4444;">Error loading history. Please try again.</p>
+      </div>`;
+  }
+});
+</script>
+</body>
+</html>

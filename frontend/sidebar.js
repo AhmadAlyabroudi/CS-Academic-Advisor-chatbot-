@@ -1,13 +1,12 @@
-// Sidebar component – injects sidebar HTML, highlights active page, always dark
+// Sidebar component – injects sidebar HTML, highlights active page
 (async function() {
-  document.body.classList.add('dark-mode');
 
   const currentPage = window.location.pathname.split('/').pop() || 'index.html';
 
   // Auth Guard
   const studentId = localStorage.getItem('student_id');
   if (!studentId && currentPage !== 'index.html' && currentPage !== '') {
-    window.location.href = '/';
+    window.location.href = 'index.html';
     return;
   }
 
@@ -24,7 +23,7 @@
         displayId = `ID: ${student.university_id}`;
       } else {
         localStorage.removeItem('student_id');
-        window.location.href = '/';
+        window.location.href = 'index.html';
         return;
       }
     } catch (err) {
@@ -32,22 +31,23 @@
     }
   }
 
+  // ✅ تم إرجاع امتداد .html للروابط لضمان استقرار السيرفر بدون تعديل Nginx
   const menuItems = [
-    { icon: 'fa-comment-dots',      label: 'Active Session', href: '/chatbot', id: 'chatbot' },
-    { icon: 'fa-clock-rotate-left', label: 'Chat History',   href: '/history', id: 'history' },
+    { icon: 'fa-comment-dots',      label: 'Active Session', href: 'chatbot.html', id: 'chatbot' },
+    { icon: 'fa-clock-rotate-left', label: 'Chat History',   href: 'history.html', id: 'history' },
   ];
 
   const uniLinks = [
-    { icon: 'fa-earth-americas', label: 'Course Roadmap',  href: '/roadmap',     id: 'roadmap'     },
-    { icon: 'fa-calculator',     label: 'GPA Calculator',  href: '/gpa',         id: 'gpa'         },
-    { icon: 'fa-door-open',      label: 'Study Rooms',     href: '/study-rooms', id: 'study-rooms' },
-    { icon: 'fa-users',          label: 'Faculty Info',    href: '/faculty',     id: 'faculty'     },
-    { icon: 'fa-book',           label: 'Courses Catalog', href: '/courses',     id: 'courses'     },
+    { icon: 'fa-earth-americas', label: 'Course Roadmap',  href: 'roadmap.html',     id: 'roadmap'     },
+    { icon: 'fa-calculator',     label: 'GPA Calculator',  href: 'gpa.html',         id: 'gpa'         },
+    { icon: 'fa-door-open',      label: 'Study Rooms',     href: 'study-rooms.html', id: 'study-rooms' },
+    { icon: 'fa-users',          label: 'Faculty Info',    href: 'faculty.html',     id: 'faculty'     },
+    { icon: 'fa-book',           label: 'Courses Catalog', href: 'courses.html',     id: 'courses'     },
   ];
 
   function isActive(href) {
     const clean = href.replace(/^\//, '');
-    return currentPage === clean + '.html' || currentPage === clean || window.location.pathname === href;
+    return currentPage === clean || currentPage === clean + '.html' || window.location.pathname.endsWith(href);
   }
 
   function buildItems(items) {
@@ -65,7 +65,7 @@
         <p>Student Portal AI</p>
       </div>
     </div>
-    <button class="btn-new" onclick="window.location.href='/chatbot'">
+    <button class="btn-new" onclick="window.location.href='chatbot.html'">
       <i class="fas fa-plus"></i> New Consultation
     </button>
     <div class="menu-label">MENU</div>
@@ -78,7 +78,7 @@
         <div class="user-name">${userName}</div>
         <div class="user-id">${displayId}</div>
       </div>
-      <a href="/profile" class="chevron"><i class="fas fa-chevron-right"></i></a>
+      <a href="profile.html" class="chevron"><i class="fas fa-chevron-right"></i></a>
     </div>
   `;
 
@@ -94,10 +94,10 @@
         <span>JUST Advisor</span>
       </div>
       <div class="tb-links">
-        <a href="/">Home</a>
-        <a href="/about">About</a>
-        <a href="/features">Features</a>
-        <button class="btn-ask" onclick="window.location.href='/chatbot'">
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="features.html">Features</a>
+        <button class="btn-ask" onclick="window.location.href='chatbot.html'">
           <i class="fas fa-robot"></i> Ask AI Advisor
         </button>
       </div>
@@ -121,7 +121,7 @@
           </div>
         </div>
         <div class="footer-bottom">
-          <p>&copy; 2025 JUST Academic Advisor. All rights reserved.</p>
+          <p>&copy; 2026 JUST Academic Advisor. All rights reserved.</p>
         </div>
       </div>
     `;
@@ -194,7 +194,7 @@
 
     document.getElementById('returnToMeeting').addEventListener('click', () => {
       if (miniStream) miniStream.getTracks().forEach(t => t.stop());
-      window.location.href = `/room?id=${activeMeeting.id}&type=${activeMeeting.type}`;
+      window.location.href = `room.html?id=${activeMeeting.id}&type=${activeMeeting.type}`;
     });
 
     document.getElementById('quitMiniMeeting').addEventListener('click', async () => {
