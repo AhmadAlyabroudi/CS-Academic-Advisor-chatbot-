@@ -30,7 +30,7 @@ function refreshAllSelects() {
   const used = getUsedCodes();
   document.querySelectorAll('.course-select').forEach(sel => {
     const current = sel.value;
-    const others = used.filter(c => c !== current);
+    const others  = used.filter(c => c !== current);
     sel.innerHTML = `<option value="">-- Select Course --</option>` + buildCourseOptions(others);
     sel.value = current;
   });
@@ -39,7 +39,7 @@ function refreshAllSelects() {
 function addCompletedRow() {
   const container = document.getElementById('completedCoursesList');
   const used = getUsedCodes();
-  const row = document.createElement('div');
+  const row  = document.createElement('div');
   row.className = 'course-row with-grade';
   row.innerHTML = `
     <select class="course-select" onchange="refreshAllSelects()">
@@ -58,7 +58,7 @@ function addCompletedRow() {
 function addEnrolledRow() {
   const container = document.getElementById('enrolledCoursesList');
   const used = getUsedCodes();
-  const row = document.createElement('div');
+  const row  = document.createElement('div');
   row.className = 'course-row no-grade';
   row.innerHTML = `
     <select class="course-select" onchange="refreshAllSelects()">
@@ -70,7 +70,6 @@ function addEnrolledRow() {
     </button>`;
   container.appendChild(row);
 }
-
 
 function removeRow(btn) {
   btn.closest('.course-row').remove();
@@ -93,15 +92,15 @@ function showSuccess(msg) {
 
 async function submitSignup() {
   const btn = document.getElementById('signupBtn');
-  document.getElementById('signupError').style.display = 'none';
+  document.getElementById('signupError').style.display   = 'none';
   document.getElementById('signupSuccess').style.display = 'none';
 
-  const firstName   = document.getElementById('firstName').value.trim();
-  const lastName    = document.getElementById('lastName').value.trim();
-  const email       = document.getElementById('email').value.trim();
+  const firstName    = document.getElementById('firstName').value.trim();
+  const lastName     = document.getElementById('lastName').value.trim();
+  const email        = document.getElementById('email').value.trim();
   const universityId = document.getElementById('universityId').value.trim();
-  const phone       = document.getElementById('phone').value.trim();
-  const password    = document.getElementById('password').value;
+  const phone        = document.getElementById('phone').value.trim();
+  const password     = document.getElementById('password').value;
 
   if (!firstName || !lastName || !email || !universityId || !phone || !password) {
     showError('Please fill in all required personal information fields.');
@@ -110,7 +109,7 @@ async function submitSignup() {
 
   // Collect completed courses
   const completedCourses = [];
-  let hasEmptyCompleted = false;
+  let hasEmptyCompleted  = false;
   document.querySelectorAll('#completedCoursesList .course-row').forEach(row => {
     const code  = row.querySelector('.course-select').value;
     const grade = row.querySelector('.grade-select').value;
@@ -123,8 +122,8 @@ async function submitSignup() {
   }
 
   // Collect enrolled courses
-  const currentEnrolled = [];
-  let hasEmptyEnrolled = false;
+  const currentEnrolled  = [];
+  let hasEmptyEnrolled   = false;
   document.querySelectorAll('#enrolledCoursesList .course-row').forEach(row => {
     const code = row.querySelector('.course-select').value;
     if (!code) { hasEmptyEnrolled = true; return; }
@@ -135,7 +134,7 @@ async function submitSignup() {
     return;
   }
 
-  btn.disabled = true;
+  btn.disabled  = true;
   btn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:8px"></i>Creating Account…';
 
   try {
@@ -143,31 +142,31 @@ async function submitSignup() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        first_name: firstName,
-        last_name: lastName,
+        first_name:      firstName,
+        last_name:       lastName,
         email,
-        university_id: universityId,
-        phone_number: phone,
+        university_id:   universityId,
+        phone_number:    phone,
         password,
         completed_courses: completedCourses,
-        current_enrolled: currentEnrolled,
+        current_enrolled:  currentEnrolled,
       }),
     });
 
     const data = await res.json();
 
     if (res.ok) {
-      showSuccess(data.message + ' Redirecting to login…');
+      showSuccess((data.message || 'Account created!') + ' Redirecting to login…');
       btn.disabled = true;
-      setTimeout(() => { window.location.href = 'index.html'; }, 2000);
+      setTimeout(() => { window.location.href = '/'; }, 2000);
     } else {
       showError(data.detail || 'Sign-up failed. Please try again.');
-      btn.disabled = false;
+      btn.disabled  = false;
       btn.innerHTML = '<i class="fas fa-user-check" style="margin-right:8px"></i>Create Account';
     }
   } catch (_) {
     showError('Could not connect to the server. Please make sure the backend is running.');
-    btn.disabled = false;
+    btn.disabled  = false;
     btn.innerHTML = '<i class="fas fa-user-check" style="margin-right:8px"></i>Create Account';
   }
 }

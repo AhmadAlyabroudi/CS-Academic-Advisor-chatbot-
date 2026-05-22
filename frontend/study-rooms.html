@@ -129,7 +129,7 @@ document.addEventListener("DOMContentLoaded", () => {
             // Notify lobby of the new room
             socket.emit('room_created', {});
             // Redirect creator into the new room
-            window.location.href = `room.html?id=${result.room_id}&type=Private`;
+            window.location.href = `/room?id=${result.room_id}&type=Private`;
         } catch (err) {
             alert("Error creating room.");
         }
@@ -220,7 +220,7 @@ async function joinRoom(roomId, roomType) {
             method: "POST",
             body: formData
         });
-        window.location.href = `room.html?id=${roomId}&type=${roomType}`;
+        window.location.href = `/room?id=${roomId}&type=${roomType}`;
     } catch (err) {
         alert("Error joining room.");
     }

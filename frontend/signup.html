@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <meta name="description" content="Sign up for the CS Academic Advisor portal at JUST."/>
-  <title>Sign Up | JUST CS Advisor</title>
+  <meta name="description" content="Sign up for JUST Advisor – the AI academic portal for JUST students."/>
+  <title>Sign Up | JUST Advisor</title>
   <link rel="stylesheet" href="styles.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
@@ -15,12 +15,12 @@
   <nav class="top-navbar">
     <div class="nav-inner">
       <div class="nav-brand">
-        <i class="fas fa-robot" style="color:var(--yellow);font-size:18px"></i>
-        <span>CS Academic Advisor Chatbot</span>
+        <div class="brand-dot">J</div>
+        <span>JUST Advisor</span>
       </div>
       <div class="nav-center">
-        <a href="index.html">Home</a>
-        <a href="index.html#features">Features</a>
+        <a href="/">Home</a>
+        <a href="/#features">Features</a>
       </div>
     </div>
   </nav>
@@ -29,51 +29,67 @@
   <div class="signup-page">
     <div class="signup-wrap">
       <div class="signup-card">
-        <h2><i class="fas fa-user-plus" style="color:var(--yellow);margin-right:10px;font-size:20px"></i>Create Your Account</h2>
-        <p class="signup-subtitle">Join the CS Academic Advisor portal. Your email and university ID must be pre-registered in the system.</p>
+
+        <h2>
+          <i class="fas fa-user-plus" style="color:var(--accent);margin-right:10px;font-size:20px"></i>
+          Create Your Account
+        </h2>
+        <p class="signup-subtitle">
+          Join JUST Advisor and get instant access to AI academic advising, GPA tracking, and study rooms.
+        </p>
 
         <form class="signup-form" id="signupForm" onsubmit="return false">
 
           <!-- Personal Information -->
-          <div class="signup-section-label"><i class="fas fa-user" style="margin-right:6px"></i>Personal Information</div>
+          <div class="signup-section-label">
+            <i class="fas fa-user" style="margin-right:6px"></i>Personal Information
+          </div>
           <div class="signup-grid-2">
             <div class="form-group">
-              <label for="firstName">First Name <span style="color:#ef4444">*</span></label>
+              <label for="firstName">First Name <span style="color:#EF9A9A">*</span></label>
               <input type="text" id="firstName" placeholder="e.g. Ahmad" required/>
             </div>
             <div class="form-group">
-              <label for="lastName">Last Name <span style="color:#ef4444">*</span></label>
+              <label for="lastName">Last Name <span style="color:#EF9A9A">*</span></label>
               <input type="text" id="lastName" placeholder="e.g. Al-Zyoud" required/>
             </div>
             <div class="form-group">
-              <label for="email">University Email <span style="color:#ef4444">*</span></label>
+              <label for="email">University Email <span style="color:#EF9A9A">*</span></label>
               <input type="email" id="email" placeholder="cs...@cit.just.edu.jo" required/>
             </div>
             <div class="form-group">
-              <label for="universityId">University ID <span style="color:#ef4444">*</span></label>
-              <input type="text" id="universityId" placeholder="e.g. 202301" required/>
+              <label for="universityId">University ID <span style="color:#EF9A9A">*</span></label>
+              <input type="text" id="universityId" placeholder="e.g. 202301234" required/>
             </div>
             <div class="form-group">
-              <label for="phone">Phone Number <span style="color:#ef4444">*</span></label>
+              <label for="phone">Phone Number <span style="color:#EF9A9A">*</span></label>
               <input type="tel" id="phone" placeholder="e.g. 0791234567" required/>
             </div>
             <div class="form-group">
-              <label for="password">Password <span style="color:#ef4444">*</span></label>
-              <input type="password" id="password" placeholder="Min 8 chars, upper, lower, digit, special" required/>
+              <label for="password">Password <span style="color:#EF9A9A">*</span></label>
+              <input type="password" id="password" placeholder="Min 8 chars" required/>
             </div>
           </div>
 
           <!-- Completed Courses -->
-          <div class="signup-section-label"><i class="fas fa-check-circle" style="margin-right:6px;color:#22c55e"></i>Completed Courses</div>
-          <p style="font-size:12px;color:var(--gray-500);margin-bottom:12px">Add all courses you have already completed along with the grade you received.</p>
+          <div class="signup-section-label">
+            <i class="fas fa-check-circle" style="margin-right:6px;color:var(--green-text)"></i>Completed Courses
+          </div>
+          <p style="font-size:12px;color:var(--gray-500);margin-bottom:12px">
+            Add courses you have already passed, along with the grade received.
+          </p>
           <div id="completedCoursesList"></div>
           <button type="button" class="btn-add-course" onclick="addCompletedRow()">
             <i class="fas fa-plus"></i> Add Completed Course
           </button>
 
           <!-- Currently Enrolled Courses -->
-          <div class="signup-section-label"><i class="fas fa-book-open" style="margin-right:6px;color:#eab308"></i>Currently Enrolled Courses</div>
-          <p style="font-size:12px;color:var(--gray-500);margin-bottom:12px">Add the courses you are taking this semester.</p>
+          <div class="signup-section-label">
+            <i class="fas fa-book-open" style="margin-right:6px;color:var(--amber-text)"></i>Currently Enrolled Courses
+          </div>
+          <p style="font-size:12px;color:var(--gray-500);margin-bottom:12px">
+            Add the courses you are taking this semester.
+          </p>
           <div id="enrolledCoursesList"></div>
           <button type="button" class="btn-add-course" onclick="addEnrolledRow()">
             <i class="fas fa-plus"></i> Add Enrolled Course
@@ -83,23 +99,22 @@
           <button type="button" class="btn-signup" id="signupBtn" onclick="submitSignup()">
             <i class="fas fa-user-check" style="margin-right:8px"></i>Create Account
           </button>
-          <div class="signup-error" id="signupError"></div>
+          <div class="signup-error"  id="signupError"></div>
           <div class="signup-success" id="signupSuccess"></div>
+
         </form>
 
         <div class="signup-login-link">
-          Already have an account? <a href="index.html">Sign in</a>
+          Already have an account? <a href="/">Sign in</a>
         </div>
       </div>
     </div>
   </div>
 
   <script>
-    if (localStorage.getItem('theme') === 'dark') {
-      document.body.classList.add('dark-mode');
-    }
+    document.body.classList.add('dark-mode');
     if (localStorage.getItem('student_id')) {
-      window.location.href = 'chatbot.html';
+      window.location.href = '/chatbot';
     }
   </script>
   <script src="signup.js"></script>
