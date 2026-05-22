@@ -1,18 +1,22 @@
 import os
+import sys
+from pathlib import Path
 from sqlalchemy import create_engine, text
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(Path(__file__).parent / ".env")
 
 DATABASE_URL = os.getenv("DATABASE_URL")
-if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
+if not DATABASE_URL:
+    print("ERROR: DATABASE_URL is not set in .env")
+    sys.exit(1)
+if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-sqlite_engine = create_engine("sqlite:////var/www/justadvisor/backend/Project.db")
-pg_engine = create_engine(DATABASE_URL)
+SQLITE_PATH = os.getenv("SQLITE_PATH", str(Path(__file__).parent / "Project.db"))
 
-# الترتيب الصحيح
-tables = [
+# FK-ordered: parent tables first, child tables last
+TABLES_FK_ORDER = [
     "student_verification",
     "cs_faculty_info",
     "courses",
@@ -22,47 +26,82 @@ tables = [
     "room_members",
     "student_roadmap",
     "chatbot_history",
-    "enrollment"
+    "enrollment",
 ]
 
 
-def migrate():
-    print("🚀 Starting Production Data Migration...")
-    with sqlite_engine.connect() as src, pg_engine.connect() as dest:
+def migrate() -> None:
+    if not Path(SQLITE_PATH).exists():
+        print(f"ERROR: SQLite database not found at {SQLITE_PATH}")
+        sys.exit(1)
 
-        for table in tables:
+    print("=" * 60)
+    print("  JUST Advisor — SQLite → PostgreSQL Data Migration")
+    print("=" * 60)
+    print(f"  Source : {SQLITE_PATH}")
+    print(f"  Target : PostgreSQL ({DATABASE_URL.split('@')[-1]})")
+    print()
+
+    sqlite_engine = create_engine(f"sqlite:///{SQLITE_PATH}")
+    pg_engine = create_engine(DATABASE_URL)
+
+    # ── Step 1: read all data from SQLite ─────────────────────────────────────
+    data: dict[str, list[dict]] = {}
+    with sqlite_engine.connect() as src:
+        for table in TABLES_FK_ORDER:
             try:
                 rows = src.execute(text(f"SELECT * FROM {table}")).mappings().all()
-                if not rows:
-                    print(f"⚠️ Table [{table}] is empty in SQLite. Skipping...")
-                    continue
-
-                print(f"📦 Found {len(rows)} rows for table [{table}]. Migrating...")
-
-                # تنظيف الجدول قبل الصب لمنع التكرار
-                dest.execute(text(f"ALTER TABLE {table} DISABLE TRIGGER ALL;"))  # إيقاف القيود مؤقتاً لهذا الجدول
-                dest.execute(text(f"DELETE FROM {table};"))
-                dest.commit()
-
-                for row in rows:
-                    try:
-                        row_dict = dict(row)
-                        columns = ", ".join(row_dict.keys())
-                        placeholders = ", ".join([f":{k}" for k in row_dict.keys()])
-                        insert_query = text(f"INSERT INTO {table} ({columns}) VALUES ({placeholders})")
-                        dest.execute(insert_query, row_dict)
-                    except Exception as row_err:
-                        print(f"   ❌ Row insert error: {str(row_err)}")
-                        continue
-
-                dest.execute(text(f"ALTER TABLE {table} ENABLE TRIGGER ALL;"))  # إعادة تفعيل القيود
-                dest.commit()
-                print(f"✅ Table [{table}] synchronized successfully.")
+                data[table] = [dict(r) for r in rows]
+                print(f"  Read  [{table}]: {len(data[table])} rows")
             except Exception as e:
-                print(f"❌ Critical error on table [{table}]: {str(e)}")
+                print(f"  WARN  [{table}]: could not read from SQLite — {e}")
+                data[table] = []
+
+    # ── Step 2: clear PostgreSQL tables (CASCADE handles FK order) ─────────────
+    print("\n[1/2] Clearing PostgreSQL tables...")
+    all_tables = ", ".join(TABLES_FK_ORDER)
+    with pg_engine.connect() as dest:
+        dest.execute(text(
+            f"TRUNCATE TABLE {all_tables} RESTART IDENTITY CASCADE"
+        ))
+        dest.commit()
+    print("  All tables cleared.")
+
+    # ── Step 3: insert in FK order (parents before children) ──────────────────
+    print("\n[2/2] Inserting rows into PostgreSQL...")
+    total_inserted = 0
+    with pg_engine.connect() as dest:
+        for table in TABLES_FK_ORDER:
+            rows = data[table]
+            if not rows:
+                print(f"  SKIP  [{table}]: no data in SQLite")
                 continue
+
+            inserted = 0
+            skipped = 0
+            for row in rows:
+                columns = ", ".join(row.keys())
+                placeholders = ", ".join([f":{k}" for k in row.keys()])
+                sql = text(
+                    f"INSERT INTO {table} ({columns}) VALUES ({placeholders})"
+                    f" ON CONFLICT DO NOTHING"
+                )
+                try:
+                    dest.execute(sql, row)
+                    inserted += 1
+                except Exception as e:
+                    skipped += 1
+                    print(f"    ROW ERROR [{table}]: {e}")
+
+            dest.commit()
+            total_inserted += inserted
+            status = "✓" if skipped == 0 else "!"
+            print(f"  {status}  [{table}]: {inserted} inserted, {skipped} skipped")
+
+    print(f"\n{'=' * 60}")
+    print(f"  Migration complete — {total_inserted} total rows inserted.")
+    print(f"{'=' * 60}")
 
 
 if __name__ == "__main__":
     migrate()
-    print("🎉 Sync Complete!")
