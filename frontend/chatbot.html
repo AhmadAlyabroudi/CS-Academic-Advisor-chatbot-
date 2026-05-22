@@ -4,33 +4,146 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <meta name="description" content="JUST Advisor AI Chatbot – Hybrid RAG Academic Advisor powered by Gemini and Pinecone."/>
-  <title>AI Advisor | JUST Advisor</title>
+  <title>AI Chatbot | JUST Advisor</title>
   <link rel="stylesheet" href="styles.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <style>
+    /* ── Source badges ─────────────────────────────────────────────────────── */
+    .source-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 20px;
+      margin-top: 6px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .badge-official {
+      background: rgba(34, 197, 94, 0.15);
+      color: #22c55e;
+      border: 1px solid rgba(34, 197, 94, 0.35);
+    }
+    .badge-general {
+      background: rgba(251, 191, 36, 0.15);
+      color: #f59e0b;
+      border: 1px solid rgba(251, 191, 36, 0.35);
+    }
+    .badge-demo {
+      background: rgba(148, 163, 184, 0.12);
+      color: #94a3b8;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+    }
+    /* ── Typing indicator ──────────────────────────────────────────────────── */
+    .typing-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 16px;
+      background: var(--bg-card, #1e293b);
+      border-radius: 1rem;
+      border-bottom-left-radius: 4px;
+      max-width: 120px;
+    }
+    .typing-dot {
+      width: 7px;
+      height: 7px;
+      background: #6366f1;
+      border-radius: 50%;
+      animation: bounce 1.2s infinite;
+    }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce {
+      0%, 80%, 100% { transform: translateY(0); opacity: 0.5; }
+      40%            { transform: translateY(-6px); opacity: 1; }
+    }
+    /* ── Message wrapper ───────────────────────────────────────────────────── */
+    .msg-bot .msg-bubble {
+      position: relative;
+    }
+    .msg-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 4px;
+      flex-wrap: wrap;
+    }
+    /* ── Confidence micro-bar ──────────────────────────────────────────────── */
+    .confidence-bar {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.65rem;
+      color: #64748b;
+    }
+    .confidence-bar .bar-track {
+      width: 40px;
+      height: 4px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .confidence-bar .bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      background: #6366f1;
+    }
+    /* ── Quick-action cards ────────────────────────────────────────────────── */
+    .qa-card { cursor: pointer; }
+    .qa-card:hover { transform: translateY(-2px); }
+    /* ── Clear history button ──────────────────────────────────────────────── */
+    .clear-chat-btn {
+      background: none;
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #64748b;
+      border-radius: 0.5rem;
+      padding: 4px 12px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .clear-chat-btn:hover { color: #ef4444; border-color: rgba(239,68,68,0.4); }
+    /* ── Chat header bar (shows when conversation starts) ─────────────────── */
+    #chatHeader {
+      display: none;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    #chatHeader.visible { display: flex; }
+    .chat-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+  </style>
 </head>
 <body>
 <div class="page-with-sidebar">
   <aside class="sidebar"></aside>
   <div class="main-content">
     <div class="top-bar"></div>
-
     <div class="chat-area">
 
       <!-- Welcome Section (hidden once chat starts) -->
       <div class="chat-welcome animate-in" id="chatWelcome">
         <div class="welcome-icon"><i class="fas fa-robot"></i></div>
-        <h1>Hello, how can I help you?</h1>
-        <p>
-          I'm your AI Academic Advisor — powered by Gemini 2.0 Flash and the official<br/>
-          JUST CS Department study plan. Ask me anything about your academic journey.
-        </p>
-        <div style="display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap">
-          <span style="font-size:.72rem;padding:5px 12px;background:rgba(76,175,80,.12);color:#81C784;border-radius:20px;border:1px solid rgba(76,175,80,.25);font-weight:700">
-            <i class="fas fa-graduation-cap" style="margin-right:5px"></i>Official Source Mode
+        <h1>Hello, how can I help you today?</h1>
+        <p>I'm your AI Academic Advisor, powered by Gemini 1.5 Pro and the official<br/>
+           JUST CS Department study plan. Ask me anything about your academic journey.</p>
+        <div style="display:flex; gap:8px; justify-content:center; margin-top:12px; flex-wrap:wrap;">
+          <span style="font-size:0.72rem; padding:4px 10px; background:rgba(34,197,94,0.12); color:#22c55e; border-radius:20px; border:1px solid rgba(34,197,94,0.3); font-weight:600;">
+            <i class="fas fa-graduation-cap" style="margin-right:4px;"></i>Official Source Mode
           </span>
-          <span style="font-size:.72rem;padding:5px 12px;background:rgba(255,152,0,.12);color:#FFCC80;border-radius:20px;border:1px solid rgba(255,152,0,.25);font-weight:700">
-            <i class="fas fa-robot" style="margin-right:5px"></i>AI Insight Mode
+          <span style="font-size:0.72rem; padding:4px 10px; background:rgba(251,191,36,0.12); color:#f59e0b; border-radius:20px; border:1px solid rgba(251,191,36,0.3); font-weight:600;">
+            <i class="fas fa-robot" style="margin-right:4px;"></i>AI Insight Mode
           </span>
         </div>
       </div>
@@ -59,23 +172,23 @@
       <div class="quick-nav animate-in-delay" id="quickNav">
         <h2>Quick Navigation</h2>
         <div class="qn-grid">
-          <a href="/roadmap" class="qn-card">
-            <div class="qn-icon" style="background:rgba(66,165,245,.1);color:#90CAF9"><i class="fas fa-map"></i></div>
+          <a href="roadmap.html" class="qn-card">
+            <div class="qn-icon" style="background:rgba(59,130,246,.1);color:#3b82f6"><i class="fas fa-map"></i></div>
             <div class="qn-text"><strong>Course Roadmap</strong><p>View your 4-year CS degree progression</p></div>
             <i class="fas fa-chevron-right qn-arrow"></i>
           </a>
-          <a href="/gpa" class="qn-card">
-            <div class="qn-icon" style="background:rgba(76,175,80,.1);color:#81C784"><i class="fas fa-calculator"></i></div>
+          <a href="gpa.html" class="qn-card">
+            <div class="qn-icon" style="background:rgba(34,197,94,.1);color:#22c55e"><i class="fas fa-calculator"></i></div>
             <div class="qn-text"><strong>GPA Calculator</strong><p>Calculate your semester and cumulative GPA</p></div>
             <i class="fas fa-chevron-right qn-arrow"></i>
           </a>
-          <a href="/study-rooms" class="qn-card">
-            <div class="qn-icon" style="background:rgba(206,147,216,.1);color:#CE93D8"><i class="fas fa-users"></i></div>
+          <a href="study-rooms.html" class="qn-card">
+            <div class="qn-icon" style="background:rgba(168,85,247,.1);color:#a855f7"><i class="fas fa-users"></i></div>
             <div class="qn-text"><strong>Study Rooms</strong><p>Join or create virtual study sessions</p></div>
             <i class="fas fa-chevron-right qn-arrow"></i>
           </a>
-          <a href="/profile" class="qn-card">
-            <div class="qn-icon" style="background:rgba(255,224,130,.1);color:#FFE082"><i class="fas fa-user"></i></div>
+          <a href="profile.html" class="qn-card">
+            <div class="qn-icon" style="background:rgba(239,68,68,.1);color:#ef4444"><i class="fas fa-user"></i></div>
             <div class="qn-text"><strong>My Profile</strong><p>Manage your profile and settings</p></div>
             <i class="fas fa-chevron-right qn-arrow"></i>
           </a>
@@ -84,9 +197,9 @@
 
       <!-- Conversation header (visible after first message) -->
       <div id="chatHeader">
-        <span class="chat-label"><i class="fas fa-comments" style="margin-right:5px"></i>Conversation</span>
+        <span class="chat-label"><i class="fas fa-comments" style="margin-right:5px;"></i>Conversation</span>
         <button class="clear-chat-btn" onclick="clearHistory()">
-          <i class="fas fa-trash-alt" style="margin-right:4px"></i>Clear History
+          <i class="fas fa-trash-alt" style="margin-right:4px;"></i>Clear History
         </button>
       </div>
 
@@ -94,55 +207,48 @@
       <div class="chat-messages" id="chatMessages"></div>
     </div>
 
-    <!-- Input Bar (sticky bottom) -->
+    <!-- Input Bar -->
     <div class="chat-input-bar">
       <div class="input-bar-inner">
         <button class="attach-btn" title="Attach (coming soon)"><i class="fas fa-paperclip"></i></button>
-        <input
-          type="text"
-          id="chatInput"
-          placeholder="Ask about prerequisites, GPA, regulations, or anything academic…"
-          autocomplete="off"
-        />
-        <button class="send-btn" id="sendBtn" title="Send">
-          <i class="fas fa-paper-plane"></i>
-        </button>
+        <input type="text" id="chatInput" placeholder="Ask about prerequisites, GPA, regulations, or anything academic…" autocomplete="off"/>
+        <button class="send-btn" id="sendBtn"><i class="fas fa-paper-plane"></i></button>
       </div>
       <p class="disclaimer">
-        <i class="fas fa-graduation-cap" style="color:#81C784;margin-right:4px"></i>Official answers are grounded in the JUST CS Study Plan.
-        <i class="fas fa-robot" style="color:#FFCC80;margin:0 4px"></i>AI Insights are Gemini-generated — verify critical information with your department.
+        <i class="fas fa-graduation-cap" style="color:#22c55e;margin-right:4px;"></i>Official answers are grounded in the JUST CS Study Plan.
+        <i class="fas fa-robot" style="color:#f59e0b;margin:0 4px;"></i>AI Insights are Gemini-generated — verify critical info with the department.
       </p>
     </div>
   </div>
 </div>
 
-<script src="sidebar.js?v=8"></script>
+<script src="sidebar.js?v=7"></script>
 <script>
-  const chatInput    = document.getElementById('chatInput');
-  const sendBtn      = document.getElementById('sendBtn');
+  const chatInput   = document.getElementById('chatInput');
+  const sendBtn     = document.getElementById('sendBtn');
   const chatMessages = document.getElementById('chatMessages');
-  const studentId    = localStorage.getItem('student_id') || '';
+  const studentId   = localStorage.getItem('student_id') || '';
 
   let conversationStarted = false;
 
-  // ── XSS helper ──────────────────────────────────────────────────────────────
+  // ── XSS helper ─────────────────────────────────────────────────────────────
   function esc(str) {
     const d = document.createElement('div');
     d.textContent = String(str ?? '');
     return d.innerHTML;
   }
 
-  // ── Reveal conversation UI ───────────────────────────────────────────────────
+  // ── Reveal conversation UI ──────────────────────────────────────────────────
   function revealConversation() {
     if (conversationStarted) return;
     conversationStarted = true;
-    document.getElementById('chatWelcome').style.display  = 'none';
-    document.getElementById('quickActions').style.display = 'none';
-    document.getElementById('quickNav').style.display     = 'none';
+    document.getElementById('chatWelcome').style.display   = 'none';
+    document.getElementById('quickActions').style.display  = 'none';
+    document.getElementById('quickNav').style.display      = 'none';
     document.getElementById('chatHeader').classList.add('visible');
   }
 
-  // ── Source badge HTML ────────────────────────────────────────────────────────
+  // ── Source badge HTML ───────────────────────────────────────────────────────
   function sourceBadge(source, confidence) {
     if (source === 'official') {
       const pct = Math.round((confidence || 0) * 100);
@@ -151,7 +257,7 @@
           <span class="source-badge badge-official">
             <i class="fas fa-graduation-cap"></i> Official Source
           </span>
-          <span class="confidence-bar" title="Similarity: ${pct}%">
+          <span class="confidence-bar" title="Similarity score: ${pct}%">
             <span class="bar-track"><span class="bar-fill" style="width:${pct}%"></span></span>
             ${pct}% match
           </span>
@@ -176,13 +282,14 @@
     return '';
   }
 
-  // ── Append a message bubble ──────────────────────────────────────────────────
+  // ── Append a message bubble ─────────────────────────────────────────────────
   function addMessage(text, sender, source, confidence) {
     revealConversation();
     const div = document.createElement('div');
     div.className = 'chat-msg ' + (sender === 'user' ? 'msg-user' : 'msg-bot');
 
-    const safeText  = esc(text);
+    const safeText = esc(text);
+    // Convert **bold** and newlines for readability
     const formatted = safeText
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\n/g, '<br/>');
@@ -201,14 +308,14 @@
     return div;
   }
 
-  // ── Typing indicator ─────────────────────────────────────────────────────────
+  // ── Typing indicator ────────────────────────────────────────────────────────
   function showTyping() {
     revealConversation();
     const div = document.createElement('div');
     div.className = 'chat-msg msg-bot';
     div.id = 'typingIndicator';
     div.innerHTML = `
-      <div class="msg-bubble" style="padding:12px 18px">
+      <div class="msg-bubble">
         <div class="typing-indicator">
           <div class="typing-dot"></div>
           <div class="typing-dot"></div>
@@ -223,37 +330,37 @@
     document.getElementById('typingIndicator')?.remove();
   }
 
-  // ── Load chat history ────────────────────────────────────────────────────────
+  // ── Load chat history ───────────────────────────────────────────────────────
   async function loadHistory() {
     if (!studentId) return;
     try {
       const res = await fetch(`/chat/history/${studentId}`);
       if (!res.ok) return;
       const history = await res.json();
-      if (!history.length) return;
+      if (history.length === 0) return;
       history.forEach(msg => addMessage(msg.message_content, msg.sender_type, msg.source, null));
     } catch (e) {
       console.error('Could not load history', e);
     }
   }
 
-  // ── Clear history ────────────────────────────────────────────────────────────
+  // ── Clear history ───────────────────────────────────────────────────────────
   async function clearHistory() {
     if (!confirm('Clear your entire chat history? This cannot be undone.')) return;
     chatMessages.innerHTML = '';
-    conversationStarted    = false;
+    conversationStarted = false;
     document.getElementById('chatHeader').classList.remove('visible');
-    document.getElementById('chatWelcome').style.display  = '';
-    document.getElementById('quickActions').style.display = '';
-    document.getElementById('quickNav').style.display     = '';
+    document.getElementById('chatWelcome').style.display   = '';
+    document.getElementById('quickActions').style.display  = '';
+    document.getElementById('quickNav').style.display      = '';
   }
 
-  // ── Send a message ───────────────────────────────────────────────────────────
+  // ── Send a message ──────────────────────────────────────────────────────────
   async function sendMessage(text) {
     const msg = (text || chatInput.value).trim();
     if (!msg) return;
 
-    chatInput.value  = '';
+    chatInput.value = '';
     sendBtn.disabled = true;
 
     addMessage(msg, 'user');
@@ -285,16 +392,14 @@
     }
   }
 
-  // ── Quick action shortcut ────────────────────────────────────────────────────
+  // ── Quick action shortcut ───────────────────────────────────────────────────
   function sendQuick(text) { sendMessage(text); }
 
-  // ── Event listeners ──────────────────────────────────────────────────────────
+  // ── Event listeners ─────────────────────────────────────────────────────────
   sendBtn.addEventListener('click', () => sendMessage());
-  chatInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey) sendMessage();
-  });
+  chatInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) sendMessage(); });
 
-  // ── Init ─────────────────────────────────────────────────────────────────────
+  // ── Init ────────────────────────────────────────────────────────────────────
   loadHistory();
 </script>
 </body>
