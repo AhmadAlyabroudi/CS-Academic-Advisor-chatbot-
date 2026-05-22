@@ -75,6 +75,6 @@ jobs:
           python -c "
           from app.api.chatbot_controller import router
           routes = [r.path for r in router.routes]
-          assert '/ai' in routes, f'Expected /ai route, got: {routes}'
+          assert '/chat/ai' in routes, f'Expected /chat/ai route, got: {routes}'
           print('Chatbot AI endpoint registered OK')
           "
