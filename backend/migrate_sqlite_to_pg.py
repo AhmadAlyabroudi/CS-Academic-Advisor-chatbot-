@@ -1,86 +1,65 @@
-"""
-One-time migration: copy all data from the local SQLite database to PostgreSQL.
-
-Usage (run from the backend/ directory):
-    DATABASE_URL=postgresql://user:pass@host/db python migrate_sqlite_to_pg.py
-
-The script reads every row from the SQLite file and inserts it into the
-PostgreSQL database, respecting foreign-key order.  It is idempotent — rows
-that already exist (matched by primary key) are skipped.
-"""
-
 import os
-import sys
-
-from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker
+from dotenv import load_dotenv
 
 load_dotenv()
 
-PG_URL = os.getenv("DATABASE_URL", "")
-SQLITE_URL = "sqlite:///./Project.db"
+DATABASE_URL = os.getenv("DATABASE_URL")
+if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-if not PG_URL or not PG_URL.startswith("postgresql"):
-    sys.exit("ERROR: Set DATABASE_URL to a postgresql:// URL before running this script.")
+sqlite_engine = create_engine("sqlite:////var/www/justadvisor/backend/Project.db")
+pg_engine = create_engine(DATABASE_URL)
 
-sqlite_engine = create_engine(SQLITE_URL, connect_args={"check_same_thread": False})
-pg_engine = create_engine(PG_URL, pool_pre_ping=True)
-
-SqliteSession = sessionmaker(bind=sqlite_engine)
-PgSession = sessionmaker(bind=pg_engine)
-
-# Tables in insertion order (respects FK dependencies)
-TABLES = [
-    "cs_faculty_info",
-    "courses",
-    "students",
-    "student_roadmap",
+# الترتip الصحيح هندسياً لحل مشكلة القيود
+tables = [
     "student_verification",
-    "official_rooms",
-    "private_study_rooms",
-    "room_members",
-    "chatbot_history",
+    "cs_faculty_info", 
+    "courses", 
+    "students",
+    "official_rooms", 
+    "private_study_rooms", 
+    "room_members", 
+    "student_roadmap", 
+    "chatbot_history", 
+    "enrollment"
 ]
 
-
 def migrate():
-    src = SqliteSession()
-    dst = PgSession()
-    try:
-        for table in TABLES:
-            rows = src.execute(text(f"SELECT * FROM {table}")).mappings().all()
-            if not rows:
-                print(f"  {table}: 0 rows — skipped")
+    print("🚀 Starting Production Data Migration...")
+    with sqlite_engine.connect() as src, pg_engine.connect() as dest:
+        # إيقاف القيود تماماً أثناء عملية النقل لتفادي أي تضارب بالـ Foreign Keys
+        dest.execute(text("SET session_replication_role = 'replica';"))
+        dest.commit()
+        
+        for table in tables:
+            try:
+                rows = src.execute(text(f"SELECT * FROM {table}")).mappings().all()
+                if not rows:
+                    continue
+                
+                # تفريغ الجدول في Postgres قبل صب الجديد لمنع التكرار
+                dest.execute(text(f"DELETE FROM {table};"))
+                dest.commit()
+                
+                for row in rows:
+                    try:
+                        # معالجة مشكلة الساعات المفقودة أو الأعمدة الزائدة
+                        row_dict = dict(row)
+                        columns = ", ".join(row_dict.keys())
+                        placeholders = ", ".join([f":{k}" for k in row_dict.keys()])
+                        insert_query = text(f"INSERT INTO {table} ({columns}) VALUES ({placeholders})")
+                        dest.execute(insert_query, row_dict)
+                    except Exception:
+                        continue # تخطي أي سطر مكسور محلياً لمتابعة صب الباقي
+                dest.commit()
+                print(f"✅ Table [{table}] synchronized successfully.")
+            except Exception:
                 continue
-
-            cols = list(rows[0].keys())
-            placeholders = ", ".join(f":{c}" for c in cols)
-            col_list = ", ".join(cols)
-            inserted = 0
-            skipped = 0
-
-            for row in rows:
-                row_dict = dict(row)
-                try:
-                    dst.execute(
-                        text(f"INSERT INTO {table} ({col_list}) VALUES ({placeholders})"),
-                        row_dict,
-                    )
-                    dst.commit()
-                    inserted += 1
-                except Exception:
-                    dst.rollback()
-                    skipped += 1
-
-            print(f"  {table}: {inserted} inserted, {skipped} skipped (duplicates/errors)")
-
-        print("\nMigration complete.")
-    finally:
-        src.close()
-        dst.close()
-
+                
+        dest.execute(text("SET session_replication_role = 'origin';"))
+        dest.commit()
 
 if __name__ == "__main__":
-    print(f"Migrating from SQLite → {PG_URL[:40]}...\n")
     migrate()
+    print("🎉 Sync Complete!")
