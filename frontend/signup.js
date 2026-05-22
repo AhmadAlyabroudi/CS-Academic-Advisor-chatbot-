@@ -159,7 +159,7 @@ async function submitSignup() {
     if (res.ok) {
       showSuccess(data.message + ' Redirecting to login…');
       btn.disabled = true;
-      setTimeout(() => { window.location.href = '/'; }, 2000);
+      setTimeout(() => { window.location.href = 'index.html'; }, 2000);
     } else {
       showError(data.detail || 'Sign-up failed. Please try again.');
       btn.disabled = false;
