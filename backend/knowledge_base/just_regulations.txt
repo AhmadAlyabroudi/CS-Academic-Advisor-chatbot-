@@ -1,0 +1,206 @@
+JUST Computer Science Department — Academic Regulations & Policies
+Jordan University of Science and Technology (JUST)
+Source: Official CS Department Handbook
+
+====================================================================
+GRADUATION REQUIREMENTS
+====================================================================
+
+Total Credit Hours Required: 132 credit hours
+A student must successfully complete all 132 credit hours to graduate with a Bachelor of Science in Computer Science from JUST.
+
+Credit Hour Breakdown:
+- University Compulsory Requirements: 16 credit hours
+- Faculty Compulsory Requirements: 30 credit hours
+- Department Compulsory Requirements: 74 credit hours
+- Department Elective Requirements: 9 credit hours
+- University Elective Requirements: 9 credit hours (3 courses × 3 credit hours each)
+- Total: 132 credit hours
+
+====================================================================
+ACADEMIC STANDING DEFINITIONS
+====================================================================
+
+First Year Standing: Student has completed fewer than 30 credit hours.
+Second Year Standing: Student has completed 30 to 59 credit hours.
+Third Year Standing: Student has completed 60 to 89 credit hours.
+Fourth Year Standing: Student has completed 90 or more credit hours.
+
+====================================================================
+GPA GRADING SYSTEM
+====================================================================
+
+JUST uses the following grade point scale (maximum GPA: 4.2):
+
+Grade A+  = 4.2 grade points (Excellent Plus)
+Grade A   = 4.0 grade points (Excellent)
+Grade A-  = 3.75 grade points (Very Good Plus)
+Grade B+  = 3.5 grade points (Very Good)
+Grade B   = 3.25 grade points (Good Plus)
+Grade B-  = 3.0 grade points (Good)
+Grade C+  = 2.75 grade points (Above Average)
+Grade C   = 2.5 grade points (Average)
+Grade C-  = 2.25 grade points (Below Average)
+Grade D+  = 2.0 grade points (Pass Plus)
+Grade D   = 1.75 grade points (Pass)
+Grade D-  = 1.5 grade points (Minimum Pass)
+Grade F   = 0.5 grade points (Fail)
+
+Cumulative GPA (CGPA) is calculated as: (Sum of Grade Points × Credit Hours) / (Total Credit Hours Attempted)
+Students must maintain a minimum CGPA of 2.0 to remain in good standing.
+
+====================================================================
+PREREQUISITE POLICY
+====================================================================
+
+Students must pass all listed prerequisites before registering for a course.
+A grade of D- (1.5) or above is considered a passing grade for prerequisite purposes.
+The prerequisite policy is strictly enforced by the registration system.
+
+Examples of prerequisite chains:
+- CS101 → SE112 → CS216 → SE230 → SE320
+- CS101 → CS211 → CS284 → CS375 (Operating Systems)
+- CS211 → CIS221 (Database Systems)
+- MATH241 + CS101 → CS282 (Theory of Computing)
+- CS284 + CPE252 → CS375 (Operating Systems)
+- CS375 + CS451 → CS475 (Distributed Systems)
+
+====================================================================
+PRACTICAL TRAINING (CS391) REQUIREMENTS
+====================================================================
+
+Practical Training (CS391) is a mandatory 3-credit-hour course.
+Eligibility: Students must have successfully completed at least 90 credit hours before registering.
+Duration: Minimum of 8 weeks of full-time work in a relevant industry organization.
+Deliverables: Student must submit a training report and receive a supervisor evaluation.
+Timing: Typically completed during the Summer of Year 3.
+
+====================================================================
+GRADUATION PROJECT REQUIREMENTS
+====================================================================
+
+The Graduation Project is split across two semesters:
+
+Graduation Project 1 (CS491) — Fall Semester, Year 4:
+- Prerequisites: Must have passed at least 90 credit hours.
+- Credits: 3 credit hours.
+- Requirements: Topic proposal, literature review, supervisor assignment, and initial implementation.
+- Team size: 2 to 4 students per project team.
+- Supervisor: Each team must have an assigned faculty supervisor.
+
+Graduation Project 2 (CS492) — Spring Semester, Year 4:
+- Prerequisites: Must have passed CS491 (Graduation Project 1).
+- Credits: 3 credit hours.
+- Requirements: Full system implementation, testing, final report, and public presentation/defense before a jury.
+- Jury evaluation: Final grade includes jury assessment during the defense presentation.
+
+====================================================================
+COURSE REGISTRATION POLICIES
+====================================================================
+
+Maximum Credit Hours per Semester:
+- Regular semester (Fall/Spring): Maximum of 18 credit hours.
+- Summer semester: Maximum of 9 credit hours.
+- Students on academic probation are limited to 12 credit hours per semester.
+
+Minimum Credit Hours per Semester:
+- Full-time students must register for at least 12 credit hours per regular semester.
+- Exception: Final semester students may register for fewer if only a small number of credits remain.
+
+Course Withdrawal Policy:
+- Students may withdraw from a course within the first two weeks without any academic penalty.
+- Late withdrawal (weeks 3–10) results in a "W" grade on the transcript (not counted in GPA).
+- Withdrawal after week 10 requires dean's approval and results in a "WF" (counted as F in GPA).
+
+====================================================================
+ACADEMIC PROBATION
+====================================================================
+
+A student is placed on Academic Probation if their CGPA falls below 2.0.
+Students on probation:
+- Are limited to 12 credit hours per semester.
+- Must meet with their academic advisor each semester.
+- Have 2 semesters to raise their CGPA above 2.0, or they face suspension.
+
+Academic suspension means the student cannot register for one full academic year.
+After suspension, students may return but remain on probation until CGPA exceeds 2.0.
+
+====================================================================
+ELECTIVE COURSES POLICY
+====================================================================
+
+University Elective Requirements: Students must complete 3 university elective courses (9 credit hours total) from the list approved by the university.
+
+Department Elective Requirements: Students must complete 3 department elective courses (9 credit hours total) from the CS department-approved elective list.
+These courses cover advanced topics such as:
+- Machine Learning and Deep Learning
+- Cybersecurity
+- Mobile Application Development
+- Cloud Computing
+- Natural Language Processing
+- Computer Vision
+- Advanced Database Systems
+
+====================================================================
+TRANSFER CREDIT POLICY
+====================================================================
+
+Students transferring from other universities or faculties may apply for course equivalency.
+Maximum transfer credits accepted: 60 credit hours.
+Transferred courses must be equivalent in content (minimum 70% similarity) and grade (minimum C or equivalent).
+Transfer requests must be submitted within the first semester of enrollment.
+
+====================================================================
+ACADEMIC ADVISOR ASSIGNMENT
+====================================================================
+
+Each student is assigned a faculty academic advisor from the CS department.
+The academic advisor helps students:
+- Plan their course registration each semester.
+- Navigate prerequisite requirements.
+- Address academic difficulties.
+- Approve course substitutions or overloads.
+Students must consult their academic advisor before registering for Graduation Project (CS491) and Practical Training (CS391).
+
+====================================================================
+FREQUENTLY ASKED QUESTIONS
+====================================================================
+
+Q: What is the minimum GPA to graduate?
+A: Students need a cumulative GPA of at least 2.0 to graduate. Some honors recognitions require higher GPAs.
+
+Q: Can I take courses from other departments?
+A: Yes, for university and department elective slots, students may take approved courses from other departments with advisor approval.
+
+Q: How long does it typically take to complete the CS degree?
+A: The standard completion time is 4 years (8 regular semesters + 1 summer for practical training).
+
+Q: What happens if I fail a compulsory course?
+A: You must retake the course. The new grade replaces the failing grade in the GPA calculation, but both attempts appear on the transcript.
+
+Q: Can I register for CS491 (GP1) without finishing all my courses?
+A: No. You must have completed at least 90 credit hours to register for CS491 or CS391.
+
+Q: What is the prerequisite for CS284 (Algorithms)?
+A: CS284 requires CS211 (Data Structures). To take CS211, you need to have passed both MATH241 and CS101.
+
+Q: What is the prerequisite for CS342 (Computer Networks)?
+A: CS342 requires CS284 (Analysis and Design of Algorithms).
+
+Q: What is the prerequisite for CS375 (Operating Systems)?
+A: CS375 requires both CS284 (Algorithms) and CPE252 (Computer Organization and Design).
+
+Q: What is the prerequisite for CS362 (Artificial Intelligence)?
+A: CS362 requires CS284 (Analysis and Design of Algorithms).
+
+Q: What are the prerequisites for CY261 (Cryptography)?
+A: CY261 requires SE112, SE113 (OOP + Lab), and MATH233 (Probability and Statistics).
+
+Q: How is my GPA calculated at JUST?
+A: CGPA = Sum of (Grade Points × Credit Hours for each course) divided by Total Credit Hours attempted. The maximum possible GPA at JUST is 4.2 (for A+).
+
+Q: Can I improve a grade by retaking a course?
+A: Yes. If you retake a course, the higher grade is used in GPA calculations, but all attempts are shown on the transcript.
+
+Q: What is the role of the practical training course?
+A: CS391 (Practical Training) provides real-world industry experience. It must be completed after earning 90 credit hours and typically takes place during the summer after Year 3. You must secure a position at an approved company and complete a minimum of 8 weeks of full-time work.

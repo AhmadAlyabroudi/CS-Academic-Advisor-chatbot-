@@ -7,3 +7,4 @@ class CsFacultyInfo(Base):
     name = Column(String, nullable=False)
     office_location = Column(String)
     office_hours = Column(String)
+    title = Column(String, nullable=True)

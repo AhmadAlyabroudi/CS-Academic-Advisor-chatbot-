@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="Platform Features – Discover the tools designed to help you succeed."/>
+  <title>Features | JUST Advisor</title>
+  <link rel="stylesheet" href="styles.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <style>
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 30px;
+      margin-top: 40px;
+    }
+    .feature-card {
+      background: var(--card-bg);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-lg);
+      padding: 40px 30px;
+      transition: all var(--transition);
+      text-align: center;
+      box-shadow: var(--shadow-card);
+    }
+    .feature-card:hover {
+      transform: translateY(-8px);
+      box-shadow: var(--shadow-hover);
+      border-color: var(--yellow);
+    }
+    .f-icon {
+      width: 70px;
+      height: 70px;
+      background: rgba(250, 204, 21, 0.1);
+      color: var(--yellow);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      margin: 0 auto 24px;
+    }
+    .feature-card h3 {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: var(--dark-text);
+    }
+    .feature-card p {
+      color: var(--gray-600);
+      font-size: 15px;
+      line-height: 1.7;
+    }
+    body.dark-mode .feature-card {
+      background: #161b22;
+      border-color: #30363d;
+    }
+    body.dark-mode .feature-card h3 {
+      color: #ffffff;
+    }
+    body.dark-mode .feature-card p {
+      color: #8b949e;
+    }
+  </style>
+</head>
+<body>
+<div class="page-with-sidebar">
+  <aside class="sidebar"></aside>
+  <div class="main-content">
+    <div class="top-bar"></div>
+    <div class="content-area">
+      <div class="section-badge"><i class="fas fa-star"></i> PLATFORM FEATURES</div>
+      <h1 class="section-title">Everything You Need to <span>Succeed</span></h1>
+      <p class="section-desc">Our platform provides a comprehensive suite of tools designed to help CS students manage their academic life with ease. Each feature is tailored for the JUST Computer Science curriculum.</p>
+
+      <div class="features-grid">
+        <div class="feature-card animate-in">
+          <div class="f-icon"><i class="fas fa-robot"></i></div>
+          <h3>AI Academic Advisor</h3>
+          <p>An intelligent chatbot trained on JUST CS department rules, prerequisites, and graduation requirements to answer any academic question instantly.</p>
+        </div>
+
+        <div class="feature-card animate-in">
+          <div class="f-icon"><i class="fas fa-map-marked-alt"></i></div>
+          <h3>Interactive Roadmap</h3>
+          <p>Visualize your entire 4-year plan. Track completed courses, view prerequisites, and see what's locked until you pass specific classes.</p>
+        </div>
+
+        <div class="feature-card animate-in">
+          <div class="f-icon"><i class="fas fa-calculator"></i></div>
+          <h3>GPA Calculator</h3>
+          <p>Calculate your semester and cumulative GPA. Use the GPA Projector to see exactly what grades you need to reach your target goals.</p>
+        </div>
+
+        <div class="feature-card animate-in">
+          <div class="f-icon"><i class="fas fa-users"></i></div>
+          <h3>Faculty Directory</h3>
+          <p>Quickly find contact information, office hours, and research interests for every faculty member in the Computer Science department.</p>
+        </div>
+
+        <div class="feature-card animate-in">
+          <div class="f-icon"><i class="fas fa-book-open"></i></div>
+          <h3>Course Catalog</h3>
+          <p>Browse every course offered by the department. View detailed descriptions, credit hours, and registration IDs.</p>
+        </div>
+
+        <div class="feature-card animate-in">
+          <div class="f-icon"><i class="fas fa-door-open"></i></div>
+          <h3>Study Rooms</h3>
+          <p>Find and join physical or virtual study rooms to collaborate with peers on specific subjects and graduation projects.</p>
+        </div>
+      </div>
+    </div>
+    <footer class="site-footer"></footer>
+  </div>
+</div>
+<script src="sidebar.js?v=6"></script>
+</body>
+</html>

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="Study Rooms – Find your study buddy at JUST."/>
+  <title>Study Rooms | JUST Advisor</title>
+  <link rel="stylesheet" href="styles.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+</head>
+<body>
+<div class="page-with-sidebar">
+  <aside class="sidebar"></aside>
+  <div class="main-content">
+    <div class="top-bar"></div>
+    <div class="content-area study-content">
+      <!-- Header -->
+      <div class="study-header animate-in">
+        <div class="live-badge"><span class="live-dot"></span> NOW LIVE</div>
+        <h1 class="section-title">Find Your <span>Study Buddy</span></h1>
+        <p class="section-desc" style="text-align:center;margin-left:auto;margin-right:auto">Connect with fellow university students, create private rooms, or join an existing room session. Success is better together!</p>
+      </div>
+      <!-- Search -->
+      <!-- Search -->
+      <!-- Search -->
+      <div class="study-search animate-in-delay">
+        <div class="search-bar">
+          <i class="fas fa-search"></i>
+          <input type="text" class="form-input" placeholder="Search by topic, course or keyword..." id="searchRooms" oninput="filterRooms()"/>
+          <select class="form-input" style="max-width:140px" id="filterType" onchange="filterRooms()">
+            <option value="All">All</option>
+            <option value="Official">Official</option>
+            <option value="Public">Public</option>
+            <option value="Private">Private</option>
+          </select>
+        </div>
+        <button class="btn-primary" onclick="openCreateModal()"><i class="fas fa-plus"></i> Create Room</button>
+      </div>
+      <!-- Active Sessions -->
+      <div class="sessions-header">
+        <h2>Active Sessions</h2>
+      </div>
+      <div class="sessions-grid" id="sessionsGrid">
+        <p style="text-align:center; padding: 2rem; color: #888;">Loading active sessions...</p>
+      </div>
+      <!-- Create Room CTA -->
+      <div class="create-room-cta animate-in">
+        <div class="cta-icon"><i class="fas fa-plus"></i></div>
+        <h3>Create New Room</h3>
+        <p>Can't find what you're looking for? Start your own study group.</p>
+        <button class="btn-primary" onclick="openCreateModal()">Get Started</button>
+      </div>
+    </div>
+    <footer class="site-footer"></footer>
+  </div>
+</div>
+
+<!-- Create Room Modal -->
+<div id="createRoomModal" class="modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+    <div class="modal-content" style="background:var(--bg-card); padding:2rem; border-radius:1rem; max-width:500px; width:90%; position:relative;">
+        <button onclick="closeCreateModal()" style="position:absolute; top:1rem; right:1rem; background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--text-muted);">&times;</button>
+        <h2 style="margin-bottom:1.5rem;">Create New Study Room</h2>
+        <form id="createRoomForm">
+            <div style="margin-bottom:1rem;">
+                <label style="display:block; margin-bottom:0.5rem; font-weight:600;">Room Name</label>
+                <input type="text" id="newRoomName" class="form-input" placeholder="e.g. Algorithms Review" required />
+            </div>
+            <div style="margin-bottom:1rem;">
+                <label style="display:block; margin-bottom:0.5rem; font-weight:600;">Room Type</label>
+                <select id="newRoomType" class="form-input">
+                    <option value="Public">Public (Anyone can join)</option>
+                    <option value="Private">Private (Password protected)</option>
+                </select>
+            </div>
+            <div id="passwordField" style="display:none; margin-bottom:1rem;">
+                <label style="display:block; margin-bottom:0.5rem; font-weight:600;">Password</label>
+                <input type="password" id="newRoomPassword" class="form-input" placeholder="Enter room password" />
+            </div>
+            <button type="submit" class="btn-primary" style="width:100%;">Create Room</button>
+        </form>
+    </div>
+</div>
+
+<!-- Socket.IO client for real-time lobby updates -->
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script src="sidebar.js?v=6"></script>
+<script>
+const studentId = localStorage.getItem("student_id") || "";
+let allRoomsData = [];
+
+function escapeHtml(str) {
+  const d = document.createElement('div');
+  d.textContent = String(str ?? '');
+  return d.innerHTML;
+}
+
+// ── Real-time lobby via Socket.IO ─────────────────────────────────────────────
+const socket = io(window.location.origin, { transports: ['websocket', 'polling'] });
+socket.on('connect', () => { socket.emit('join_lobby', {}); });
+socket.on('room-list-updated', () => { loadRooms(); });
+socket.on('disconnect', () => { socket.emit('leave_lobby', {}); });
+
+document.addEventListener("DOMContentLoaded", () => {
+    loadRooms();
+
+    document.getElementById("newRoomType").addEventListener("change", (e) => {
+        document.getElementById("passwordField").style.display = e.target.value === "Private" ? "block" : "none";
+    });
+
+    document.getElementById("createRoomForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const name = document.getElementById("newRoomName").value;
+        const type = document.getElementById("newRoomType").value;
+        const password = document.getElementById("newRoomPassword").value;
+
+        const formData = new FormData();
+        formData.append("name", name);
+        formData.append("type", type);
+        formData.append("creator_id", studentId);
+        if (password) formData.append("password", password);
+
+        try {
+            const response = await fetch("/rooms/create", {
+                method: "POST",
+                body: formData
+            });
+            const result = await response.json();
+            closeCreateModal();
+            // Notify lobby of the new room
+            socket.emit('room_created', {});
+            // Redirect creator into the new room
+            window.location.href = `room.html?id=${result.room_id}&type=Private`;
+        } catch (err) {
+            alert("Error creating room.");
+        }
+    });
+});
+
+async function loadRooms() {
+    const grid = document.getElementById("sessionsGrid");
+    try {
+        const response = await fetch(`/rooms/?student_id=${studentId}`);
+        allRoomsData = await response.json();
+        renderRooms(allRoomsData);
+    } catch (err) {
+        grid.innerHTML = "<p style='text-align:center; padding: 2rem; color: #ef4444;'>Error loading rooms.</p>";
+    }
+}
+
+function renderRooms(rooms) {
+    const grid = document.getElementById("sessionsGrid");
+    grid.innerHTML = "";
+    
+    if (rooms.length === 0) {
+        grid.innerHTML = "<p style='text-align:center; padding: 2rem; color: #888;'>No rooms found matching your criteria.</p>";
+        return;
+    }
+
+    rooms.forEach(room => {
+        const tagClass = room.type === "Official" ? "tag-blue" : "tag-purple";
+        const card = document.createElement("div");
+        card.className = "room-card animate-in";
+        const creatorLabel = room.type === 'Official' ? 'Official' : (room.creator_id === studentId ? 'You' : escapeHtml(room.creator_name || ''));
+        card.innerHTML = `
+            <div class="room-tags">
+                <span class="tag ${tagClass}">${escapeHtml(room.type.toUpperCase())}</span>
+                ${room.room_privacy === 'Private' ? '<span class="tag tag-red"><i class="fas fa-lock"></i> PRIVATE</span>' : ''}
+                <span class="room-live"><span class="live-dot-sm"></span> Active</span>
+            </div>
+            <h3>${escapeHtml(room.name)}</h3>
+            <p class="room-desc">${room.type === 'Official' ? 'Join the official room for ' + escapeHtml(room.course_code || '') : 'Join this student-led study session.'}</p>
+            <div class="room-footer" style="margin-top:auto; display:flex; align-items:center; justify-content:space-between;">
+                <span style="font-size:0.85rem; color:var(--text-muted);"><i class="fas fa-user-circle"></i> ${creatorLabel}</span>
+                <button class="btn-primary room-join" onclick="joinRoom(${room.id}, '${escapeHtml(room.type)}')">Join Room →</button>
+            </div>
+        `;
+        grid.appendChild(card);
+    });
+}
+
+function filterRooms() {
+    const searchTerm = document.getElementById("searchRooms").value.toLowerCase();
+    const filterType = document.getElementById("filterType").value;
+    
+    const filtered = allRoomsData.filter(room => {
+        const matchesSearch = room.name.toLowerCase().includes(searchTerm) || 
+                              (room.course_code && room.course_code.toLowerCase().includes(searchTerm));
+        
+        let matchesType = true;
+        if (filterType === "Official") {
+            matchesType = room.type === "Official";
+        } else if (filterType === "Public") {
+            matchesType = room.type === "Private" && room.room_privacy === "Public";
+        } else if (filterType === "Private") {
+            matchesType = room.type === "Private" && room.room_privacy === "Private";
+        }
+        
+        return matchesSearch && matchesType;
+    });
+    
+    renderRooms(filtered);
+}
+
+function openCreateModal() {
+    document.getElementById("createRoomModal").style.display = "flex";
+}
+
+function closeCreateModal() {
+    document.getElementById("createRoomModal").style.display = "none";
+}
+
+async function joinRoom(roomId, roomType) {
+    const formData = new FormData();
+    formData.append("room_id", roomId);
+    formData.append("room_type", roomType);
+    formData.append("student_id", studentId);
+
+    try {
+        const response = await fetch("/rooms/join", {
+            method: "POST",
+            body: formData
+        });
+        window.location.href = `room.html?id=${roomId}&type=${roomType}`;
+    } catch (err) {
+        alert("Error joining room.");
+    }
+}
+</script>
+</body>
+</html>

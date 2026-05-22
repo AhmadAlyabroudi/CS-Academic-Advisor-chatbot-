@@ -1,0 +1,327 @@
+JUST Computer Science Department — Official Course Curriculum
+Jordan University of Science and Technology (JUST)
+Faculty of IT & Computer Sciences — CS Department
+Source: Official CS Study Plan
+
+====================================================================
+YEAR 1 — FALL SEMESTER
+====================================================================
+
+Course: LG101 — Communication Skills in English
+Credits: 3 | Type: University Compulsory Requirement
+Prerequisites: LG 099
+Year: 1 | Semester: Fall
+Description: Develops academic English communication skills required for university-level study.
+
+Course: CS101 — Introduction to Programming
+Credits: 2 | Type: Faculty Compulsory Requirement
+Prerequisites: None
+Year: 1 | Semester: Fall
+Description: Fundamental programming concepts using a procedural language. Variables, loops, functions, arrays.
+
+Course: CS106 — Introduction to Programming Lab
+Credits: 1 | Type: Faculty Compulsory Requirement
+Prerequisites: CS101
+Year: 1 | Semester: Fall
+Description: Practical laboratory sessions reinforcing CS101 concepts.
+
+Course: SE103 — Introduction to Information Technology
+Credits: 3 | Type: Faculty Compulsory Requirement
+Prerequisites: None
+Year: 1 | Semester: Fall
+Description: Overview of IT systems, computer hardware, software, networks, and the role of IT in society.
+
+Course: MATH101 — Calculus I
+Credits: 3 | Type: Faculty Compulsory Requirement
+Prerequisites: None
+Year: 1 | Semester: Fall
+Description: Limits, derivatives, and basic integration. Foundational for algorithms and machine learning.
+
+Course: MS100 — Military Sciences
+Credits: 3 | Type: University Compulsory Requirement
+Prerequisites: None
+Year: 1 | Semester: Fall
+
+Course: PHY102 — General Physics (2)
+Credits: 3 | Type: Faculty Compulsory Requirement
+Prerequisites: None
+Year: 1 | Semester: Fall
+
+====================================================================
+YEAR 1 — SPRING SEMESTER
+====================================================================
+
+Course: SE112 — Introduction to Object-Oriented Programming
+Credits: 2 | Type: Faculty Compulsory Requirement
+Prerequisites: CS101
+Year: 1 | Semester: Spring
+Description: Object-oriented programming principles: classes, objects, inheritance, polymorphism.
+
+Course: SE113 — Introduction to Object-Oriented Programming Lab
+Credits: 1 | Type: Faculty Compulsory Requirement
+Prerequisites: SE112
+Year: 1 | Semester: Spring
+
+Course: MATH102 — Calculus 2
+Credits: 3 | Type: Faculty Compulsory Requirement
+Prerequisites: MATH101
+Year: 1 | Semester: Spring
+Description: Integration techniques, series, multivariable calculus fundamentals.
+
+Course: MATH241 — Discrete Mathematics
+Credits: 3 | Type: Faculty Compulsory Requirement
+Prerequisites: MATH101
+Year: 1 | Semester: Spring
+Description: Set theory, logic, proof techniques, graphs, combinatorics — essential for algorithm analysis.
+
+Course: HSS110 — Leader and Social Responsibility
+Credits: 3 | Type: University Compulsory Requirement
+Prerequisites: None
+Year: 1 | Semester: Spring
+
+Course: ARB102 — Communication Skills in Arabic
+Credits: 3 | Type: University Compulsory Requirement
+Prerequisites: None
+Year: 1 | Semester: Spring
+
+Course: PHY106 — General Physics Laboratory (2)
+Credits: 1 | Type: Faculty Compulsory Requirement
+Prerequisites: PHY102
+Year: 1 | Semester: Spring
+
+====================================================================
+YEAR 2 — FALL SEMESTER
+====================================================================
+
+Course: HSS119 — Entrepreneurship and Innovation
+Credits: 2 | Type: University Compulsory Requirement
+Prerequisites: None
+Year: 2 | Semester: Fall
+
+Course: CIS201 — Introduction to Web Design
+Credits: 1 | Type: Department Compulsory Requirement
+Prerequisites: CS101
+Year: 2 | Semester: Fall
+Description: HTML, CSS, and basic web design principles.
+
+Course: CS216 — Object-Oriented Software Modeling Lab
+Credits: 1 | Type: Department Compulsory Requirement
+Prerequisites: CS101
+Year: 2 | Semester: Fall
+
+Course: LG103 — Life Skills
+Credits: 2 | Type: University Compulsory Requirement
+Prerequisites: None
+Year: 2 | Semester: Fall
+
+Course: CS211 — Data Structures
+Credits: 3 | Type: Faculty Compulsory Requirement
+Prerequisites: MATH241 and CS101
+Year: 2 | Semester: Fall
+Description: Arrays, linked lists, stacks, queues, trees, graphs, hash tables, sorting algorithms. Core to all CS work.
+
+Course: MATH140 — Elements of Linear Algebra
+Credits: 3 | Type: Department Compulsory Requirement
+Prerequisites: MATH101
+Year: 2 | Semester: Fall
+Description: Vectors, matrices, linear transformations — used in computer graphics and machine learning.
+
+Course: CIS203 — Communication and Professional Ethics
+Credits: 2 | Type: Faculty Compulsory Requirement
+Prerequisites: None
+Year: 2 | Semester: Fall
+
+Course: UnivElec1 — University Elective Requisite
+Credits: 3 | Type: University Elective
+Prerequisites: None
+Year: 2 | Semester: Fall
+
+====================================================================
+YEAR 2 — SPRING SEMESTER
+====================================================================
+
+Course: CPE231 — Digital Logic Design
+Credits: 3 | Type: Department Compulsory Requirement
+Prerequisites: None
+Year: 2 | Semester: Spring
+Description: Boolean algebra, logic gates, combinational and sequential circuits.
+
+Course: CS282 — Theory of Computing
+Credits: 3 | Type: Department Compulsory Requirement
+Prerequisites: MATH241 and CS101
+Year: 2 | Semester: Spring
+Description: Automata theory, regular languages, context-free grammars, Turing machines, complexity.
+
+Course: CS284 — Analysis and Design of Algorithms
+Credits: 3 | Type: Department Compulsory Requirement
+Prerequisites: CS211
+Year: 2 | Semester: Spring
+Description: Algorithm complexity (Big-O), divide-and-conquer, dynamic programming, greedy algorithms, NP-completeness.
+
+Course: CIS221 — Fundamentals of Database Systems
+Credits: 3 | Type: Faculty Compulsory Requirement
+Prerequisites: CS211
+Year: 2 | Semester: Spring
+Description: Relational model, SQL, ER diagrams, normalization, transactions.
+
+Course: MATH233 — Probability and Statistics
+Credits: 3 | Type: Department Compulsory Requirement
+Prerequisites: MATH102
+Year: 2 | Semester: Spring
+Description: Probability theory, distributions, statistical inference — foundational for data science and AI.
+
+====================================================================
+YEAR 3 — FALL SEMESTER
+====================================================================
+
+Course: CPE232 — Digital Logic Design Lab
+Credits: 1 | Type: Department Compulsory Requirement
+Prerequisites: CPE231
+Year: 3 | Semester: Fall
+
+Course: CS318 — Human-Computer Interaction
+Credits: 3 | Type: Department Compulsory Requirement
+Prerequisites: CS211
+Year: 3 | Semester: Fall
+Description: UI/UX principles, usability, user research methods, accessibility.
+
+Course: CS342 — Computer Networks
+Credits: 3 | Type: Department Compulsory Requirement
+Prerequisites: CS284
+Year: 3 | Semester: Fall
+Description: OSI model, TCP/IP, routing, network security, socket programming.
+
+Course: CPE252 — Computer Organization and Design
+Credits: 3 | Type: Department Compulsory Requirement
+Prerequisites: CPE231
+Year: 3 | Semester: Fall
+Description: CPU architecture, instruction sets, memory hierarchy, pipelining.
+
+Course: SE230 — Fundamentals of Software Engineering
+Credits: 3 | Type: Department Compulsory Requirement
+Prerequisites: CS216
+Year: 3 | Semester: Fall
+Description: SDLC models, requirements engineering, software design, testing, project management.
+
+Course: UnivElec2 — University Elective Requisite
+Credits: 3 | Type: University Elective
+Prerequisites: None
+Year: 3 | Semester: Fall
+
+====================================================================
+YEAR 3 — SPRING SEMESTER
+====================================================================
+
+Course: CS362 — Artificial Intelligence
+Credits: 3 | Type: Department Compulsory Requirement
+Prerequisites: CS284
+Year: 3 | Semester: Spring
+Description: Search algorithms, knowledge representation, machine learning basics, neural networks introduction.
+
+Course: CS375 — Operating Systems
+Credits: 3 | Type: Department Compulsory Requirement
+Prerequisites: CS284 and CPE252
+Year: 3 | Semester: Spring
+Description: Process management, scheduling, memory management, file systems, concurrency.
+
+Course: CS385 — Fundamentals of Multimedia
+Credits: 3 | Type: Department Compulsory Requirement
+Prerequisites: MATH140 and CS211
+Year: 3 | Semester: Spring
+Description: Digital media, image processing, audio/video compression, multimedia systems.
+
+Course: SE320 — System Analysis and Design
+Credits: 3 | Type: Department Compulsory Requirement
+Prerequisites: CIS221 and SE230
+Year: 3 | Semester: Spring
+Description: Requirements analysis, system modeling, UML, database design, architectural patterns.
+
+Course: UnivElec3 — University Elective Requisite
+Credits: 3 | Type: University Elective
+Prerequisites: None
+Year: 3 | Semester: Spring
+
+====================================================================
+YEAR 3 — SUMMER
+====================================================================
+
+Course: CS391 — Practical Training
+Credits: 3 | Type: Department Compulsory Requirement
+Prerequisites: Must have passed 90 credit hours
+Year: 3 | Semester: Summer
+Description: Minimum 8-week industry internship. Students gain real-world software development experience. Report and evaluation by supervisor required.
+
+====================================================================
+YEAR 4 — FALL SEMESTER
+====================================================================
+
+Course: CS451 — Computer Architecture
+Credits: 3 | Type: Department Compulsory Requirement
+Prerequisites: CPE252 and CS375
+Year: 4 | Semester: Fall
+Description: Advanced processor design, parallelism, cache optimization, multicore architectures.
+
+Course: CS491 — Graduation Project 1
+Credits: 3 | Type: Department Compulsory Requirement
+Prerequisites: Must have passed 90 credit hours
+Year: 4 | Semester: Fall
+Description: First semester of the graduation project. Students select a topic, form a team, write the proposal, conduct literature review, and begin implementation.
+
+Course: CY261 — Cryptography
+Credits: 3 | Type: Department Compulsory Requirement
+Prerequisites: SE112, SE113, and MATH233
+Year: 4 | Semester: Fall
+Description: Symmetric and asymmetric encryption, hash functions, digital signatures, PKI.
+
+Course: BT401 — Computational Biology
+Credits: 2 | Type: Department Compulsory Requirement
+Prerequisites: CS101
+Year: 4 | Semester: Fall
+
+Course: BT401L — Computational Biology Lab
+Credits: 0 | Type: Department Compulsory Requirement
+Prerequisites: BT401
+Year: 4 | Semester: Fall
+
+Course: DeptElec1 — Department Elective Requisite
+Credits: 3 | Type: Department Elective
+Prerequisites: None
+Year: 4 | Semester: Fall
+
+Course: DeptElec2 — Department Elective Requisite
+Credits: 3 | Type: Department Elective
+Prerequisites: None
+Year: 4 | Semester: Fall
+
+====================================================================
+YEAR 4 — SPRING SEMESTER
+====================================================================
+
+Course: CS442 — Wireless Networks
+Credits: 3 | Type: Department Compulsory Requirement
+Prerequisites: CS342
+Year: 4 | Semester: Spring
+Description: Wi-Fi, cellular networks, mobile protocols, IoT communication.
+
+Course: CS475 — Distributed Computer Systems
+Credits: 3 | Type: Department Compulsory Requirement
+Prerequisites: CS375 and CS451
+Year: 4 | Semester: Spring
+Description: Distributed architectures, consistency, fault tolerance, cloud computing, microservices.
+
+Course: CS492 — Graduation Project 2
+Credits: 3 | Type: Department Compulsory Requirement
+Prerequisites: CS491
+Year: 4 | Semester: Spring
+Description: Continuation of CS491. Students complete the system implementation, conduct testing, and present the final project to a jury committee.
+
+Course: CIS341 — Web Applications Development
+Credits: 3 | Type: Department Compulsory Requirement
+Prerequisites: CIS201 and CS318
+Year: 4 | Semester: Spring
+Description: Full-stack web development: REST APIs, frameworks, databases, deployment, security.
+
+Course: DeptElec3 — Department Elective Requisite
+Credits: 3 | Type: Department Elective
+Prerequisites: None
+Year: 4 | Semester: Spring

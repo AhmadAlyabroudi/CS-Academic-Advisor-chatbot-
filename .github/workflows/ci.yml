@@ -1,0 +1,80 @@
+name: CI – Lint & Test
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend-checks:
+    name: Backend – Python checks
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: justadvisor
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_DB: justadvisor_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    defaults:
+      run:
+        working-directory: backend
+
+    env:
+      DATABASE_URL: postgresql://justadvisor:testpassword@localhost:5432/justadvisor_test
+      TURN_SERVER_IP: ""
+      ALLOWED_ORIGINS: "*"
+      # AI keys are intentionally absent in CI — app must start and import cleanly
+      # without them (graceful degradation to demo mode).
+      GEMINI_API_KEY: ""
+      PINECONE_API_KEY: ""
+      PINECONE_INDEX_NAME: just-cs-advisor
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Check Alembic migrations are consistent
+        run: |
+          alembic upgrade head
+          alembic check
+
+      - name: Verify app imports without error
+        run: python -c "from main import socket_app; print('Import OK')"
+
+      - name: Verify AI advisor graceful degradation (no API keys)
+        run: |
+          python -c "
+          from app.core.ai_advisor import get_advisor
+          advisor = get_advisor()
+          assert advisor is None, 'Expected None when keys are absent'
+          print('Graceful degradation OK — advisor is None without keys')
+          "
+
+      - name: Verify chatbot endpoint exists
+        run: |
+          python -c "
+          from app.api.chatbot_controller import router
+          routes = [r.path for r in router.routes]
+          assert '/ai' in routes, f'Expected /ai route, got: {routes}'
+          print('Chatbot AI endpoint registered OK')
+          "

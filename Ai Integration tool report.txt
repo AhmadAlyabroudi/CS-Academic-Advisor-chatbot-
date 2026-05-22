@@ -1,0 +1,95 @@
+Technical Documentation: Hybrid AI Academic Advisor
+Project: CS Academic Advisor Chatbot (JUST)
+System Architecture: Advanced RAG with General LLM Fallback
+Target User: Computer Science Students
+Created by: Ahmad Alyabroudi
+1. Executive Summary
+The CS Academic Advisor is a high-performance AI system designed to assist Computer Science students at Jordan University of Science and Technology (JUST). The system employs a Hybrid Intelligence model: it first attempts to retrieve precise answers from official university databases (Study Plans, Handbooks, FAQs) and, if no specific data is found, it utilizes the general reasoning capabilities of Gemini 1.5 Pro.
+
+2. System Architecture & Components
+A. Knowledge Retrieval: Pinecone (Vector Database)
+* Function: Stores the "Official Truth" of the department.
+* Content: All CS department study plans, course descriptions, and academic regulations are converted into Vector Embeddings.
+* Mechanism: When a student asks a question, the system performs a semantic search to find the most relevant paragraph from the university's official documents.
+B. Logic Orchestration: LangChain
+* Function: The "Smart Router" of the application.
+* Hybrid Logic: LangChain is programmed with a conditional workflow:
+1. Step 1: Search the Pinecone index for the user's query.
+2. Step 2: Evaluate the "Confidence Score" of the retrieved data.
+3. Step 3: If the score is high, pass the context to the LLM. If the score is low (meaning the answer isn't in the books), trigger the General AI Fallback.
+
+C. Core Intelligence: Gemini 1.5 Pro
+* Function: Multi-modal reasoning and natural language generation.
+* Role:
+o In-Context Mode: Summarizes official university rules into easy-to-read student advice.
+o General Mode: Acts as a standard AI assistant for general programming help, career advice, or general knowledge when the university database does not have the answer.
+D. Data Privacy & Integrity
+* Public Data Focus: The system exclusively processes public academic information (Study Plans, Handbooks, and Course Catalogs) from the Jordan University of Science and Technology.
+
+* No Sensitive Storage: To ensure student privacy, the vector database (Pinecone) does not store personal student records, only academic metadata and embeddings.
+
+
+
+
+
+
+
+
+
+
+
+
+
+3. The Hybrid Response Logic (Algorithm) 
+To ensure the student always receives an answer, the chatbot follows this decision tree:
+ScenarioInput ExampleAction TakenResultOfficial Data Found"What is the prerequisite for CS342?"System retrieves the CS Study Plan from Pinecone."Based on the JUST CS Plan, the prerequisite is..."Official Data Missing"How can I prepare for a Google interview?"Pinecone finds no match in the University Guide.Gemini generates a general career guide based on its training data.Ambiguous Query"What is C++?"System finds "C++" in course descriptions but also knows it generally.Combines course context with general programming explanation.
+4. Data Flow Architecture (The Hybrid Pipeline)
+The system follows a synchronized data flow designed to prioritize official university sources while maintaining a high-quality user experience through AI fallback.
+Phase 1: User Input & Vectorization
+* Input: The student submits a query (e.g., "What are the requirements for the Graduation Project?" or "How do I learn React?").
+* Embedding: LangChain sends the query to an embedding model (like text-embedding-3-small) to convert the text into a mathematical vector.
+
+Phase 2: Semantic Retrieval (The Search)
+* Querying Pinecone: The system compares the query vector against the stored vectors of the JUST CS Study Plan and FAQ Database.
+* Similarity Scoring: Pinecone returns the most relevant "chunks" of text along with a Similarity Score.
+Phase 3: The Decision Logic (Hybrid Routing)
+* Condition A (Match Found): If the Similarity Score is above a certain threshold (e.g., > 0.7), the system extracts the text from the university books.
+* Condition B (No Match): If the score is low (meaning the answer isn't in the official documents), the system flags the query as a "General AI Request."
+Phase 4: Contextual Augmentation & Generation
+* Prompt Construction: * If Condition A: The prompt sent to Gemini 1.5 Pro is: "Answer this question based ONLY on this text: [University Data]."
+o If Condition B: The prompt sent to Gemini 1.5 Pro is: "The answer is not in the official records. Answer as a general AI assistant."
+* LLM Processing: Gemini generates a natural, helpful response.
+Phase 5: Output Delivery
+* Response: The final answer is displayed to the student via the Chatbot UI, often with a tag indicating whether the source is "Official Department Data" or "General AI Knowledge."
+* Trust Indicators: The UI is designed to visually distinguish between sources. Responses grounded in Pinecone are marked with an "Official Source" badge, while general AI responses are tagged as "AI-Generated Insight" to maintain academic transparency.
+
+
+
+
+
+5. Key Technical Features for Jury Evaluation
+* Zero-Failure Response: By implementing the Gemini Fallback, the chatbot never says "I don't know." It remains helpful regardless of the query.
+* Semantic Understanding: Unlike basic keyword bots, this system understands the intent behind student questions using Vector Embeddings.
+* Scalability: New academic years or changed regulations can be uploaded to Pinecone without changing a single line of code.
+* Source Attribution: The system distinguishes between "Official University Advice" and "General AI Suggestions," maintaining high academic integrity.
+*  High-Speed Retrieval: By utilizing Vector Search via Pinecone, the system achieves sub-second latency in retrieving complex academic regulations, outperforming traditional keyword-based database queries. 
+* Optimized Token Usage: The hybrid routing logic minimizes costs and processing time by only sending relevant context to Gemini 1.5 Pro, rather than the entire document.
+
+
+
+6. Evaluation & Tool Rationale
+This section outlines why specific technologies were chosen over traditional methods and the trade-offs involved in this architecture.
+A. Why we chose this Architecture (Hybrid RAG)
+* Accuracy over Generality: Traditional LLMs (like standard ChatGPT) often "hallucinate" or provide outdated academic advice. By using RAG, we ensure the chatbot is grounded in the official JUST CS Study Plan.
+* Reliability: The 0.7 Similarity Threshold acts as a quality gate, ensuring the student only receives "Official Advice" when the data is 100% verified in our database.
+* Cost-Efficiency: Instead of sending massive textbooks to the AI every time, we only send the relevant "chunks" retrieved by Pinecone, significantly reducing API token costs.
+B. Pros & Cons Analysis
+FeaturePros (Advantages)Cons (Limitations)Pinecone (Vector DB)Sub-second retrieval speed and highly scalable for thousands of academic documents.Requires constant management of "Vector Embeddings" if the study plan changes frequently.Gemini 1.5 ProMassive Context Window allowing for complex reasoning across entire degree plans.Dependent on stable internet connectivity and API availability for real-time responses.LangChain (Logic)Provides a modular structure, making it easy to swap AI models or databases in the future.Increases the initial complexity of the code compared to using a simple, single API call.General FallbackEnsures a Zero-Failure user experience; the bot always has an answer.Might occasionally provide general advice that differs slightly from specific university "hidden" traditions.
+
+
+
+
+
+
+7. Conclusion
+By integrating Pinecone, LangChain, and Gemini 1.5 Pro, this project moves beyond a simple chatbot into a professional Decision Support System. It provides a reliable bridge between official university bureaucracy and the modern student’s need for instant, intelligent assistance.

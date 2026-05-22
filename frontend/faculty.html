@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="Faculty Directory – Meet the CS department faculty at JUST."/>
+  <title>Faculty Directory | JUST Advisor</title>
+  <link rel="stylesheet" href="styles.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+</head>
+<body>
+<div class="page-with-sidebar">
+  <aside class="sidebar"></aside>
+  <div class="main-content">
+    <div class="top-bar"></div>
+    <div class="content-area">
+      <div class="section-badge"><i class="fas fa-graduation-cap"></i> FACULTY DIRECTORY</div>
+      <h1 class="section-title">Meet Our<span>Faculty</span></h1>
+      <p class="section-desc">Connect with our distinguished Computer Science faculty members. Find their office hours, research interests, and contact information all in one place.</p>
+      <!-- Search -->
+      <div class="faculty-search animate-in">
+        <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="searchInput" class="form-input" placeholder="Search by name, email, or office..."/></div>
+        <select id="roleFilter" class="form-input" style="max-width:200px">
+          <option value="All">All Roles</option>
+          <option value="Professor">Professor</option>
+          <option value="Associate Professor">Associate Professor</option>
+          <option value="Assistant Professor">Assistant Professor</option>
+          <option value="Lecturer">Lecturer</option>
+          <option value="Chairman">Chairman</option>
+        </select>
+        <button id="filterBtn" class="btn-outline"><i class="fas fa-filter"></i> Filter</button>
+      </div>
+      <!-- Stats -->
+      <div class="stats-grid animate-in">
+        <div class="stat-card"><div><div class="stat-value" id="stat-total-faculty">0</div><div class="stat-label">Total Faculty</div></div><div class="stat-icon" style="background:rgba(59,130,246,.1);color:#3b82f6"><i class="fas fa-graduation-cap"></i></div></div>
+        <div class="stat-card"><div><div class="stat-value" id="stat-professors">0</div><div class="stat-label">Professors</div></div><div class="stat-icon" style="background:rgba(234,179,8,.1);color:#eab308"><i class="fas fa-star"></i></div></div>
+        <a href="courses.html" class="stat-card" style="text-decoration:none; color:inherit; display:flex; align-items:center; justify-content:space-between; cursor:pointer;">
+          <div><div class="stat-value" id="stat-courses">0</div><div class="stat-label">Courses Offered</div></div><div class="stat-icon" style="background:rgba(59,130,246,.1);color:#3b82f6"><i class="fas fa-book-open"></i></div>
+        </a>
+        <div class="stat-card"><div><div class="stat-value">1,500</div><div class="stat-label">Students Enrolled (approx)</div></div><div class="stat-icon" style="background:rgba(234,179,8,.1);color:#eab308"><i class="fas fa-star"></i></div></div>
+      </div>
+      <!-- Faculty Cards -->
+      <div class="faculty-grid" id="facultyGrid">
+        <!-- Faculty cards will be dynamically injected here via JS -->
+      </div>
+    </div>
+    <footer class="site-footer"></footer>
+  </div>
+</div>
+<script src="sidebar.js?v=6"></script>
+<script>
+  let allFaculty = [];
+
+  function renderFaculty(facultyList) {
+    const grid = document.getElementById('facultyGrid');
+    grid.innerHTML = '';
+    
+    if (facultyList.length === 0) {
+      grid.innerHTML = '<p style="color:var(--dark-text)">No faculty members found matching your search.</p>';
+      return;
+    }
+
+    facultyList.forEach(fac => {
+      let initials = "FC";
+      if (fac.name) {
+        const parts = fac.name.replace(/Dr\.?/i, "").trim().split(' ');
+        if (parts.length > 1) {
+          initials = (parts[0][0] + parts[1][0]).toUpperCase();
+        } else if (parts.length === 1 && parts[0].length > 0) {
+          initials = parts[0].substring(0, 2).toUpperCase();
+        }
+      }
+
+      const card = document.createElement('div');
+      card.className = 'faculty-card animate-in';
+      card.innerHTML = `
+        <div class="fc-header">
+          <div class="fc-avatar" style="background:#2d4a7a">${initials}</div>
+          <div>
+            <h3>${fac.name}</h3>
+            <p class="fc-title">${fac.title || 'Faculty Member'}</p>
+          </div>
+        </div>
+        <div class="fc-info" style="margin-top:20px;">
+          <i class="fas fa-envelope"></i><a href="mailto:${fac.email}">${fac.email}</a>
+        </div>
+        <div class="fc-info">
+          <i class="fas fa-map-marker-alt"></i>${fac.office_location || 'N/A'}
+        </div>
+        <div class="fc-info">
+          <i class="fas fa-clock"></i>${fac.office_hours || 'N/A'}
+        </div>
+        <a href="mailto:${fac.email}" class="btn-primary fc-btn">Contact Faculty →</a>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  function applyFilters() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const roleFilter = document.getElementById('roleFilter').value;
+
+    const filtered = allFaculty.filter(fac => {
+      // Check search term against name, email, office
+      const matchesSearch = !searchTerm || 
+                            (fac.name && fac.name.toLowerCase().includes(searchTerm)) ||
+                            (fac.email && fac.email.toLowerCase().includes(searchTerm)) ||
+                            (fac.office_location && fac.office_location.toLowerCase().includes(searchTerm));
+                            
+      // Check role
+      let matchesRole = true;
+      if (roleFilter !== 'All') {
+        const title = (fac.title || '').toLowerCase();
+        const selectedRole = roleFilter.toLowerCase();
+        matchesRole = title === selectedRole || title.includes(selectedRole);
+      }
+
+      return matchesSearch && matchesRole;
+    });
+
+    renderFaculty(filtered);
+  }
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    // Attach event listeners for dynamic searching
+    document.getElementById('searchInput').addEventListener('input', applyFilters);
+    document.getElementById('roleFilter').addEventListener('change', applyFilters);
+    document.getElementById('filterBtn').addEventListener('click', applyFilters);
+
+    try {
+      const response = await fetch('/faculty');
+      if (!response.ok) throw new Error('Failed to fetch faculty');
+      allFaculty = await response.json();
+      
+      const coursesResponse = await fetch('/courses/');
+      let coursesCount = 0;
+      if (coursesResponse.ok) {
+        const coursesList = await coursesResponse.json();
+        coursesCount = coursesList.length;
+      }
+      
+      // Update Stats
+      const totalFaculty = allFaculty.length;
+      const totalProfessors = allFaculty.filter(f => f.title && f.title.toLowerCase() === 'professor').length;
+      document.getElementById('stat-total-faculty').innerText = totalFaculty;
+      document.getElementById('stat-professors').innerText = totalProfessors;
+      document.getElementById('stat-courses').innerText = coursesCount;
+      
+      // Initial Render
+      renderFaculty(allFaculty);
+    } catch (e) {
+      console.error(e);
+      document.getElementById('facultyGrid').innerHTML = '<p style="color:var(--dark-text)">Error loading faculty directory.</p>';
+    }
+  });
+</script>
+</body>
+</html>

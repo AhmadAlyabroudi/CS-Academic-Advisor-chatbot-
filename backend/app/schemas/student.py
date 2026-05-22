@@ -1,5 +1,6 @@
 from pydantic import BaseModel, EmailStr
-from typing import Optional
+from typing import Optional, List
+
 
 class StudentBase(BaseModel):
     first_name: str
@@ -20,3 +21,27 @@ class Student(StudentBase):
 
     class Config:
         from_attributes = True
+
+class StudentUpdate(BaseModel):
+    first_name: str
+    last_name: str
+    phone_number: str
+
+class StudentPasswordUpdate(BaseModel):
+    current_password: str
+    new_password: str
+
+class CourseGradeEntry(BaseModel):
+    course_code: str
+    grade: str
+
+class StudentSignup(BaseModel):
+    first_name: str
+    last_name: str
+    email: str
+    university_id: str
+    phone_number: str
+    password: str
+    completed_courses: List[CourseGradeEntry] = []
+    current_enrolled: List[str] = []
+    remaining_courses: List[str] = []

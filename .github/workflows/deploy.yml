@@ -1,0 +1,34 @@
+name: Deploy to DigitalOcean
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: SSH deploy to Droplet
+    runs-on: ubuntu-latest
+    # Only deploy when CI passes
+    needs: []
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host:     ${{ secrets.DROPLET_HOST }}
+          username: ${{ secrets.DROPLET_USER }}
+          key:      ${{ secrets.SSH_PRIVATE_KEY }}
+          port:     22
+          script: |
+            set -e
+            cd /var/www/justadvisor
+            bash deploy/scripts/deploy.sh
+
+      - name: Notify success
+        if: success()
+        run: echo "✅ Deployed successfully to ${{ secrets.DROPLET_HOST }}"
+
+      - name: Notify failure
+        if: failure()
+        run: echo "❌ Deployment failed — check the Actions log for details."

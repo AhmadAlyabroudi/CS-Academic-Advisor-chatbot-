@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c ' *)",
+      "Bash(python3 -c ' *)",
+      "Bash(where python *)",
+      "Bash(where py *)",
+      "Read(//c/Users/ahmad/AppData/Local/Programs/**)",
+      "Bash(ls /c/Python*)",
+      "Bash(command -v python3.11)",
+      "Bash(command -v py)",
+      "Bash(/c/Python314/python.exe -c ' *)"
+    ]
+  }
+}

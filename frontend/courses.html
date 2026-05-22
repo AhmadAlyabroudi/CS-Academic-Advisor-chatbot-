@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="Courses Directory - JUST Advisor"/>
+  <title>Courses Offered | JUST Advisor</title>
+  <link rel="stylesheet" href="styles.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <style>
+    .courses-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 24px;
+      margin-top: 30px;
+    }
+    .course-card-new {
+      background: var(--card-bg);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      transition: all var(--transition);
+      display: flex;
+      flex-direction: column;
+    }
+    .course-card-new:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-hover);
+      border-color: var(--gray-300);
+    }
+    .c-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+    }
+    .c-code {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--yellow);
+      background: rgba(250, 204, 21, 0.1);
+      padding: 4px 10px;
+      border-radius: 6px;
+      letter-spacing: 0.5px;
+    }
+    .c-credits {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-500);
+      background: var(--gray-100);
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+    .c-name {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--dark-text);
+      margin-bottom: 12px;
+      line-height: 1.3;
+    }
+    .c-info {
+      font-size: 14px;
+      color: var(--gray-400);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .c-info i {
+      width: 16px;
+      text-align: center;
+      color: var(--gray-500);
+    }
+    .c-footer {
+      margin-top: auto;
+      padding-top: 16px;
+      border-top: 1px solid var(--gray-200);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .c-type {
+      font-size: 12px;
+      font-weight: 600;
+      color: #3b82f6;
+      background: rgba(59, 130, 246, 0.1);
+      padding: 4px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+    
+    /* Modal Styles */
+    .modal-overlay {
+      display: none;
+      transition: all 0.3s ease;
+    }
+    .modal-content {
+      transform: scale(0.95);
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .modal-overlay[style*="display: flex"] .modal-content {
+      transform: scale(1);
+    }
+    .detail-item {
+      padding: 12px;
+      background: var(--gray-50);
+      border-radius: 10px;
+      border: 1px solid var(--gray-100);
+    }
+    .courses-search:focus-within {
+      border-color: var(--yellow) !important;
+      box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.2);
+    }
+  </style>
+</head>
+<body>
+<div class="page-with-sidebar">
+  <aside class="sidebar"></aside>
+  <div class="main-content">
+    <div class="top-bar"></div>
+    <div class="content-area">
+      <div class="section-badge" style="background: rgba(234, 179, 8, 0.1); color: var(--yellow);"><i class="fas fa-book-open"></i> COURSES CATALOG</div>
+      <h1 class="section-title">Courses<span>Offered</span></h1>
+      <p class="section-desc">Browse the complete catalog of all computer science courses currently available in the database.</p>
+      <!-- Search Bar -->
+      <div class="courses-search animate-in" style="margin-bottom: 30px; display: flex; gap: 15px; background: var(--card-bg); padding: 10px; border-radius: var(--radius-lg); border: 1px solid var(--gray-200);">
+        <div style="flex: 1; display: flex; align-items: center; gap: 10px; padding: 0 15px;">
+          <i class="fas fa-search" style="color: var(--gray-400);"></i>
+          <input type="text" id="courseSearchInput" placeholder="Search by name, code, or registration ID..." style="width: 100%; border: none; outline: none; background: transparent; font-size: 15px; color: var(--dark-text);">
+        </div>
+      </div>
+      
+      <div class="courses-grid" id="coursesGrid">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+    <footer class="site-footer"></footer>
+  </div>
+</div>
+
+<!-- Course Details Modal -->
+<div id="courseModal" class="modal-overlay" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center; padding: 20px;">
+  <div class="modal-content animate-in" style="background: var(--card-bg); width: 100%; max-width: 600px; border-radius: var(--radius-xl); border: 1px solid var(--gray-200); box-shadow: var(--shadow-lg); overflow: hidden;">
+    <div class="modal-header" style="padding: 24px; border-bottom: 1px solid var(--gray-100); display: flex; justify-content: space-between; align-items: flex-start;">
+      <div>
+        <span id="modalCourseCode" class="c-code" style="margin-bottom: 8px; display: inline-block;"></span>
+        <h2 id="modalCourseName" class="section-title" style="font-size: 24px; margin: 0;"></h2>
+      </div>
+      <button onclick="closeModal()" style="background: none; border: none; font-size: 24px; color: var(--gray-400); cursor: pointer;"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body" style="padding: 24px;">
+      <div id="modalDetailsGrid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <!-- Details will be injected here -->
+      </div>
+      <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--gray-100);">
+        <h4 style="font-size: 14px; font-weight: 700; color: var(--gray-500); text-transform: uppercase; margin-bottom: 12px;">Course Prerequisite</h4>
+        <p id="modalPrereq" style="color: var(--dark-text); font-weight: 600;"></p>
+      </div>
+    </div>
+    <div class="modal-footer" style="padding: 20px 24px; background: var(--gray-50); display: flex; justify-content: flex-end;">
+      <button onclick="closeModal()" class="btn-primary" style="padding: 10px 24px;">Close</button>
+    </div>
+  </div>
+</div>
+<script src="sidebar.js?v=6"></script>
+<script>
+  let allCourses = [];
+
+  function renderCourses(courses) {
+    const grid = document.getElementById('coursesGrid');
+    grid.innerHTML = '';
+    
+    if (courses.length === 0) {
+      grid.innerHTML = '<p style="color:var(--gray-500); grid-column: 1/-1; text-align: center; padding: 40px;">No courses found matching your search.</p>';
+      return;
+    }
+
+    courses.forEach(course => {
+      const card = document.createElement('div');
+      card.className = 'course-card-new animate-in';
+      card.innerHTML = `
+        <div class="c-head">
+          <span class="c-code">${course.code}</span>
+          <span class="c-credits">${course.credit_hours} CR</span>
+        </div>
+        <h3 class="c-name">${course.name}</h3>
+        <div class="c-info">
+          <i class="fas fa-calendar-alt"></i> ${course.suggested_semester || 'Any Semester'}
+        </div>
+        <div class="c-info" style="margin-bottom: 20px;">
+          <i class="fas fa-link"></i> Prereq: <strong>${course.prerequisites || 'None'}</strong>
+        </div>
+        <div class="c-footer">
+          <span class="c-type">${course.plan_type || 'Elective'}</span>
+          <button onclick="openCourseDetails('${course.code}')" style="background: none; border: none; font-size: 13px; font-weight: 600; color: var(--dark-text); cursor: pointer; display: flex; align-items: center; gap: 5px;">View Details <i class="fas fa-arrow-right" style="font-size: 10px;"></i></button>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  function applyFilters() {
+    const searchTerm = document.getElementById('courseSearchInput').value.toLowerCase();
+    const filtered = allCourses.filter(c => 
+      c.name.toLowerCase().includes(searchTerm) || 
+      c.code.toLowerCase().includes(searchTerm) || 
+      (c.id_reg && c.id_reg.toLowerCase().includes(searchTerm))
+    );
+    renderCourses(filtered);
+  }
+
+  function openCourseDetails(code) {
+    const course = allCourses.find(c => c.code === code);
+    if (!course) return;
+
+    document.getElementById('modalCourseCode').innerText = course.code;
+    document.getElementById('modalCourseName').innerText = course.name;
+    document.getElementById('modalPrereq').innerText = course.prerequisites || 'None';
+
+    const detailsGrid = document.getElementById('modalDetailsGrid');
+    detailsGrid.innerHTML = `
+      <div class="detail-item">
+        <label style="display: block; font-size: 12px; color: var(--gray-400); margin-bottom: 4px;">Registration ID</label>
+        <span style="font-weight: 600; color: var(--dark-text);">${course.id_reg || 'N/A'}</span>
+      </div>
+      <div class="detail-item">
+        <label style="display: block; font-size: 12px; color: var(--gray-400); margin-bottom: 4px;">Credit Hours</label>
+        <span style="font-weight: 600; color: var(--dark-text);">${course.credit_hours} Hours</span>
+      </div>
+      <div class="detail-item">
+        <label style="display: block; font-size: 12px; color: var(--gray-400); margin-bottom: 4px;">Plan Type</label>
+        <span style="font-weight: 600; color: var(--dark-text);">${course.plan_type || 'N/A'}</span>
+      </div>
+      <div class="detail-item">
+        <label style="display: block; font-size: 12px; color: var(--gray-400); margin-bottom: 4px;">Suggested Year</label>
+        <span style="font-weight: 600; color: var(--dark-text);">Year ${course.suggested_year || 'N/A'}</span>
+      </div>
+      <div class="detail-item">
+        <label style="display: block; font-size: 12px; color: var(--gray-400); margin-bottom: 4px;">Suggested Semester</label>
+        <span style="font-weight: 600; color: var(--dark-text);">${course.suggested_semester || 'N/A'}</span>
+      </div>
+    `;
+
+    const modal = document.getElementById('courseModal');
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal() {
+    const modal = document.getElementById('courseModal');
+    modal.style.display = 'none';
+    document.body.style.overflow = 'auto';
+  }
+
+  // Close modal on outside click
+  window.onclick = function(event) {
+    const modal = document.getElementById('courseModal');
+    if (event.target == modal) {
+      closeModal();
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    const searchInput = document.getElementById('courseSearchInput');
+    searchInput.addEventListener('input', applyFilters);
+
+    try {
+      const response = await fetch('/courses/');
+      if (!response.ok) throw new Error('Failed to fetch courses');
+      allCourses = await response.json();
+      renderCourses(allCourses);
+    } catch (e) {
+      console.error(e);
+      document.getElementById('coursesGrid').innerHTML = '<p style="color:var(--dark-text)">Error loading courses.</p>';
+    }
+  });
+</script>
+</body>
+</html>

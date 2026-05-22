@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="Profile Management – Manage your personal information and academic details."/>
+  <title>Profile Management | JUST Advisor</title>
+  <link rel="stylesheet" href="styles.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+</head>
+<body>
+<div class="page-with-sidebar">
+  <aside class="sidebar"></aside>
+  <div class="main-content">
+    <div class="top-bar"></div>
+    <div class="content-area">
+      <h1 class="section-title" style="font-size:32px">Profile Management</h1>
+      <p class="section-desc">Manage your personal information, academic details, and account preferences.</p>
+
+      <div class="profile-layout animate-in">
+        <!-- Left Panel -->
+        <div class="profile-sidebar">
+          <div class="ps-avatar"><i class="fas fa-user" style="font-size:40px;color:var(--gray-400)"></i><button class="avatar-edit"><i class="fas fa-pen"></i></button></div>
+          <h2 class="ps-name" id="psName">Student Name</h2>
+          <p class="ps-id" id="psId">ID: Loading...</p>
+          <span class="tag tag-green" style="margin:10px 0">+ Active Student</span>
+          <nav class="ps-nav">
+            <a class="ps-nav-item active" data-tab="personal"><i class="fas fa-user"></i> Personal Information</a>
+            <a class="ps-nav-item" data-tab="academic"><i class="fas fa-graduation-cap"></i> Academic Details</a>
+            <a class="ps-nav-item" data-tab="preferences"><i class="fas fa-gear"></i> Preferences & Privacy</a>
+            <a class="ps-nav-item" data-tab="security"><i class="fas fa-lock"></i> Security</a>
+          </nav>
+          <a href="#" class="ps-signout" onclick="localStorage.removeItem('student_id'); window.location.href='index.html';"><i class="fas fa-arrow-right-from-bracket"></i> Sign Out</a>
+        </div>
+        <!-- Right Panel -->
+        <div class="profile-content">
+          <!-- Personal Info Tab -->
+          <div class="tab-content active" id="tab-personal">
+            <div class="tab-header"><h2><i class="fas fa-user" style="color:var(--dark-text);margin-right:8px"></i>Personal Information</h2><button class="clear-link" id="editProfileBtn">Edit Info</button></div>
+            <p class="tab-sub">Update your personal details and contact info.</p>
+            <div class="form-row">
+              <div class="form-col"><label class="form-label">FIRST NAME</label><div class="form-input-icon"><i class="fas fa-user"></i><input type="text" id="piFirstName" class="form-input" value="" disabled/></div></div>
+              <div class="form-col"><label class="form-label">LAST NAME</label><div class="form-input-icon"><i class="fas fa-user"></i><input type="text" id="piLastName" class="form-input" value="" disabled/></div></div>
+            </div>
+            <div class="form-row">
+              <div class="form-col"><label class="form-label">UNIVERSITY EMAIL</label><div class="form-input-icon"><i class="fas fa-envelope"></i><input type="email" id="piEmail" class="form-input" value="" readonly/></div><span class="verified-badge"><i class="fas fa-check-circle"></i> Verified</span></div>
+              <div class="form-col"><label class="form-label">PHONE NUMBER</label><div class="form-input-icon"><i class="fas fa-phone"></i><input type="text" id="piPhone" class="form-input" value="" disabled/></div></div>
+            </div>
+            
+            <!-- Actions -->
+            <div class="profile-actions" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--gray-200);">
+              <span id="saveStatusMsg" style="color: var(--primary); font-weight: 600; font-size: 14px; margin-right: auto; display: none;"><i class="fas fa-check-circle"></i> Personal information updated</span>
+              <button class="btn-outline" id="cancelEditBtn" disabled style="opacity:0.5; cursor:not-allowed;">Cancel</button><button class="btn-primary" id="saveProfileBtn" disabled style="opacity:0.5; cursor:not-allowed;"><i class="fas fa-save"></i> Save Changes</button>
+            </div>
+          </div>
+          <!-- Academic Details Tab -->
+          <div class="tab-content" id="tab-academic">
+            <div class="tab-header"><h2><i class="fas fa-graduation-cap" style="color:var(--yellow);margin-right:8px"></i>Academic Details</h2></div>
+            <p class="tab-sub">Synced from your Course Roadmap progress.</p>
+            <div class="acad-grid">
+              <div class="acad-item"><label class="form-label">MAJOR</label><p class="acad-value" id="adMajor">Loading...</p></div>
+              <div class="acad-item"><label class="form-label">FACULTY</label><p class="acad-value">IT & Computer Sciences</p></div>
+              <div class="acad-item"><label class="form-label">ACADEMIC STANDING</label><p class="acad-value" id="adStanding">Loading...</p></div>
+              <div class="acad-item"><label class="form-label">CURRENT GPA</label><p class="acad-value"><span style="color:var(--yellow);font-weight:700" id="adGpa">-</span> /4.20</p></div>
+              <div class="acad-item"><label class="form-label">COMPLETED CREDITS</label><p class="acad-value"><span style="color:#22c55e;font-weight:700;font-size:20px" id="adCompletedCredits">-</span> <span style="color:var(--gray-500);font-size:13px">credits</span></p></div>
+              <div class="acad-item"><label class="form-label">REMAINING CREDITS</label><p class="acad-value"><span style="color:#3b82f6;font-weight:700;font-size:20px" id="adRemainingCourses">-</span> <span style="color:var(--gray-500);font-size:13px">credits</span></p></div>
+              <div class="acad-item"><label class="form-label">ADVISOR</label><p class="acad-value" id="adAdvisor">Loading...</p></div>
+              <div class="acad-item"><label class="form-label">&nbsp;</label><a href="#" id="contactAdvisorBtn" class="btn-outline" style="padding:8px 16px;font-size:12px;text-decoration:none;display:inline-block;">Contact</a></div>
+            </div>
+          </div>
+          <!-- Preferences Tab -->
+          <div class="tab-content" id="tab-preferences">
+            <div class="tab-header"><h2><i class="fas fa-gear" style="margin-right:8px"></i>Preferences & Privacy</h2></div>
+            <p class="tab-sub">Customize your experience.</p>
+            <div class="pref-item"><div><strong>Email Notifications</strong><p>Receive email alerts for study room updates and announcements</p></div><label class="toggle"><input type="checkbox" checked/><span class="toggle-slider"></span></label></div>
+            <div class="pref-item"><div><strong>Show Profile to Others</strong><p>Allow other students to see your profile in study rooms</p></div><label class="toggle"><input type="checkbox" checked/><span class="toggle-slider"></span></label></div>
+            <div class="pref-item"><div><strong>Dark Mode</strong><p>Use dark theme across the platform</p></div><label class="toggle"><input type="checkbox" id="darkModeToggle"/><span class="toggle-slider"></span></label></div>
+          </div>
+          <!-- Security Tab -->
+          <div class="tab-content" id="tab-security">
+            <div class="tab-header"><h2><i class="fas fa-lock" style="margin-right:8px"></i>Security</h2></div>
+            <p class="tab-sub">Manage your account security settings.</p>
+            <div class="form-row"><div class="form-col"><label class="form-label">CURRENT PASSWORD</label><input type="password" id="currentPassword" class="form-input" placeholder="Enter current password"/></div></div>
+            <div class="form-row"><div class="form-col"><label class="form-label">NEW PASSWORD</label><input type="password" id="newPassword" class="form-input" placeholder="Enter new password"/></div><div class="form-col"><label class="form-label">CONFIRM NEW PASSWORD</label><input type="password" id="confirmPassword" class="form-input" placeholder="Confirm new password"/></div></div>
+            
+            <!-- Security Actions -->
+            <div class="profile-actions" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--gray-200);">
+              <span id="saveSecurityMsg" style="color: var(--primary); font-weight: 600; font-size: 14px; margin-right: auto; display: none;"><i class="fas fa-check-circle"></i> Password updated</span>
+              <span id="securityErrorMsg" style="color: red; font-weight: 600; font-size: 14px; margin-right: auto; display: none;"><i class="fas fa-exclamation-circle"></i> <span id="securityErrorText">Error</span></span>
+              <button class="btn-outline" id="cancelSecurityBtn">Cancel</button><button class="btn-primary" id="saveSecurityBtn"><i class="fas fa-save"></i> Save Changes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="site-footer"></footer>
+  </div>
+</div>
+<script src="sidebar.js?v=6"></script>
+<script>
+  // Tab switching
+  document.querySelectorAll('.ps-nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+      document.querySelectorAll('.ps-nav-item').forEach(i => i.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      item.classList.add('active');
+      document.getElementById('tab-' + item.dataset.tab)?.classList.add('active');
+    });
+  });
+
+  const darkModeToggle = document.getElementById('darkModeToggle');
+  if (darkModeToggle) {
+    darkModeToggle.checked = localStorage.getItem('theme') === 'dark';
+    darkModeToggle.addEventListener('change', (e) => {
+      if (e.target.checked) {
+        document.body.classList.add('dark-mode');
+        localStorage.setItem('theme', 'dark');
+      } else {
+        document.body.classList.remove('dark-mode');
+        localStorage.setItem('theme', 'light');
+      }
+    });
+  }
+
+  // Load profile data
+  window.addEventListener('DOMContentLoaded', async () => {
+    const studentId = localStorage.getItem('student_id');
+    if (!studentId) return;
+
+    try {
+      const res = await fetch(`/student/${studentId}`);
+      if (res.ok) {
+        const student = await res.json();
+        
+        // Populate sidebar
+        document.getElementById('psName').textContent = `${student.first_name} ${student.last_name}`;
+        document.getElementById('psId').textContent = `ID: ${student.university_id}`;
+        
+        // Populate Personal Info
+        document.getElementById('piFirstName').value = student.first_name || '';
+        document.getElementById('piLastName').value = student.last_name || '';
+        document.getElementById('piEmail').value = student.email || '';
+        document.getElementById('piPhone').value = student.phone_number || '';
+        
+        // Populate Academic Details
+        document.getElementById('adMajor').textContent = student.major || 'Computer Science';
+        document.getElementById('adStanding').textContent = student.academic_standing || 'Unknown';
+        document.getElementById('adGpa').textContent = student.current_gpa || '-';
+        document.getElementById('adCompletedCredits').textContent = student.completed_credits || '0';
+        document.getElementById('adRemainingCourses').textContent = student.remaining_credits || '132';
+        
+        if (student.advisor) {
+          document.getElementById('adAdvisor').textContent = student.advisor.name;
+          const contactBtn = document.getElementById('contactAdvisorBtn');
+          if (contactBtn) {
+            contactBtn.href = `mailto:${student.advisor.email}`;
+            contactBtn.title = `Email ${student.advisor.name}`;
+          }
+        } else {
+          document.getElementById('adAdvisor').textContent = 'Not Assigned';
+        }
+      } else {
+        document.getElementById('psName').textContent = "Guest User";
+        document.getElementById('psId').textContent = "Please Login";
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  });
+
+  const piFirstName = document.getElementById('piFirstName');
+  const piLastName = document.getElementById('piLastName');
+  const piPhone = document.getElementById('piPhone');
+  const cancelEditBtn = document.getElementById('cancelEditBtn');
+  const saveProfileBtn = document.getElementById('saveProfileBtn');
+
+  function setEditMode(isEditing) {
+    piFirstName.disabled = !isEditing;
+    piLastName.disabled = !isEditing;
+    piPhone.disabled = !isEditing;
+    
+    if (cancelEditBtn) {
+      cancelEditBtn.disabled = !isEditing;
+      cancelEditBtn.style.opacity = isEditing ? '1' : '0.5';
+      cancelEditBtn.style.cursor = isEditing ? 'pointer' : 'not-allowed';
+    }
+    if (saveProfileBtn) {
+      saveProfileBtn.disabled = !isEditing;
+      saveProfileBtn.style.opacity = isEditing ? '1' : '0.5';
+      saveProfileBtn.style.cursor = isEditing ? 'pointer' : 'not-allowed';
+    }
+  }
+
+  document.getElementById('editProfileBtn')?.addEventListener('click', () => {
+    setEditMode(true);
+    piFirstName.focus();
+  });
+
+  cancelEditBtn?.addEventListener('click', () => {
+    setEditMode(false);
+    // Reload the page to easily discard any unsaved text changes
+    window.location.reload(); 
+  });
+
+  document.getElementById('saveProfileBtn')?.addEventListener('click', async () => {
+    const studentId = localStorage.getItem('student_id');
+    if (!studentId) return;
+
+    try {
+      const res = await fetch(`/student/${studentId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          first_name: piFirstName.value,
+          last_name: piLastName.value,
+          phone_number: piPhone.value 
+        })
+      });
+      if (res.ok) {
+        alert("Personal information updated");
+        const msg = document.getElementById('saveStatusMsg');
+        if (msg) {
+          msg.style.display = 'inline-block';
+          setTimeout(() => msg.style.display = 'none', 3000);
+        }
+        setEditMode(false);
+      } else {
+        alert("Error updating profile.");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Error updating profile.");
+    }
+  });
+
+  document.getElementById('cancelSecurityBtn')?.addEventListener('click', () => {
+    document.getElementById('currentPassword').value = '';
+    document.getElementById('newPassword').value = '';
+    document.getElementById('confirmPassword').value = '';
+  });
+
+  document.getElementById('saveSecurityBtn')?.addEventListener('click', async () => {
+    const studentId = localStorage.getItem('student_id');
+    if (!studentId) return;
+
+    const curr = document.getElementById('currentPassword').value;
+    const newPass = document.getElementById('newPassword').value;
+    const confPass = document.getElementById('confirmPassword').value;
+    
+    const errorMsg = document.getElementById('securityErrorMsg');
+    const errorText = document.getElementById('securityErrorText');
+    const successMsg = document.getElementById('saveSecurityMsg');
+    
+    if (errorMsg) errorMsg.style.display = 'none';
+    if (successMsg) successMsg.style.display = 'none';
+
+    if (!curr || !newPass || !confPass) {
+      if (errorMsg) { errorMsg.style.display = 'inline-block'; errorText.textContent = "Please fill in all fields."; }
+      return;
+    }
+    if (newPass !== confPass) {
+      if (errorMsg) { errorMsg.style.display = 'inline-block'; errorText.textContent = "New passwords do not match!"; }
+      return;
+    }
+
+    try {
+      const res = await fetch(`/student/${studentId}/password`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          current_password: curr,
+          new_password: newPass
+        })
+      });
+      
+      if (res.ok) {
+        if (successMsg) {
+          successMsg.style.display = 'inline-block';
+          setTimeout(() => successMsg.style.display = 'none', 3000);
+        }
+        document.getElementById('currentPassword').value = '';
+        document.getElementById('newPassword').value = '';
+        document.getElementById('confirmPassword').value = '';
+      } else {
+        const errorData = await res.json();
+        if (errorMsg) { errorMsg.style.display = 'inline-block'; errorText.textContent = errorData.detail || "Error updating password."; }
+      }
+    } catch (e) {
+      console.error(e);
+      if (errorMsg) { errorMsg.style.display = 'inline-block'; errorText.textContent = "Connection error."; }
+    }
+  });
+</script>
+</body>
+</html>

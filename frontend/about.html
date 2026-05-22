@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="About JUST Advisor – Learn about our mission and the team behind the platform."/>
+  <title>About Us | JUST Advisor</title>
+  <link rel="stylesheet" href="styles.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <style>
+    .about-hero {
+      background: linear-gradient(135deg, #0b1120 0%, #1a2a44 100%);
+      padding: 100px 40px;
+      text-align: center;
+      border-radius: var(--radius-xl);
+      margin-bottom: 40px;
+      position: relative;
+      overflow: hidden;
+    }
+    .about-hero::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: radial-gradient(circle at 50% 50%, rgba(233, 233, 36, 0.1) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .about-hero h1 {
+      color: white;
+      font-size: 52px;
+      font-weight: 800;
+      margin-bottom: 24px;
+      line-height: 1.1;
+    }
+    .about-hero p {
+      color: #e5e7eb;
+      font-size: 20px;
+      max-width: 700px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+    .about-card {
+      background: var(--card-bg);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-lg);
+      padding: 50px;
+      margin-bottom: 30px;
+      box-shadow: var(--shadow-card);
+    }
+    .about-card h2.section-title {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--dark-text);
+      margin-bottom: 20px;
+    }
+    .about-card h2.section-title span {
+      color: var(--yellow);
+    }
+    .about-card p.section-desc {
+      font-size: 18px;
+      color: var(--gray-700);
+      line-height: 1.7;
+      margin-bottom: 40px;
+    }
+    .mission-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 50px;
+      margin-top: 20px;
+    }
+    .mission-item h3 {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--dark-text);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .mission-item p {
+      font-size: 16px;
+      color: var(--gray-600);
+      line-height: 1.8;
+    }
+    body.dark-mode .about-card {
+      background: #161b22;
+      border-color: #30363d;
+    }
+    body.dark-mode .about-card h2.section-title,
+    body.dark-mode .mission-item h3 {
+      color: #ffffff;
+    }
+    body.dark-mode .about-card p.section-desc {
+      color: #c9d1d9;
+    }
+    body.dark-mode .mission-item p {
+      color: #8b949e;
+    }
+  </style>
+</head>
+<body>
+<div class="page-with-sidebar">
+  <aside class="sidebar"></aside>
+  <div class="main-content">
+    <div class="top-bar"></div>
+    <div class="content-area">
+      <div class="about-hero animate-in">
+        <h1>Empowering Students with <span style="color:var(--yellow)">AI Guidance</span></h1>
+        <p>JUST Advisor is a state-of-the-art academic platform designed specifically for Computer Science students at Jordan University of Science and Technology.</p>
+      </div>
+
+      <div class="about-card animate-in">
+        <h2 class="section-title">Our <span>Mission</span></h2>
+        <p class="section-desc">To simplify the academic journey by providing intelligent tools that help students plan their degree, track their progress, and interact with the department more efficiently.</p>
+        
+        <div class="mission-grid">
+          <div class="mission-item">
+            <h3><i class="fas fa-lightbulb" style="color:var(--yellow)"></i> Intelligent Planning</h3>
+            <p>Using data-driven insights to help you navigate the complex CS curriculum and stay on track for graduation. We visualize your progress so you always know where you stand.</p>
+          </div>
+          <div class="mission-item">
+            <h3><i class="fas fa-shield-halved" style="color:#22c55e"></i> Student Success</h3>
+            <p>Our goal is to ensure every student has the resources they need to excel academically and professionally. We bridge the gap between students and faculty.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="about-card animate-in">
+        <h2 class="section-title">Why <span>JUST Advisor?</span></h2>
+        <p class="section-desc" style="margin-bottom: 0;">
+          The Computer Science department at JUST is one of the most prestigious in the region. However, managing course prerequisites, tracking GPA, and finding faculty information can be overwhelming. <br><br>
+          JUST Advisor integrates all these needs into a single, unified dashboard powered by modern AI technology. Our platform is built by students, for students, with the goal of making academic life smoother and more productive.
+        </p>
+      </div>
+    </div>
+    <footer class="site-footer"></footer>
+  </div>
+</div>
+<script src="sidebar.js?v=6"></script>
+</body>
+</html>
