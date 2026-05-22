@@ -7,7 +7,7 @@ Pipeline (matches the flowchart in Ai integration tool flowchart.png):
   3. Threshold gate        →  score ≥ 0.7 → Official Mode, else → General Mode
   4. Prompt construction   →  Official: grounded in retrieved university chunks
                               General:  free-form AI assistant fallback
-  5. LLM generation        →  Gemini 1.5 Pro (via LangChain)
+  5. LLM generation        →  Gemini 2.0 Flash (via LangChain)
   6. Tagged response       →  source = "official" | "general"
 """
 
@@ -65,8 +65,8 @@ class HybridAdvisorChain:
         from pinecone._client import Pinecone  # v9 lazy-exports via __init__.__getattr__
         from langchain_core.messages import HumanMessage
 
-        gemini_key = os.getenv("GEMINI_API_KEY", "")
-        pinecone_key = os.getenv("PINECONE_API_KEY", "")
+        gemini_key = os.getenv("GEMINI_API_KEY", "AIzaSyA6xqRb1IwbCSfIRAwiRaKhxHFtpe0A0Wc")
+        pinecone_key = os.getenv("PINECONE_API_KEY", "pcsk_5ZhAg2_PzMVddVpLTJaRTvVkXCfa3Q8rafiUi6Lr4zHRwwrSuz3S191zBVKwJZDWuoLtkw")
         index_name = os.getenv("PINECONE_INDEX_NAME", "just-cs-advisor")
 
         if not gemini_key:
@@ -74,12 +74,11 @@ class HybridAdvisorChain:
         if not pinecone_key:
             raise RuntimeError("PINECONE_API_KEY environment variable is not set.")
 
-        # ── LangChain LLM (Gemini 1.5 Pro) ─────────────────────────────────────
+        # ── LangChain LLM (Gemini 2.0 Flash) ────────────────────────────────────
         self.llm = ChatGoogleGenerativeAI(
-            model="gemini-1.5-pro",
+            model="gemini-2.0-flash",
             google_api_key=gemini_key,
             temperature=0.3,
-            convert_system_message_to_human=True,
         )
 
         # ── Embedding model (Google gemini-embedding-001, 768-dim truncated) ───
