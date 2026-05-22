@@ -1,19 +1,18 @@
 [Unit]
-Description=JUST Advisor – FastAPI + Socket.IO
+Description=JUST Advisor – FastAPI + Socket.IO Backend
 After=network.target postgresql.service
 Wants=postgresql.service
 
 [Service]
-Type=notify
-User=www-data
-Group=www-data
+Type=simple
+User=root
+Group=root
 WorkingDirectory=/var/www/justadvisor/backend
+Environment=PYTHONPATH=/var/www/justadvisor/backend
 EnvironmentFile=/var/www/justadvisor/backend/.env
-ExecStart=/var/www/justadvisor/venv/bin/gunicorn \
-    -c /var/www/justadvisor/deploy/gunicorn.conf.py \
-    main:socket_app
+ExecStart=/var/www/justadvisor/backend/venv/bin/gunicorn -c /var/www/justadvisor/deploy/gunicorn.conf.py main:app
 ExecReload=/bin/kill -s HUP $MAINPID
-Restart=on-failure
+Restart=always
 RestartSec=5s
 StandardOutput=journal
 StandardError=journal
