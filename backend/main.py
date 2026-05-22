@@ -308,8 +308,7 @@ def seed():
 
         # --- Seed Chatbot History ---
         chat_data = [
-            ChatbotHistory(student_id="160309", message_content="Hello, how can I register for CS101?", sender_type="user"),
-            ChatbotHistory(student_id="160309", message_content="You can register through the portal.", sender_type="bot")
+            #ChatbotHistory(student_id="160309", message_content="Hello, how can I register for CS101?", sender_type="user"),
         ]
         for chat in chat_data:
             existing = db.query(ChatbotHistory).filter_by(student_id=chat.student_id, message_content=chat.message_content).first()
