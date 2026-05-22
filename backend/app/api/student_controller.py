@@ -167,18 +167,18 @@ def update_student_password(student_id: str, password_update: StudentPasswordUpd
 
 @router.post("/signup", tags=["Authentication"])
 def signup(signup_data: StudentSignup, db: Session = Depends(get_db)):
-    # 1. Verify email + university_id in verification table
-    verification = db.query(StudentVerification).filter(
-        StudentVerification.email.ilike(signup_data.email),
-        StudentVerification.university_id == signup_data.university_id
-    ).first()
-    if not verification:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Your email and university ID are not registered in the system. Please contact the department."
-        )
+    # # 1. Verify email + university_id in verification table (تعطيل الفحص مؤقتاً لأن الجدول ممسوح)
+    # verification = db.query(StudentVerification).filter(
+    #     StudentVerification.email.ilike(signup_data.email),
+    #     StudentVerification.university_id == signup_data.university_id
+    # ).first()
+    # if not verification:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_403_FORBIDDEN,
+    #         detail="Your email and university ID are not registered in the system."
+    #     )
 
-    # 2. Check for duplicate email
+    # 2. Check for duplicate email (هذا خليه شغال عشان ما يتكرر نفس الإيميل)
     if db.query(Student).filter(Student.email.ilike(signup_data.email)).first():
         raise HTTPException(status_code=400, detail="An account with this email already exists.")
 

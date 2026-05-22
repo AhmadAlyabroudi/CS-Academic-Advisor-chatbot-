@@ -139,7 +139,7 @@ async function submitSignup() {
   btn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:8px"></i>Creating Account…';
 
   try {
-    const res = await fetch(`${window.location.origin}/api/auth/signup`, {
+    const res = await fetch(`${window.location.origin}/api/signup`, {
     method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
