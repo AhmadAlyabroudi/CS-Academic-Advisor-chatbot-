@@ -30,6 +30,7 @@ from app.models.cs_faculty_info import CsFacultyInfo  # noqa: E402, F401
 from app.models.course import Course  # noqa: E402, F401
 from app.models.student_roadmap import StudentRoadmap  # noqa: E402, F401
 from app.models.student_verification import StudentVerification  # noqa: E402, F401
+from app.models.enrollment import Enrollment  # noqa: E402, F401
 from app.models.study_rooms import OfficialRooms, PrivateStudyRooms, RoomMembers  # noqa: E402, F401
 from app.models.chatbot_history import ChatbotHistory  # noqa: E402, F401
 
