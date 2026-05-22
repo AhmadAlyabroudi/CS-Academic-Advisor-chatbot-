@@ -139,8 +139,8 @@ async function submitSignup() {
   btn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:8px"></i>Creating Account…';
 
   try {
-    const res = await fetch(`${API}/signup`, {
-      method: 'POST',
+    const res = await fetch(`${window.location.origin}/api/auth/signup`, {
+    method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         first_name: firstName,
@@ -159,7 +159,7 @@ async function submitSignup() {
     if (res.ok) {
       showSuccess(data.message + ' Redirecting to login…');
       btn.disabled = true;
-      setTimeout(() => { window.location.href = 'index.html'; }, 2000);
+      setTimeout(() => { window.location.href = '/'; }, 2000);
     } else {
       showError(data.detail || 'Sign-up failed. Please try again.');
       btn.disabled = false;
