@@ -146,6 +146,7 @@ def main() -> None:
     from google import genai
     client = genai.Client(api_key=gemini_key)
 
+
     # 3. Embed documents
     print("\n[3/4] Generating embeddings...")
     docs = embed_documents(docs, client)
