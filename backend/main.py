@@ -304,6 +304,7 @@ def seed():
             if not existing:
                 db.add(OfficialRooms(course_code=course.code))
 
+
         db.commit()
 
         # --- Seed Chatbot History ---
