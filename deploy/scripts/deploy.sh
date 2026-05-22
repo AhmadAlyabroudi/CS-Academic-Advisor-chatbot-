@@ -21,7 +21,17 @@ echo "[deploy] Running database migrations..."
 cd "$APP_DIR/backend"
 "$VENV/alembic" upgrade head
 
-echo "[deploy] Restarting application..."
+echo "[deploy] Ensuring systemd service is registered..."
+SERVICE_FILE="$APP_DIR/deploy/systemd/justadvisor.service"
+if ! systemctl cat justadvisor &>/dev/null; then
+    echo "[deploy] Service not found — installing from $SERVICE_FILE"
+    sudo cp "$SERVICE_FILE" /etc/systemd/system/justadvisor.service
+    sudo systemctl daemon-reload
+    sudo systemctl enable justadvisor
+    echo "[deploy] Service installed and enabled."
+fi
+
+echo "[deploy] Starting / restarting application..."
 sudo systemctl restart justadvisor
 
 echo "[deploy] Done.  Service status:"
