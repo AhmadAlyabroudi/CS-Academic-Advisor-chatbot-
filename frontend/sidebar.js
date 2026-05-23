@@ -4,18 +4,20 @@
     document.body.classList.add('dark-mode');
   }
   const currentPage = window.location.pathname.split('/').pop() || 'index.html';
-  
+  const urlParams = new URLSearchParams(window.location.search);
+  const currentMode = urlParams.get('mode') || '';
+
   // Auth Guard
   const studentId = localStorage.getItem('student_id');
   if (!studentId && currentPage !== 'index.html' && currentPage !== '') {
     window.location.href = 'index.html';
     return;
   }
-  
+
   // Fetch user info
   let userName = "Student";
   let displayId = "ID: Unknown";
-  
+
   if (studentId) {
     try {
       const res = await fetch(`/student/${studentId}`);
@@ -33,12 +35,13 @@
       console.error("Failed to load user info for sidebar");
     }
   }
-  
+
+  // تحديث الـ href للـ History ليمرر باراميتر مخصص يمنع التداخل
   const menuItems = [
     { icon: 'fa-comment-dots', label: 'Active Session', href: 'chatbot.html', id: 'chatbot' },
-    { icon: 'fa-clock-rotate-left', label: 'Chat History', href: '#', id: 'history' },
+    { icon: 'fa-clock-rotate-left', label: 'Chat History', href: 'chatbot.html?mode=history', id: 'history' },
   ];
-  
+
   const uniLinks = [
     { icon: 'fa-earth-americas', label: 'Course Roadmap', href: 'roadmap.html', id: 'roadmap' },
     { icon: 'fa-calculator', label: 'GPA Calculator', href: 'gpa.html', id: 'gpa' },
@@ -47,14 +50,21 @@
     { icon: 'fa-book', label: 'Courses Catalog', href: 'courses.html', id: 'courses' },
   ];
 
-  function isActive(href) {
-    return currentPage === href;
+  function isActive(item) {
+    // التحقق من الصفحة والباراميتر معاً لضمان الإضاءة الصحيحة للزر الفعال
+    if (item.id === 'history') {
+      return currentPage === 'chatbot.html' && currentMode === 'history';
+    }
+    if (item.id === 'chatbot') {
+      return currentPage === 'chatbot.html' && currentMode !== 'history';
+    }
+    return currentPage === item.href;
   }
 
   function buildItems(items) {
     return items.map(item => {
-      const active = isActive(item.href) ? ' active' : '';
-      return `<a href="${item.href}" class="menu-item${active}"><i class="fas ${item.icon}"></i>${item.label}</a>`;
+      const active = isActive(item) ? ' active' : '';
+      return `<a href="${item.href}" id="${item.id}" class="menu-item${active}"><i class="fas ${item.icon}"></i>${item.label}</a>`;
     }).join('');
   }
 
@@ -124,7 +134,7 @@
           </div>
         </div>
         <div class="footer-bottom">
-          <p>&copy; 2024 JUST Academic Advisor. All rights reserved.</p>
+          <p>&copy; 2026 JUST Academic Advisor. All rights reserved.</p>
         </div>
       </div>
     `;
@@ -161,7 +171,7 @@
       color: white;
       animation: slideIn 0.3s ease-out;
     `;
-    
+
     widget.innerHTML = `
       <style>
         @keyframes slideIn { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
@@ -196,14 +206,13 @@
         <button class="mini-btn btn-quit" id="quitMiniMeeting">Leave</button>
       </div>
     `;
-    
+
     document.body.appendChild(widget);
 
-    // Auto-start mini-camera if it was active in the meeting
     const miniVideo = document.getElementById('miniVideo');
     const miniPlaceholder = document.getElementById('miniPlaceholder');
     let miniStream = null;
-    
+
     if (activeMeeting.cam) {
         navigator.mediaDevices.getUserMedia({ video: true, audio: false })
             .then(stream => {
@@ -222,13 +231,13 @@
         }
         window.location.href = `room.html?id=${activeMeeting.id}&type=${activeMeeting.type}`;
     });
-    
+
     document.getElementById('quitMiniMeeting').addEventListener('click', async () => {
         const formData = new FormData();
         formData.append("room_id", activeMeeting.id);
         formData.append("room_type", activeMeeting.type);
         formData.append("student_id", studentId);
-        
+
         await fetch("/rooms/leave", { method: "POST", body: formData });
         sessionStorage.removeItem('active_meeting');
         widget.remove();
