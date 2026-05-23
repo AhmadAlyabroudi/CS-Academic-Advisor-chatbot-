@@ -52,15 +52,15 @@ def seed():
         # --- إضافة الطلاب ---
         students_data = [
             Student(
-                university_id="",
-                email="",
-                first_name="",
-                last_name="",
-                password=_pwd_context.hash(""),
-                phone_number="",
-                major="",
-                academic_standing="",
-                advisor_id=""
+                university_id="166001",
+                email="amalyabroudi22@cit.just.edu.jo",
+                first_name="Ahmad",
+                last_name="Alyabroudi",
+                password=_pwd_context.hash("Avanger@95"),
+                phone_number="0795753919",
+                major="Computer Science",
+                academic_standing="fourth year",
+                advisor_id="yahya-t@just.edu.jo"
             )
         ]
         for student in students_data:
