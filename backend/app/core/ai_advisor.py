@@ -48,24 +48,31 @@ Answer (general AI knowledge — not from official records):"""
 
 class HybridAdvisorChain:
     def __init__(self) -> None:
-        from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
-        from pinecone._client import Pinecone
+        # قراءة وتأكيد الـ env داخل الـ __init__ أول شيء وقبل أي Import داخلي
+        import os
+        from pathlib import Path
+        from dotenv import load_dotenv
+
+        BASE_DIR = Path(__file__).resolve().parent.parent.parent
+        load_dotenv(BASE_DIR / ".env")
 
         gemini_key = os.getenv("GEMINI_API_KEY", "")
         pinecone_key = os.getenv("PINECONE_API_KEY", "")
         index_name = os.getenv("PINECONE_INDEX_NAME", "just-cs-advisor")
 
         if not gemini_key or not pinecone_key:
-            raise RuntimeError("Missing API Keys inside Environment Variables.")
+            raise RuntimeError("Missing GEMINI_API_KEY or PINECONE_API_KEY inside .env file.")
 
-        # تهيئة جيميناي 2.0 فلاش للردود السريعة
+        # الآن نقوم بعمل الـ Imports بأمان بعد ضمان شحن المفاتيح في النظام
+        from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
+        from pinecone._client import Pinecone
+
         self.llm = ChatGoogleGenerativeAI(
             model="gemini-2.0-flash",
             google_api_key=gemini_key,
             temperature=0.3,
         )
 
-        # نماذج التضمين والمطابقة مع فيكتور باينكون
         self.embeddings = GoogleGenerativeAIEmbeddings(
             model="models/gemini-embedding-001",
             google_api_key=gemini_key,
@@ -112,7 +119,13 @@ def get_advisor() -> Optional[HybridAdvisorChain]:
         return _advisor_instance
     _init_attempted = True
 
-    # جلب المفاتيح بشكل مباشر مع الحماية الآمنة للداتا بيز
+    import os
+    from pathlib import Path
+    from dotenv import load_dotenv
+
+    BASE_DIR = Path(__file__).resolve().parent.parent.parent
+    load_dotenv(BASE_DIR / ".env")
+
     gemini_key = os.getenv("GEMINI_API_KEY")
     pinecone_key = os.getenv("PINECONE_API_KEY")
 
