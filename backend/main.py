@@ -52,16 +52,16 @@ def seed():
         # --- إضافة الطلاب ---
         students_data = [
             Student(
-                university_id="162256",
-                email="csalnimri22@cit.just.edu.jo",
-                first_name="Candle",
-                last_name="AlNimri",
-                password=_pwd_context.hash("Candle@2004"),
-                phone_number="0798081971",
-                major="Computer Science",
-                current_gpa=3.2,
-                academic_standing="fourth year",
-                advisor_id="talomari@just.edu.jo"
+               # university_id="162256",
+                #email="csalnimri22@cit.just.edu.jo",
+                #first_name="Candle",
+                #last_name="AlNimri",
+                #password=_pwd_context.hash("Candle@2004"),
+                #phone_number="0798081971",
+                #major="Computer Science",
+                #current_gpa=3.2,
+                #academic_standing="fourth year",
+                #advisor_id="talomari@just.edu.jo"
             )
         ]
         for student in students_data:
@@ -319,9 +319,8 @@ def seed():
         # --- Seed Student Verification Table ---
         verification_data = [
             StudentVerification(email="ymtashtoush@cit.just.edu.jo",  university_id="160991"),
-            StudentVerification(email="test@cit.just.edu.jo", university_id="160000"),
-            StudentVerification(email="test2@cit.just.edu.jo", university_id="166666"),
-            StudentVerification(email="test3@cit.just.edu.jo", university_id="167777"),
+            StudentVerification(email="rymohaidat22@cit.just.edu.jo.jo", university_id="160309"),
+            StudentVerification(email="csalnimri22@cit.just.edu.jo", university_id="162256"),
         ]
         for v in verification_data:
             existing_v = db.query(StudentVerification).filter_by(email=v.email).first()
