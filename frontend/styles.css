@@ -65,7 +65,7 @@ button{font-family:inherit}
 .top-navbar .nav-user{display:flex;align-items:center;gap:10px;color:var(--white);font-size:13px}
 .top-navbar .nav-user .user-avatar{width:32px;height:32px;border-radius:50%;background:var(--yellow);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--navy)}
 .hamburger-btn{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:4px}
-.hamburger-btn span{display:block;width:22px;height:2px;background:var(--white);border-radius:2px;transition:var(--transition)}
+.hamburger-btn span{display:block;width:22px;height:2px;background:var(--card-bg);border-radius:2px;transition:var(--transition)}
 
 /* ---------- SIDEBAR ---------- */
 .sidebar{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--navy);z-index:1100;display:flex;flex-direction:column;border-right:1px solid rgba(255,255,255,.06);padding-top:0;overflow-y:auto}
@@ -125,7 +125,7 @@ button{font-family:inherit}
 /* ---------- CARDS ---------- */
 .card{background:var(--card-bg);border-radius:var(--radius-lg);border:1px solid var(--gray-200);padding:24px;transition:transform var(--transition),box-shadow var(--transition)}
 .card:hover{transform:translateY(-2px);box-shadow:var(--shadow-hover)}
-.section-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius999px;font-size:11px;font-weight:700;letter-spacing:.5px;background:rgba(233,233,36,.15);color:var(--yellow);margin-bottom:12px}
+.section-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.5px;background:rgba(233,233,36,.15);color:var(--yellow);margin-bottom:12px}
 .section-badge i{font-size:12px}
 .section-title{font-size:28px;font-weight:800;color:var(--dark-text);margin-bottom:8px}
 .section-title span{color:var(--yellow)}
@@ -150,12 +150,24 @@ button{font-family:inherit}
 .stat-card .stat-label{font-size:12px;color:var(--gray-500);margin-top:2px}
 .stat-card .stat-icon{width:40px;height:40px;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;font-size:16px}
 
+/* ---------- RESPONSIVE ---------- */
+@media(max-width:960px){
+  .sidebar{transform:translateX(-100%);transition:transform .3s ease}
+  .sidebar.open{transform:translateX(0)}
+  .page-with-sidebar .main-content{margin-left:0}
+  .hamburger-btn{display:flex}
+  .content-area{padding:24px 20px}
+}
+@media(max-width:640px){
+  .top-navbar .nav-center{display:none}
+  .hamburger-btn{display:flex}
+}
+
 /* ---------- ANIMATIONS ---------- */
 @keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 .animate-in{animation:fadeInUp .5s ease both}
 .animate-in-delay{animation:fadeInUp .5s ease .15s both}
-
 /* ============================================
    Landing Page Specific Styles
    ============================================ */
@@ -236,6 +248,24 @@ button{font-family:inherit}
 .landing-footer .footer-bottom{border-top:1px solid rgba(255,255,255,.08);padding:20px 0;text-align:center}
 .landing-footer .footer-bottom p{font-size:13px;color:var(--gray-500)}
 
+/* --- Responsive --- */
+@media(max-width:960px){
+  .hero-container{flex-direction:column;align-items:center;text-align:center;gap:40px;padding:60px 24px 30px}
+  .hero-content{max-width:100%;padding-top:0}
+  .hero-subtitle{margin-left:auto;margin-right:auto}
+  .hero-badges{justify-content:center}
+  .login-card{width:100%;max-width:400px}
+  .features-grid{grid-template-columns:1fr;max-width:420px;margin:0 auto}
+  .landing-footer .footer-top{flex-direction:column;text-align:center;align-items:center}
+  .footer-brand{flex-direction:column;align-items:center}
+  .footer-brand-desc{margin-left:auto;margin-right:auto}
+}
+@media(max-width:640px){
+  .top-navbar .nav-center{display:none}
+  .hamburger-btn{display:flex}
+  .hero-title{font-size:30px}
+  .features-title{font-size:24px}
+}
 /* Chatbot Page Styles */
 .chat-area{flex:1;display:flex;flex-direction:column;align-items:center;padding:40px 32px 0;overflow-y:auto;background:var(--gray-50)}
 .chat-welcome{text-align:center;margin-bottom:32px}
@@ -278,6 +308,12 @@ button{font-family:inherit}
 .send-btn:hover{background:var(--yellow-hover)}
 .disclaimer{text-align:center;font-size:11px;color:var(--gray-400);margin-top:8px}
 
+@media(max-width:768px){
+  .quick-actions{flex-direction:column;align-items:stretch}
+  .qn-grid{grid-template-columns:1fr}
+  .chat-area{padding:24px 16px 0}
+  .chat-input-bar{padding:12px 16px 8px}
+}
 /* GPA Calculator Page Styles */
 .gpa-card{background:var(--card-bg);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:28px;margin-bottom:24px}
 .gpa-card h2{font-size:18px;font-weight:700;color:var(--dark-text);margin-bottom:4px}
@@ -312,10 +348,14 @@ button{font-family:inherit}
 .pr-icon{color:#3b82f6;font-size:18px;margin-top:2px}
 .pr-label{font-size:11px;font-weight:600;color:var(--gray-500);text-transform:uppercase;letter-spacing:.5px}
 .pr-value{font-size:28px;font-weight:800;color:var(--dark-text)}
-.pr-note{font-size:13px;color:#3b82f6;margin-top:4px;text-decoration:underline}
+.pr-note{font-size:13px;color:var(--blue,#3b82f6);margin-top:4px;text-decoration:underline}
 
 .calculate-btn{font-size:15px;padding:14px;border-radius:var(--radius-md)}
 
+@media(max-width:768px){
+  .gpa-row{grid-template-columns:1fr}
+  .courses-table{font-size:12px}
+}
 /* Roadmap Page Styles */
 .legend{display:flex;flex-wrap:wrap;gap:20px;padding:14px 20px;background:var(--card-bg);border:1px solid var(--gray-200);border-radius:var(--radius-md);margin-bottom:28px}
 .legend-item{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:500;color:var(--gray-600)}
@@ -328,7 +368,7 @@ button{font-family:inherit}
 .semester-block{background:var(--card-bg);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:24px 28px;margin-bottom:20px}
 .semester-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
 .semester-header h2{font-size:18px;font-weight:700;color:var(--dark-text);margin:0}
-.sem-credits-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;background:rgba(250,204,21,.15);color:var(--yellow)}
+.sem-credits-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;background:rgba(var(--primary-rgb,250,204,21),.15);color:var(--yellow,#FACC15)}
 .semester-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
 .course-card{border-radius:var(--radius-md);padding:14px 16px;border:1.5px solid;transition:transform var(--transition),box-shadow var(--transition);cursor:pointer;position:relative;overflow:hidden}
 .course-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-card)}
@@ -357,7 +397,6 @@ button{font-family:inherit}
 .course-card.completed .cc-status{background:#22c55e}
 .course-card.enrolled .cc-status{background:#e9e924}
 .semester-total{font-size:12px;color:var(--gray-500);margin-top:14px;font-weight:500;border-top:1px solid var(--gray-100);padding-top:10px}
-
 /* Roadmap Summary Bar */
 .roadmap-summary{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:24px;padding:18px 24px;background:var(--card-bg);border-radius:var(--radius-lg);border:1px solid var(--gray-200)}
 .rsm-item{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;padding:8px 16px;border-radius:var(--radius-md)}
@@ -365,7 +404,15 @@ button{font-family:inherit}
 .rsm-enrolled{background:#fefce8;color:#ca8a04}
 .rsm-remaining{background:#f0f9ff;color:#0369a1}
 
+@media(max-width:768px){
+  .semester-grid{grid-template-columns:1fr 1fr}
+  .legend{flex-direction:column;gap:8px}
+  .roadmap-summary{flex-direction:column;gap:10px}
+}
+@media(max-width:480px){.semester-grid{grid-template-columns:1fr}}
+
 /* ── New Roadmap Design (rdm-*) ──────────────────────────────── */
+/* Summary badge row */
 .rdm-summary{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:24px;padding:14px 20px;background:var(--card-bg);border:1px solid var(--gray-200);border-radius:var(--radius-lg)}
 .rdm-badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:6px 14px;border-radius:999px}
 .rdm-badge--completed{background:#f0fdf4;color:#16a34a}
@@ -374,13 +421,16 @@ button{font-family:inherit}
 .rdm-badge--locked{background:var(--gray-100);color:var(--gray-600)}
 .rdm-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 
+/* Semester block */
 .rdm-block{background:var(--card-bg);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:22px 24px;margin-bottom:18px}
 .rdm-block__header{margin-bottom:16px}
 .rdm-block__title{font-size:17px;font-weight:700;color:var(--dark-text);margin:0}
 .rdm-block__total{font-size:12px;font-weight:600;color:var(--gray-500);margin-top:14px;padding-top:10px;border-top:1px solid var(--gray-100)}
 
+/* Card grid */
 .rdm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
 
+/* Individual course card */
 .rdm-card{border-radius:var(--radius-md);padding:12px 14px;border:1.5px solid;position:relative;overflow:hidden;transition:transform .15s,box-shadow .15s;cursor:pointer}
 .rdm-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-card)}
 .rdm-card__top{display:flex;align-items:center;gap:7px;margin-bottom:7px}
@@ -390,6 +440,7 @@ button{font-family:inherit}
 .rdm-card__name{font-size:12px;font-weight:600;color:var(--dark-text);margin-bottom:5px;line-height:1.4}
 .rdm-card__prereq{font-size:10px;color:var(--gray-500);line-height:1.4}
 
+/* Status-specific card colors */
 .rdm-card--completed{background:#f0fdf4;border-color:#86efac}
 .rdm-card--completed .rdm-card__code{color:#166534}
 .rdm-card--enrolled{background:#fefce8;border-color:#fde047}
@@ -400,6 +451,9 @@ button{font-family:inherit}
 .rdm-card--locked .rdm-card__code{color:var(--gray-500)}
 .rdm-card__grade-corner{display:inline-flex;align-items:center;font-size:11px;font-weight:700;color:#166534;background:#dcfce7;padding:2px 8px;border-radius:999px;margin-top:6px;border:1px solid #86efac;letter-spacing:.3px}
 body.dark-mode .rdm-card__grade-corner{color:#4ade80;background:rgba(74,222,128,.12);border-color:rgba(74,222,128,.3)}
+
+@media(max-width:768px){.rdm-grid{grid-template-columns:1fr 1fr}.rdm-summary{flex-direction:column}}
+@media(max-width:480px){.rdm-grid{grid-template-columns:1fr}}
 
 /* Study Rooms Page Styles */
 .study-content{text-align:left}
@@ -440,6 +494,10 @@ body.dark-mode .rdm-card__grade-corner{color:#4ade80;background:rgba(74,222,128,
 .create-room-cta h3{font-size:18px;font-weight:700;color:var(--dark-text);margin-bottom:8px}
 .create-room-cta p{font-size:13px;color:var(--gray-500);margin-bottom:18px}
 
+@media(max-width:768px){
+  .sessions-grid{grid-template-columns:1fr}
+  .study-search{flex-direction:column}
+}
 /* Faculty Page Styles */
 .faculty-search{display:flex;gap:12px;margin-bottom:24px;align-items:center}
 .faculty-search .search-bar{flex:1;display:flex;align-items:center;gap:10px;background:var(--card-bg);border:1.5px solid var(--gray-200);border-radius:var(--radius-md);padding:6px 14px}
@@ -466,6 +524,15 @@ body.dark-mode .rdm-card__grade-corner{color:#4ade80;background:rgba(74,222,128,
 .fc-info a:hover{color:var(--yellow)}
 .fc-btn{width:100%;justify-content:center;margin-top:16px}
 
+@media(max-width:960px){
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .faculty-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:640px){
+  .faculty-grid{grid-template-columns:1fr}
+  .stats-grid{grid-template-columns:1fr}
+  .faculty-search{flex-direction:column}
+}
 /* Profile Page Styles */
 .profile-layout{display:flex;gap:24px;min-height:500px}
 .profile-sidebar{width:280px;flex-shrink:0;background:var(--card-bg);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:28px;text-align:center;align-self:flex-start;position:sticky;top:80px}
@@ -509,6 +576,13 @@ body.dark-mode .rdm-card__grade-corner{color:#4ade80;background:rgba(74,222,128,
 
 .profile-actions{display:flex;justify-content:flex-end;gap:12px;margin-top:28px;padding-top:20px;border-top:1px solid var(--gray-200)}
 
+@media(max-width:768px){
+  .profile-layout{flex-direction:column}
+  .profile-sidebar{width:100%;position:static}
+  .acad-grid{grid-template-columns:1fr 1fr}
+  .form-row{flex-direction:column;gap:12px}
+}
+
 /* ---------- SIGNUP PAGE ---------- */
 .signup-page{min-height:100vh;background:var(--navy);display:flex;flex-direction:column;padding-top:56px}
 .signup-wrap{flex:1;display:flex;justify-content:center;align-items:flex-start;padding:48px 24px}
@@ -537,241 +611,4 @@ body.dark-mode .rdm-card__grade-corner{color:#4ade80;background:rgba(74,222,128,
 .signup-login-link{text-align:center;margin-top:18px;font-size:13px;color:var(--gray-500)}
 .signup-login-link a{color:#6366f1;font-weight:600}
 .signup-login-link a:hover{text-decoration:underline}
-
-/* ============================================
-   JUST Advisor – Responsive Grid System (Mobile & Tablet)
-   ============================================ */
-
-@media (max-width: 960px) {
-  .sidebar {
-    transform: translateX(-100%);
-    transition: transform .3s ease;
-  }
-  .sidebar.open {
-    transform: translateX(0);
-  }
-  .page-with-sidebar {
-    flex-direction: column;
-  }
-  .page-with-sidebar .main-content {
-    margin-left: 0;
-    min-height: calc(100vh - 50px);
-  }
-  .hamburger-btn {
-    display: flex;
-  }
-  .content-area {
-    padding: 20px 16px;
-  }
-
-  /* Landing Page Hero Section */
-  .hero-container {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: 40px;
-    padding: 60px 16px 30px;
-  }
-  .hero-content {
-    max-width: 100%;
-    padding-top: 0;
-  }
-  .hero-subtitle {
-    margin-left: auto;
-    margin-right: auto;
-  }
-  .hero-badges {
-    justify-content: center;
-  }
-  .login-card {
-    width: 100%;
-    max-width: 100%;
-    box-shadow: 0 10px 30px rgba(0,0,0,.15);
-    padding: 28px 20px;
-  }
-
-  /* Core Feature & Information Grids */
-  .features-grid, .courses-grid, .faculty-grid {
-    grid-template-columns: 1fr !important;
-    gap: 20px;
-  }
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 12px;
-  }
-
-  /* Profile Management & Sidebar Tabs */
-  .profile-layout {
-    flex-direction: column !important;
-    gap: 20px;
-  }
-  .profile-sidebar {
-    width: 100% !important;
-    position: static !important;
-    padding: 20px;
-  }
-  .profile-content {
-    padding: 20px;
-  }
-  .acad-grid {
-    grid-template-columns: 1fr 1fr !important;
-    gap: 16px;
-  }
-}
-
-@media (max-width: 768px) {
-  /* Hide standard desktop links in top bars */
-  .top-navbar .nav-center {
-    display: none;
-  }
-  .top-navbar .nav-inner {
-    padding: 0 16px;
-  }
-  .page-with-sidebar .main-content .top-bar .tb-links {
-    display: none;
-  }
-
-  /* Typography Scale Down */
-  .hero-title {
-    font-size: 28px !important;
-    line-height: 1.2;
-  }
-  .about-hero h1 {
-    font-size: 32px !important;
-  }
-  .about-hero p {
-    font-size: 16px !important;
-  }
-  .about-card {
-    padding: 24px 16px !important;
-  }
-  .mission-grid {
-    grid-template-columns: 1fr !important;
-    gap: 24px !important;
-  }
-
-  /* AI Chatbot Chat Interface responsiveness */
-  .chat-area {
-    padding: 16px 12px 0 !important;
-  }
-  .chat-welcome h1 {
-    font-size: 22px;
-  }
-  .msg-bubble {
-    max-width: 85% !important;
-    font-size: 13px !important;
-  }
-  .chat-input-bar {
-    padding: 10px 12px 8px !important;
-  }
-  .input-bar-inner {
-    padding: 4px 6px 4px 14px !important;
-  }
-  .input-bar-inner input {
-    font-size: 13px;
-  }
-  .quick-actions {
-    flex-direction: column;
-    align-items: stretch;
-    width: 100%;
-  }
-  .qa-card {
-    width: 100%;
-  }
-
-  /* GPA Calculation & Courses Datatable Responsive fix */
-  .gpa-row {
-    grid-template-columns: 1fr !important;
-    gap: 12px;
-  }
-  .courses-table {
-    display: block;
-    overflow-x: auto;
-    white-space: nowrap;
-    -webkit-overflow-scrolling: touch;
-  }
-  .courses-table th, .courses-table td {
-    padding: 6px 8px;
-  }
-  .credits-sel, .grade-sel {
-    min-width: 70px;
-  }
-
-  /* WebRTC Study Rooms Grid Layout */
-  .sessions-grid {
-    grid-template-columns: 1fr !important;
-  }
-  .room-container {
-    height: auto;
-    margin: 4px;
-    padding: 10px;
-  }
-  .room-body {
-    flex-direction: column;
-  }
-  .chat-panel {
-    width: 100% !important;
-    height: 300px;
-    margin-top: 10px;
-  }
-  .video-grid {
-    grid-template-columns: 1fr !important;
-  }
-  .video-grid.presentation-mode .video-card:not(#screenShareCard) {
-    width: 120px;
-    height: 80px;
-    bottom: 0.5rem;
-    right: 0.5rem;
-  }
-  .room-controls {
-    padding: 8px 12px;
-    gap: 10px;
-    width: 95%;
-  }
-  .control-btn {
-    width: 38px;
-    height: 38px;
-    font-size: 0.9rem;
-  }
-
-  /* Pre-registered Signup multi-row alignment */
-  .signup-card {
-    padding: 24px 16px !important;
-  }
-  .signup-grid-2 {
-    grid-template-columns: 1fr !important;
-  }
-  .course-row.with-grade {
-    grid-template-columns: 1fr !important;
-    gap: 8px;
-  }
-  .course-row.with-grade .btn-remove-row {
-    width: 100%;
-    height: 36px;
-  }
-
-  /* Footers layout matching mobile viewpoint */
-  .site-footer .footer-top, .landing-footer .footer-top {
-    flex-direction: column;
-    text-align: center;
-    align-items: center;
-    gap: 20px;
-  }
-  .footer-top .ft-links, .footer-support {
-    justify-content: center;
-    gap: 16px;
-  }
-}
-
-@media (max-width: 480px) {
-  /* Extreme breakpoints styling adjustment */
-  .stats-grid, .acad-grid, .rdm-grid {
-    grid-template-columns: 1fr !important;
-  }
-  .rdm-summary {
-    flex-direction: column;
-  }
-  .result-value {
-    font-size: 26px;
-  }
-}
+@media(max-width:600px){.signup-card{padding:24px 20px}.signup-grid-2{grid-template-columns:1fr}.course-row.with-grade{grid-template-columns:1fr;}.course-row.with-grade .btn-remove-row{width:100%;height:32px}}
