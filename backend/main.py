@@ -176,6 +176,7 @@ def seed():
             StudentVerification(email="rymohaidat22@cit.just.edu.jo.jo", university_id="160309"),
             StudentVerification(email="csalnimri22@cit.just.edu.jo",   university_id="162256"),
         ]
+
         for v in verification_data:
             existing_v = db.query(StudentVerification).filter_by(email=v.email).first()
             if not existing_v:
