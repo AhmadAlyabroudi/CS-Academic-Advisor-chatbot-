@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, Form
 from sqlalchemy.orm import Session
 from typing import List, Optional
-
+import os
+from livekit.api import AccessToken, VideoGrants
 from app.core.database import get_db
 from app.models.study_rooms import OfficialRooms, PrivateStudyRooms, RoomMembers
 from app.models.student import Student
@@ -167,3 +168,27 @@ def terminate_room(
     db.delete(room)
     db.commit()
     return {"message": "Room terminated and all members removed"}
+
+
+
+
+@router.get("/token")
+def get_livekit_access_token(room_id: str, student_id: str, name: str):
+    """
+    توليد توكن دخول آمن ومشفر لكل طالب للغرفة عبر سيرفر الـ SFU
+    """
+    # جلب مفاتيح التشفير السرية المثبتة بملف الـ .env بالسيرفر
+    api_key = os.getenv("LIVEKIT_API_KEY", "devkey")
+    api_secret = os.getenv("LIVEKIT_API_SECRET", "secret")
+
+    if not room_id or not student_id:
+        raise HTTPException(status_code=400, detail="Missing parameters")
+
+    # صياغة التصاريح الرسمية للبث (دخول الغرفة، تفعيل المايك والكاميرا)
+        # صياغة التصاريح الرسمية للبث (دخول الغرفة، تفعيل المايك والكاميرا)
+        grant = AccessToken(api_key, api_secret) \
+            .with_identity(student_id) \
+            .with_name(name) \
+            .with_grants(VideoGrants(room_join=True, room=room_id))
+
+    return {"token": grant.to_jwt()}
