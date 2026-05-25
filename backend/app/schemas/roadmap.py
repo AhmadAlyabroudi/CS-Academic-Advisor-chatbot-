@@ -24,6 +24,7 @@ class RoadmapStatsResponse(BaseModel):
     remaining_credits: int
 
 
+
 # ── Request: Update a course status in a student's roadmap ────────
 class RoadmapStatusUpdate(BaseModel):
     student_id: str
