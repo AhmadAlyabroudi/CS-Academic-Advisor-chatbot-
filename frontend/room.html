@@ -339,7 +339,7 @@ const socket = io(SERVER, { transports: ['websocket', 'polling'] });
 
 socket.on('connect', () => {
   // إرسال طلب انضمام للغرفة بالباكيند
-  socket.emit('join_room', { roomId, userId: studentId, name: myName });
+  socket.emit('join_room', { room_id: roomId, user_id: studentId, name: myName });
 });
 
 // استقبال قائمة المستخدمين المتواجدين حالياً قبل دخولنا
@@ -532,7 +532,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.getElementById('avatarInitial').textContent = s.first_name.charAt(0).toUpperCase();
 
       // تحديث البيانات في السيرفر بعد جلب الاسم الحقيقي
-      socket.emit('join_room', { roomId, userId: studentId, name: myName });
+      socket.emit('join_room', { room_id: roomId, user_id: studentId, name: myName });
     }
   } catch (_) {}
 
