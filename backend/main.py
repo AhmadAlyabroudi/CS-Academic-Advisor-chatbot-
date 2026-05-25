@@ -2,8 +2,6 @@ import socketio
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
-from passlib.context import CryptContext
-from sqlalchemy import text
 from app.core.database import engine, Base, SessionLocal
 from app.core.constants import GRADE_POINTS
 from app.models.student import Student
@@ -31,42 +29,24 @@ app = FastAPI(
     version="0.1.0"
 )
 
-# Automigrate (create tables)
+# Automigrate (create tables) — Alembic owns the canonical schema; this is a safety net.
 Base.metadata.create_all(bind=engine)
-
-# Add grade column to student_roadmap if it doesn't exist yet
-with engine.connect() as conn:
-    try:
-        conn.execute(text("ALTER TABLE student_roadmap ADD COLUMN grade VARCHAR"))
-        conn.commit()
-    except Exception:
-        pass  # column already exists
-
-# Seed database
-_pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def seed():
+    """
+    Seed ONLY universal reference data:
+      - Faculty directory
+      - CS curriculum (courses)
+      - Official study rooms (one per course)
+      - GPA recompute for every existing student (idempotent)
+
+    No per-student records are seeded here. Each student's profile and roadmap
+    are created on /signup via app/api/student_controller.py.
+    """
     db = SessionLocal()
     try:
-        # --- إضافة الطلاب ---
-        students_data = [
-            Student(
-                university_id="166001",
-                email="amalyabroudi22@cit.just.edu.jo",
-                first_name="Ahmad",
-                last_name="Alyabroudi",
-                password=_pwd_context.hash("Avanger@95"),
-                phone_number="0795753919",
-                major="Computer Science",
-                academic_standing="fourth year",
-                advisor_id="yahya-t@just.edu.jo"
-            )
-        ]
-        for student in students_data:
-            db.merge(student)
-
-        # --- إضافة الدكاترة ---
+        # --- Faculty directory ---
         faculty_data = [
             CsFacultyInfo(name="Dr Ahmad G. Alzubi", email="agalzubi@just.edu.jo", office_location="A2L-O", office_hours="Sun 11:00 – 12:00", title="Associate Professor Chairman"),
             CsFacultyInfo(name="Dr Malak Abdel Ghani Abdullah", email="mabdullah@just.edu.jo", office_location="A1-L3", office_hours="Mon 12:00-1:00", title="Associate Professor"),
@@ -104,7 +84,7 @@ def seed():
         for member in faculty_data:
             db.merge(member)
 
-        # --- Courses (Full CS Curriculum from Docx) ---
+        # --- CS curriculum (universal course catalog) ---
         courses_data = [
             # Year 1 - Fall
             Course(code="LG101", id_reg="2511010", name="Communication Skills In English", prerequisites="LG 099", plan_type="University Compulsory Req", credit_hours=3, suggested_year=1, suggested_semester="Fall"),
@@ -114,7 +94,7 @@ def seed():
             Course(code="MATH101", id_reg="821011", name="Calculus I", prerequisites="None", plan_type="Faculty Compulsory Req", credit_hours=3, suggested_year=1, suggested_semester="Fall"),
             Course(code="MS100", id_reg="841000", name="Military Sciences", prerequisites="None", plan_type="University Compulsory Req", credit_hours=3, suggested_year=1, suggested_semester="Fall"),
             Course(code="PHY102", id_reg="821024", name="General Physics (2)", prerequisites="None", plan_type="Faculty Compulsory Req", credit_hours=3, suggested_year=1, suggested_semester="Fall"),
-            
+
             # Year 1 - Spring
             Course(code="SE112", id_reg="821123", name="Introduction To Object-Oriented Programming", prerequisites="CS101", plan_type="Faculty Compulsory Req", credit_hours=2, suggested_year=1, suggested_semester="Spring"),
             Course(code="SE113", id_reg="821124", name="Introduction To Object-Oriented Programming lab", prerequisites="SE112", plan_type="Faculty Compulsory Req", credit_hours=1, suggested_year=1, suggested_semester="Spring"),
@@ -123,7 +103,7 @@ def seed():
             Course(code="HSS110", id_reg="821104", name="Leader And Social Responsibility", prerequisites="None", plan_type="University Compulsory Req", credit_hours=3, suggested_year=1, suggested_semester="Spring"),
             Course(code="ARB102", id_reg="801022", name="Communication Skills In Arabic", prerequisites="None", plan_type="University Compulsory Req", credit_hours=3, suggested_year=1, suggested_semester="Spring"),
             Course(code="PHY106", id_reg="921060", name="General Physics (Laboratory)(2)", prerequisites="PHY 102", plan_type="Faculty Compulsory Req", credit_hours=1, suggested_year=1, suggested_semester="Spring"),
-            
+
             # Year 2 - Fall
             Course(code="HSS119", id_reg="821192", name="Entrepreneurship And Innovation", prerequisites="None", plan_type="University Compulsory Req", credit_hours=2, suggested_year=2, suggested_semester="Fall"),
             Course(code="CIS201", id_reg="1742010", name="Introduction to Web Design", prerequisites="CS101", plan_type="Department Compulsory Req.", credit_hours=1, suggested_year=2, suggested_semester="Fall"),
@@ -133,14 +113,14 @@ def seed():
             Course(code="MATH140", id_reg="901400", name="Elements Of Linear Algebra", prerequisites="MATH101", plan_type="Department Compulsory Req.", credit_hours=3, suggested_year=2, suggested_semester="Fall"),
             Course(code="CIS203", id_reg="1742031", name="Communication and Professional Ethics", prerequisites="None", plan_type="Faculty Compulsory Req", credit_hours=2, suggested_year=2, suggested_semester="Fall"),
             Course(code="UnivElec1", id_reg="None", name="University Elective Requisite", prerequisites="None", plan_type="University Elective Requisite", credit_hours=3, suggested_year=2, suggested_semester="Fall"),
-            
+
             # Year 2 - Spring
             Course(code="CPE231", id_reg="1712310", name="Digital Logic Design", prerequisites="None", plan_type="Department Compulsory Req.", credit_hours=3, suggested_year=2, suggested_semester="Spring"),
             Course(code="CS282", id_reg="1732821", name="Theory of Computing", prerequisites="MATH241&CS101", plan_type="Department Compulsory Req.", credit_hours=3, suggested_year=2, suggested_semester="Spring"),
             Course(code="CS284", id_reg="1732841", name="Analysis and Design of Algorithms", prerequisites="CS211", plan_type="Department Compulsory Req.", credit_hours=3, suggested_year=2, suggested_semester="Spring"),
             Course(code="CIS221", id_reg="822214", name="Fundamentals of Database Systems", prerequisites="CS211", plan_type="Faculty Compulsory Req", credit_hours=3, suggested_year=2, suggested_semester="Spring"),
             Course(code="MATH233", id_reg="822331", name="MATH Probability & Statistics", prerequisites="MATH102", plan_type="Department Compulsory Req.", credit_hours=3, suggested_year=2, suggested_semester="Spring"),
-            
+
             # Year 3 - Fall
             Course(code="CPE232", id_reg="1712320", name="Digital Logic Design Lab", prerequisites="CPE 231", plan_type="Department Compulsory Req.", credit_hours=1, suggested_year=3, suggested_semester="Fall"),
             Course(code="CS318", id_reg="1733180", name="Human-Computer Interaction", prerequisites="CS211", plan_type="Department Compulsory Req.", credit_hours=3, suggested_year=3, suggested_semester="Fall"),
@@ -148,17 +128,17 @@ def seed():
             Course(code="CPE252", id_reg="1712520", name="Computer Organization and Design", prerequisites="CPE231", plan_type="Department Compulsory Req.", credit_hours=3, suggested_year=3, suggested_semester="Fall"),
             Course(code="SE230", id_reg="1762300", name="Fundamentals of Software Engineering", prerequisites="CS216", plan_type="Department Compulsory Req.", credit_hours=3, suggested_year=3, suggested_semester="Fall"),
             Course(code="UnivElec2", id_reg="None", name="University Elective Requisite", prerequisites="None", plan_type="University Elective Requisite", credit_hours=3, suggested_year=3, suggested_semester="Fall"),
-            
+
             # Year 3 - Spring
             Course(code="CS362", id_reg="1733620", name="Artificial Intelligence", prerequisites="CS284", plan_type="Department Compulsory Req.", credit_hours=3, suggested_year=3, suggested_semester="Spring"),
             Course(code="CS375", id_reg="1733750", name="Operating Systems", prerequisites="CS284&CPE252", plan_type="Department Compulsory Req.", credit_hours=3, suggested_year=3, suggested_semester="Spring"),
             Course(code="CS385", id_reg="1733850", name="Fundamentals of Multimedia", prerequisites="MATH140&CS211", plan_type="Department Compulsory Req.", credit_hours=3, suggested_year=3, suggested_semester="Spring"),
             Course(code="SE320", id_reg="1763200", name="System Analysis and Design", prerequisites="CIS221&SE230", plan_type="Department Compulsory Req.", credit_hours=3, suggested_year=3, suggested_semester="Spring"),
             Course(code="UnivElec3", id_reg="None", name="University Elective Requisite", prerequisites="None", plan_type="University Elective Requisite", credit_hours=3, suggested_year=3, suggested_semester="Spring"),
-            
+
             # Year 3 - Summer
             Course(code="CS391", id_reg="1733910", name="Practical Training", prerequisites="PASS 90 Credit", plan_type="Department Compulsory Req.", credit_hours=3, suggested_year=3, suggested_semester="Summer"),
-            
+
             # Year 4 - Fall
             Course(code="CS451", id_reg="1734511", name="Computer Architecture", prerequisites="CPE252&CS375", plan_type="Department Compulsory Req.", credit_hours=3, suggested_year=4, suggested_semester="Fall"),
             Course(code="CS491", id_reg="1734911", name="Graduation Project 1", prerequisites="PASS 90 Credit", plan_type="Department Compulsory Req.", credit_hours=3, suggested_year=4, suggested_semester="Fall"),
@@ -167,7 +147,7 @@ def seed():
             Course(code="BT401L", id_reg="964011", name="Computational Biology lab", prerequisites="BT401", plan_type="Department Compulsory Req.", credit_hours=0, suggested_year=4, suggested_semester="Fall"),
             Course(code="DeptElec1", id_reg="None", name="Department Elective Requisite", prerequisites="None", plan_type="Department Elective", credit_hours=3, suggested_year=4, suggested_semester="Fall"),
             Course(code="DeptElec2", id_reg="None", name="Department Elective Requisite", prerequisites="None", plan_type="Department Elective", credit_hours=3, suggested_year=4, suggested_semester="Fall"),
-            
+
             # Year 4 - Spring
             Course(code="CS442", id_reg="1734421", name="Wireless Networks", prerequisites="CS342", plan_type="Department Compulsory Req.", credit_hours=3, suggested_year=4, suggested_semester="Spring"),
             Course(code="CS475", id_reg="1734751", name="Distributed Computer Systems", prerequisites="CS375&CS451", plan_type="Department Compulsory Req.", credit_hours=3, suggested_year=4, suggested_semester="Spring"),
@@ -178,103 +158,19 @@ def seed():
         for course in courses_data:
             db.merge(course)
 
-        # --- Seed Roadmap Data (Student 166001: Ahmad Alyabroudi) ---
-        roadmap_data = [
-            # Year 1 - Fall (Completed)
-            StudentRoadmap(student_id="166001", course_code="LG101", status="Completed", grade="A+", year=1, semester="Fall"),
-            StudentRoadmap(student_id="166001", course_code="CS101", status="Completed", grade="A",  year=1, semester="Fall"),
-            StudentRoadmap(student_id="166001", course_code="CS106", status="Completed", grade="A+", year=1, semester="Fall"),
-            StudentRoadmap(student_id="166001", course_code="SE103", status="Completed", grade="B+", year=1, semester="Fall"),
-            StudentRoadmap(student_id="166001", course_code="MATH101", status="Completed", grade="B",  year=1, semester="Fall"),
-            StudentRoadmap(student_id="166001", course_code="MS100", status="Completed", grade="A",  year=1, semester="Fall"),
-            StudentRoadmap(student_id="166001", course_code="PHY102", status="Completed", grade="B+", year=1, semester="Fall"),
+        db.commit()
 
-            # Year 1 - Spring (Completed)
-            StudentRoadmap(student_id="166001", course_code="SE112", status="Completed", grade="A",  year=1, semester="Spring"),
-            StudentRoadmap(student_id="166001", course_code="SE113", status="Completed", grade="A+", year=1, semester="Spring"),
-            StudentRoadmap(student_id="166001", course_code="MATH102", status="Completed", grade="B+", year=1, semester="Spring"),
-            StudentRoadmap(student_id="166001", course_code="MATH241", status="Completed", grade="B",  year=1, semester="Spring"),
-            StudentRoadmap(student_id="166001", course_code="HSS110", status="Completed", grade="A",  year=1, semester="Spring"),
-            StudentRoadmap(student_id="166001", course_code="ARB102", status="Completed", grade="A-", year=1, semester="Spring"),
-            StudentRoadmap(student_id="166001", course_code="PHY106", status="Completed", grade="A+", year=1, semester="Spring"),
-
-            # Year 2 - Fall (Completed)
-            StudentRoadmap(student_id="166001", course_code="HSS119", status="Completed", grade="A",  year=2, semester="Fall"),
-            StudentRoadmap(student_id="166001", course_code="CIS201", status="Completed", grade="A+", year=2, semester="Fall"),
-            StudentRoadmap(student_id="166001", course_code="CS216", status="Completed", grade="A-", year=2, semester="Fall"),
-            StudentRoadmap(student_id="166001", course_code="LG103", status="Completed", grade="A",  year=2, semester="Fall"),
-            StudentRoadmap(student_id="166001", course_code="CS211", status="Completed", grade="B+", year=2, semester="Fall"),
-            StudentRoadmap(student_id="166001", course_code="MATH140", status="Completed", grade="B",  year=2, semester="Fall"),
-            StudentRoadmap(student_id="166001", course_code="CIS203", status="Completed", grade="A",  year=2, semester="Fall"),
-            StudentRoadmap(student_id="166001", course_code="UnivElec1", status="Completed", grade="A",  year=2, semester="Fall"),
-
-            # Year 2 - Spring (Completed)
-            StudentRoadmap(student_id="166001", course_code="CPE231", status="Completed", grade="B+", year=2, semester="Spring"),
-            StudentRoadmap(student_id="166001", course_code="CS282", status="Completed", grade="B",  year=2, semester="Spring"),
-            StudentRoadmap(student_id="166001", course_code="CS284", status="Completed", grade="B+", year=2, semester="Spring"),
-            StudentRoadmap(student_id="166001", course_code="CIS221", status="Completed", grade="A-", year=2, semester="Spring"),
-            StudentRoadmap(student_id="166001", course_code="MATH233", status="Completed", grade="B",  year=2, semester="Spring"),
-
-            # Year 3 - Fall (Completed)
-            StudentRoadmap(student_id="166001", course_code="CPE232", status="Completed", grade="A",  year=3, semester="Fall"),
-            StudentRoadmap(student_id="166001", course_code="CS318", status="Completed", grade="B+", year=3, semester="Fall"),
-            StudentRoadmap(student_id="166001", course_code="CS342", status="Completed", grade="B",  year=3, semester="Fall"),
-            StudentRoadmap(student_id="166001", course_code="CPE252", status="Completed", grade="B+", year=3, semester="Fall"),
-            StudentRoadmap(student_id="166001", course_code="SE230", status="Completed", grade="A-", year=3, semester="Fall"),
-            StudentRoadmap(student_id="166001", course_code="UnivElec2", status="Completed", grade="A",  year=3, semester="Fall"),
-
-            # Year 3 - Spring (Completed)
-            StudentRoadmap(student_id="166001", course_code="CS362", status="Completed", grade="A-", year=3, semester="Spring"),
-            StudentRoadmap(student_id="166001", course_code="CS375", status="Completed", grade="B+", year=3, semester="Spring"),
-            StudentRoadmap(student_id="166001", course_code="CS385", status="Completed", grade="A",  year=3, semester="Spring"),
-            StudentRoadmap(student_id="166001", course_code="SE320", status="Completed", grade="B+", year=3, semester="Spring"),
-            StudentRoadmap(student_id="166001", course_code="UnivElec3", status="Completed", grade="A",  year=3, semester="Spring"),
-
-            # Year 3 - Summer (Completed)
-            StudentRoadmap(student_id="166001", course_code="CS391", status="Completed", grade="A+", year=3, semester="Summer"),
-
-            # Year 4 - Fall (Currently Enrolled)
-            StudentRoadmap(student_id="166001", course_code="CS451", status="Currently Enrolled", grade=None, year=4, semester="Fall"),
-            StudentRoadmap(student_id="166001", course_code="CS491", status="Currently Enrolled", grade=None, year=4, semester="Fall"),
-            StudentRoadmap(student_id="166001", course_code="CY261", status="Currently Enrolled", grade=None, year=4, semester="Fall"),
-            StudentRoadmap(student_id="166001", course_code="BT401", status="Currently Enrolled", grade=None, year=4, semester="Fall"),
-            StudentRoadmap(student_id="166001", course_code="BT401L", status="Currently Enrolled", grade=None, year=4, semester="Fall"),
-            StudentRoadmap(student_id="166001", course_code="DeptElec1", status="Currently Enrolled", grade=None, year=4, semester="Fall"),
-            StudentRoadmap(student_id="166001", course_code="DeptElec2", status="Currently Enrolled", grade=None, year=4, semester="Fall"),
-
-            # Year 4 - Spring (Available)
-            StudentRoadmap(student_id="166001", course_code="CS442", status="Available", grade=None, year=4, semester="Spring"),
-            StudentRoadmap(student_id="166001", course_code="CS475", status="Available", grade=None, year=4, semester="Spring"),
-            StudentRoadmap(student_id="166001", course_code="CS492", status="Available", grade=None, year=4, semester="Spring"),
-            StudentRoadmap(student_id="166001", course_code="CIS341", status="Available", grade=None, year=4, semester="Spring"),
-            StudentRoadmap(student_id="166001", course_code="DeptElec3", status="Available", grade=None, year=4, semester="Spring"),
-        ]
-        for roadmap in roadmap_data:
-            existing = db.query(StudentRoadmap).filter_by(student_id=roadmap.student_id, course_code=roadmap.course_code).first()
-            if not existing:
-                db.add(roadmap)
-            else:
-                existing.status = roadmap.status
-                existing.grade = roadmap.grade
-                existing.year = roadmap.year
-                existing.semester = roadmap.semester
-
-        # Ensure all other courses exist in roadmap for 166001 as 'locked'
+        # --- Official rooms (one per course — universal) ---
         all_courses = db.query(Course).all()
-        for c in all_courses:
-            existing = db.query(StudentRoadmap).filter_by(student_id="166001", course_code=c.code).first()
+        for course in all_courses:
+            existing = db.query(OfficialRooms).filter_by(course_code=course.code).first()
             if not existing:
-                db.add(StudentRoadmap(
-                    student_id="166001",
-                    course_code=c.code,
-                    status="locked",
-                    year=c.suggested_year,
-                    semester=c.suggested_semester
-                ))
+                db.add(OfficialRooms(course_code=course.code))
 
-        # --- Recalculate real GPA for every student based on completed courses ---
-        from app.models.student import Student as _Student
-        all_students = db.query(_Student).all()
+        db.commit()
+
+        # --- Recalculate GPA for every existing student (universal, idempotent) ---
+        all_students = db.query(Student).all()
         for stu in all_students:
             items = db.query(StudentRoadmap).filter_by(student_id=stu.university_id).all()
             total_points = 0.0
@@ -295,39 +191,7 @@ def seed():
                 stu.current_gpa = round(total_points / total_credits, 2)
         db.commit()
 
-        # --- Seed Rooms Data ---
-        # Create an official room for every course
-        all_courses = db.query(Course).all()
-        for course in all_courses:
-            existing = db.query(OfficialRooms).filter_by(course_code=course.code).first()
-            if not existing:
-                db.add(OfficialRooms(course_code=course.code))
-
-
-        db.commit()
-
-        # --- Seed Chatbot History ---
-        chat_data = [
-            #ChatbotHistory(student_id="160309", message_content="Hello, how can I register for CS101?", sender_type="user"),
-        ]
-        for chat in chat_data:
-            existing = db.query(ChatbotHistory).filter_by(student_id=chat.student_id, message_content=chat.message_content).first()
-            if not existing:
-                db.add(chat)
-
-        # --- Seed Student Verification Table ---
-        verification_data = [
-            StudentVerification(email="ymtashtoush@cit.just.edu.jo",  university_id="160991"),
-            StudentVerification(email="rymohaidat22@cit.just.edu.jo.jo", university_id="160309"),
-            StudentVerification(email="csalnimri22@cit.just.edu.jo", university_id="162256"),
-        ]
-        for v in verification_data:
-            existing_v = db.query(StudentVerification).filter_by(email=v.email).first()
-            if not existing_v:
-                db.add(v)
-
-        db.commit()
-        print("All data (Students, Faculty, Courses) synced successfully!")
+        print("Seed complete — universal data (faculty, courses, official rooms) synced.")
 
     except Exception as e:
         db.rollback()
