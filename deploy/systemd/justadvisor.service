@@ -10,18 +10,13 @@ Group=root
 WorkingDirectory=/var/www/justadvisor/backend
 Environment=PYTHONPATH=/var/www/justadvisor/backend
 EnvironmentFile=/var/www/justadvisor/backend/.env
-ExecStart=/var/www/justadvisor/backend/venv/bin/gunicorn -c /var/www/justadvisor/deploy/gunicorn.conf.py main:app
-ExecReload=/bin/kill -s HUP $MAINPID
+# السطر الذهبي: تشغيل السوكت مع الـ Reload التلقائي لمنع الـ 502 للأبد
+ExecStart=/var/www/justadvisor/backend/venv/bin/python3 -m uvicorn main:socket_app --host 127.0.0.1 --port 8080 --workers 1 --reload
 Restart=always
-RestartSec=5s
+RestartSec=3s
 StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=justadvisor
-
-# Hardening
-NoNewPrivileges=true
-PrivateTmp=true
-ProtectSystem=full
 
 [Install]
 WantedBy=multi-user.target
