@@ -2,7 +2,8 @@ port: 7880
 rtc:
   port_range_start: 7882
   port_range_end: 7882
-  use_external_ip: true
+  use_external_ip: false
+  external_ip: "192.241.180.95"
 keys:
   devkey: "secret"
 tls:
