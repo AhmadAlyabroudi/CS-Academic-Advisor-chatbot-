@@ -14,3 +14,5 @@ passlib[bcrypt]==1.7.4
 langchain-google-genai>=2.0.0   # ChatGoogleGenerativeAI + GoogleGenerativeAIEmbeddings
 langchain-core>=0.3.0           # HumanMessage, prompt primitives
 pinecone>=5.0.0                 # vector DB client (queried directly — no langchain-pinecone needed)
+livekit
+livekit.api
