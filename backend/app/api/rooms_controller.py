@@ -24,7 +24,6 @@ def get_all_rooms(student_id: Optional[str] = None, db: Session = Depends(get_db
 
     official_rooms = db.query(OfficialRooms).filter(OfficialRooms.course_code.in_(enrolled_courses)).all() if enrolled_courses else []
     
-    # 2. User Created Rooms (Show all as requested)
     private_rooms = db.query(PrivateStudyRooms).all()
 
     rooms_response = []
