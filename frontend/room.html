@@ -334,7 +334,7 @@ let audioContext = null, analyser = null, microphone = null, animId = null;
 const peers = {};
 
 // ─── Socket.IO ────────────────────────────────────────────────────────────────
-const SERVER = 'https://csacademicadvisorchatbot.codes:8080';
+const SERVER = 'https://csacademicadvisorchatbot.codes';
 const socket = io(SERVER, { transports: ['websocket', 'polling'] });
 
 socket.on('connect', () => {
@@ -353,15 +353,16 @@ socket.on('existing-users', async ({ users }) => {
 });
 
 // شخص جديد دخل الغرفة
-socket.on('user-joined', ({ userId, name, sid }) => {
+socket.on('user-joined', ({ user_id, name, sid }) => {
   addRemoteTile(sid, name);
   updateMemberCount();
 });
 
 // شخص غادر الغرفة
-socket.on('user-left', ({ userId, name }) => {
+socket.on('user-left', ({ user_id, name }) => {
   for (const sid of Object.keys(peers)) {
-    if (peers[sid].userId === userId || sid === userId) {
+    // التعديل هون: تحويل userId لـ user_id لتطابق داتا الباكيند
+    if (peers[sid].user_id === user_id || sid === user_id) {
       removePeer(sid);
       break;
     }
