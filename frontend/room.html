@@ -361,7 +361,6 @@ socket.on('user-joined', ({ user_id, name, sid }) => {
 // شخص غادر الغرفة
 socket.on('user-left', ({ user_id, name }) => {
   for (const sid of Object.keys(peers)) {
-    // التعديل هون: تحويل userId لـ user_id لتطابق داتا الباكيند
     if (peers[sid].user_id === user_id || sid === user_id) {
       removePeer(sid);
       break;
