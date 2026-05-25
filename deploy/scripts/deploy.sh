@@ -20,10 +20,7 @@ cd "$APP_DIR/backend"
 "$VENV/alembic" upgrade head
 cd "$APP_DIR"
 
-# ── 🚀 [إضافة أحمد]: المزامنة التلقائية للبيانات والـ AI ──
-echo "[deploy] Auto-syncing local SQLite data to PostgreSQL..."
-"$VENV/python" backend/migrate_sqlite_to_pg.py || echo "⚠️ Migration skipped or had non-critical issues."
-
+# ── Auto-sync AI knowledge base to Pinecone ──────────────────────────────────
 echo "[deploy] Auto-syncing AI Knowledge Base to Pinecone..."
 "$VENV/python" backend/scripts/seed_knowledge_base.py || echo "⚠️ AI Seeding skipped or had non-critical issues."
 # ────────────────────────────────────────────────────────

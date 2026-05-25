@@ -5,9 +5,9 @@
 # ─────────────────────────────────────────────────────────────────────────────
 set -euo pipefail
 
-REPO_URL="https://github.com/YOUR_GITHUB_USERNAME/YOUR_REPO_NAME.git"
+REPO_URL="https://github.com/AhmadAlyabroudi/CS-Academic-Advisor-chatbot-.git"
 APP_DIR="/var/www/justadvisor"
-DOMAIN="yourdomain.com"
+DOMAIN="csacademicadvisorchatbot.codes"
 
 echo "════════════════════════════════════════"
 echo "  JUST Advisor – Initial Server Setup  "
@@ -56,8 +56,7 @@ mkdir -p /var/log/justadvisor /var/log/coturn
 chown www-data:www-data /var/log/justadvisor
 
 # ── 7. Nginx config ───────────────────────────────────────────────────────────
-sed "s/yourdomain.com/$DOMAIN/g" "$APP_DIR/deploy/nginx.conf" \
-    > /etc/nginx/sites-available/justadvisor
+cp "$APP_DIR/deploy/nginx.conf" /etc/nginx/sites-available/justadvisor
 ln -sf /etc/nginx/sites-available/justadvisor /etc/nginx/sites-enabled/justadvisor
 rm -f /etc/nginx/sites-enabled/default
 nginx -t && systemctl reload nginx
@@ -94,5 +93,3 @@ echo "Migrations applied."
 systemctl start justadvisor
 echo ""
 echo "✅  Setup complete.  Check status with: systemctl status justadvisor"
-echo "   Then run the data migration if needed:"
-echo "   cd $APP_DIR/backend && python migrate_sqlite_to_pg.py"

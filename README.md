@@ -94,7 +94,6 @@ GP2 Project Website/
 │   │   └── seed_knowledge_base.py      # Embeds .txt files → upserts to Pinecone
 │   ├── .env.example
 │   ├── main.py                         # App factory + router registration
-│   ├── migrate_sqlite_to_pg.py         # One-time SQLite → PostgreSQL migration
 │   └── requirements.txt
 ├── deploy/
 │   ├── coturn/turnserver.conf
@@ -146,7 +145,7 @@ pip install -r requirements.txt
 
 # 4. Configure environment
 cp .env.example .env
-# Edit .env — SECRET_KEY is required. DATABASE_URL defaults to SQLite.
+# Edit .env — DATABASE_URL (PostgreSQL) and SECRET_KEY are required.
 
 # 5. Run migrations
 alembic upgrade head
@@ -185,7 +184,7 @@ All variables are loaded from `backend/.env`. Copy from `backend/.env.example`.
 | Variable | Required | Default | Description |
 |---|---|---|---|
 | `SECRET_KEY` | Yes | — | Random 32-byte hex string |
-| `DATABASE_URL` | No | `sqlite:///./Project.db` | Full SQLAlchemy connection URL |
+| `DATABASE_URL` | Yes | — | Full PostgreSQL SQLAlchemy connection URL |
 | `ENVIRONMENT` | No | `development` | `development` or `production` |
 | `ALLOWED_ORIGINS` | No | `*` | Comma-separated CORS origins |
 | `GEMINI_API_KEY` | No* | — | Google AI Studio key |
@@ -287,22 +286,12 @@ SIMILARITY_THRESHOLD = 0.7
 
 ## Database
 
-### Local — SQLite (default)
-
-No setup needed. `Project.db` is created automatically on first run.
-
-### Production — PostgreSQL
+The project uses **PostgreSQL** exclusively (local and production). Set `DATABASE_URL` in `backend/.env` before running anything.
 
 ```bash
-# On the Droplet, after setting DATABASE_URL in .env:
-cd /var/www/justadvisor/backend
-../venv/bin/alembic upgrade head
-```
-
-### SQLite → PostgreSQL Migration
-
-```bash
-SQLITE_PATH=/path/to/Project.db python migrate_sqlite_to_pg.py
+# Apply schema migrations:
+cd backend
+alembic upgrade head
 ```
 
 ### Adding Students / Faculty via Seed

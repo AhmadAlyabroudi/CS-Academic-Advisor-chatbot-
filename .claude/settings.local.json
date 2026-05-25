@@ -9,7 +9,8 @@
       "Bash(ls /c/Python*)",
       "Bash(command -v python3.11)",
       "Bash(command -v py)",
-      "Bash(/c/Python314/python.exe -c ' *)"
+      "Bash(/c/Python314/python.exe -c ' *)",
+      "Bash(python -c \"import psycopg2; print\\('psycopg2 OK'\\)\")"
     ]
   }
 }

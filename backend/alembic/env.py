@@ -15,9 +15,10 @@ load_dotenv()
 # ── Alembic Config object ─────────────────────────────────────────────────────
 config = context.config
 
-# Override the URL from the environment variable so the same ini works for both
-# SQLite (dev) and PostgreSQL (production).
-db_url = os.getenv("DATABASE_URL", "sqlite:///./Project.db")
+# Override the URL from the environment variable.
+db_url = os.getenv("DATABASE_URL")
+if not db_url:
+    raise RuntimeError("DATABASE_URL must be set (PostgreSQL connection string)")
 config.set_main_option("sqlalchemy.url", db_url)
 
 if config.config_file_name is not None:
