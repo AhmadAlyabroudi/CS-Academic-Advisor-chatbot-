@@ -14,6 +14,7 @@ from app.api.roadmap_controller import router as roadmap_router
 from app.api.rooms_controller import router as rooms_router
 from app.api.chatbot_controller import router as chatbot_router
 from app.api.gpa_controller import router as gpa_router
+from app.api.gpa_controller import router as gpa_router
 from app.api.config_controller import router as config_router
 from app.models.student_roadmap import StudentRoadmap
 from app.models.study_rooms import OfficialRooms, PrivateStudyRooms
@@ -29,8 +30,11 @@ app = FastAPI(
     version="0.1.0"
 )
 
-# Automigrate (create tables) — Alembic owns the canonical schema; this is a safety net.
-Base.metadata.create_all(bind=engine)
+# تأمين بناء الجداول لضمان عدم انهيار التطبيق إذا كانت القاعدة ممتلئة أو غير جاهزة لحظياً
+try:
+    Base.metadata.create_all(bind=engine)
+except Exception as db_err:
+    print(f"Database tables warning (Alembic fallback): {db_err}")
 
 
 def seed():
@@ -40,9 +44,6 @@ def seed():
       - CS curriculum (courses)
       - Official study rooms (one per course)
       - GPA recompute for every existing student (idempotent)
-
-    No per-student records are seeded here. Each student's profile and roadmap
-    are created on /signup via app/api/student_controller.py.
     """
     db = SessionLocal()
     try:
@@ -160,7 +161,7 @@ def seed():
 
         db.commit()
 
-        # --- Official rooms (one per course — universal) ---
+        # --- Official rooms ---
         all_courses = db.query(Course).all()
         for course in all_courses:
             existing = db.query(OfficialRooms).filter_by(course_code=course.code).first()
@@ -170,9 +171,6 @@ def seed():
         db.commit()
 
         # --- Student verification whitelist ---
-        # Only email + university_id pairs in this table are allowed to sign up.
-        # Add new students here (or insert directly into student_verification) to
-        # let them register through /signup.
         verification_data = [
             StudentVerification(email="ymtashtoush@cit.just.edu.jo",    university_id="160991"),
             StudentVerification(email="rymohaidat22@cit.just.edu.jo.jo", university_id="160309"),
@@ -185,7 +183,7 @@ def seed():
 
         db.commit()
 
-        # --- Recalculate GPA for every existing student (universal, idempotent) ---
+        # --- Recalculate GPA ---
         all_students = db.query(Student).all()
         for stu in all_students:
             items = db.query(StudentRoadmap).filter_by(student_id=stu.university_id).all()
@@ -216,8 +214,9 @@ def seed():
         db.close()
 
 
-# Run seeding
-seed()
+# حماية تشغيل الـ seed ليعمل فقط في البيئة الحية وليس عند استيراد الملف بشكل مكرر
+if __name__ == "__main__":
+    seed()
 
 # Register REST routers
 app.include_router(student_router)
