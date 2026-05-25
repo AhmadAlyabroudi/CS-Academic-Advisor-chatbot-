@@ -12,9 +12,6 @@ Environment=PYTHONPATH=/var/www/justadvisor/backend
 EnvironmentFile=/var/www/justadvisor/backend/.env
 # السطر الذهبي: تشغيل السوكت مع الـ Reload التلقائي لمنع الـ 502 للأبد
 ExecStart=/var/www/justadvisor/backend/venv/bin/python3 -m uvicorn main:socket_app --host 127.0.0.1 --port 8080 --workers 1 --reload
-Restart=always
-RestartSec=3s
-StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=justadvisor
 
