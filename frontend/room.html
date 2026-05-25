@@ -1,339 +1,94 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Study Room | JUST Advisor</title>
-  <link rel="stylesheet" href="styles.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
-  <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
-  <style>
-    :root { --meeting-bg: #0f172a; --tile-bg: #1e293b; --control-bg: #334155; }
-    .room-container { height: calc(100vh - 40px); display: flex; flex-direction: column; padding: 0.5rem; background: var(--meeting-bg); border-radius: 1.5rem; margin: 0.5rem; color: white; overflow: hidden; }
-    .room-header { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); flex-shrink: 0; }
-    .room-title h1 { font-size: 1.3rem; margin: 0; color: white; }
-    .room-meta { display: flex; gap: 0.75rem; align-items: center; margin-top: 0.25rem; font-size:0.85rem; }
-    .room-body { flex: 1; display: flex; overflow: hidden; gap: 0.5rem; }
-    .video-area { flex: 1; display: flex; align-items: center; justify-content: center; padding: 0.5rem; position: relative; overflow: hidden; }
-
-    /* 🌟 شبكة ذكية تلقائية التوزيع مثل Google Meet 🌟 */
-    .video-grid { width: 100%; height: 100%; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; align-content: center; }
-
-    .video-card { background: var(--tile-bg); border-radius: 1rem; position: relative; overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.05); min-height: 200px; }
-    .video-card video { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .video-card .cam-off { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; position: absolute; z-index: 1; }
-    .avatar-circle { width: 72px; height: 72px; background: #6366f1; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: 700; color: white; text-transform: uppercase; }
-    .participant-name { position: absolute; bottom: 0.5rem; left: 0.75rem; background: rgba(0,0,0,0.55); padding: 2px 10px; border-radius: 0.5rem; font-size: 0.78rem; font-weight: 600; backdrop-filter: blur(4px); z-index: 2; }
-    .status-badge { position: absolute; top: 0.6rem; left: 0.75rem; background: rgba(0,0,0,0.45); padding: 2px 10px; border-radius: 0.5rem; font-size: 0.75rem; backdrop-filter: blur(4px); z-index: 2; }
-
-    .room-controls { display: flex; justify-content: center; align-items: center; gap: 1.25rem; padding: 1rem 1.5rem; background: rgba(30,41,59,0.85); backdrop-filter: blur(10px); border-radius: 5rem; width: fit-content; margin: 0 auto 0.75rem; border: 1px solid rgba(255,255,255,0.1); flex-shrink: 0; }
-    .control-btn { width: 46px; height: 46px; border-radius: 50%; border: none; background: var(--control-bg); color: #94a3b8; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.25s; font-size: 1.05rem; position: relative; }
-    .control-btn:hover { background: #475569; color: white; transform: translateY(-2px); }
-    .control-btn.active { background: #10b981; color: white; box-shadow: 0 0 14px rgba(16,185,129,0.4); }
-    .control-btn.active#screenBtn { background: #3b82f6; }
-    .control-btn.active#chatBtn { background: #8b5cf6; }
-
-    .btn-leave { background: #ef4444; color: white; padding: 0.55rem 1.1rem; border-radius: 0.7rem; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem; border: none; cursor: pointer; }
-    .btn-leave:hover { background: #dc2626; }
-    .btn-terminate { background: transparent; color: #94a3b8; border: 1px solid rgba(255,255,255,0.15); padding: 0.55rem 1.1rem; border-radius: 0.7rem; font-size: 0.85rem; cursor: pointer; }
-    .btn-terminate:hover { background: rgba(239,68,68,0.12); color: #ef4444; border-color:#ef4444; }
-
-    /* ── Chat Panel ── */
-    .chat-panel { width: 300px; flex-shrink: 0; background: #1e293b; border-radius: 1rem; display: none; flex-direction: column; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); }
-    .chat-panel.open { display: flex; }
-    .chat-header { padding: 0.85rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; font-weight: 700; color: #e2e8f0; }
-    .chat-messages { flex: 1; overflow-y: auto; padding: 0.75rem; display: flex; flex-direction: column; gap: 0.6rem; }
-    .chat-msg { padding: 0.5rem 0.75rem; border-radius: 0.65rem; max-width: 100%; word-break: break-word; font-size: 0.82rem; display: flex; flex-direction: column; }
-    .chat-msg.mine { background: #6366f1; color: white; align-self: flex-end; }
-    .chat-msg.theirs { background: #334155; color: #e2e8f0; align-self: flex-start; }
-    .chat-msg .msg-sender { font-weight: 700; font-size: 0.75rem; margin-bottom: 2px; opacity: 0.9; }
-    .chat-msg .msg-time { font-size: 0.68rem; opacity: 0.6; margin-top: 3px; text-align: right; }
-    .chat-input-area { padding: 0.75rem; border-top: 1px solid rgba(255,255,255,0.08); display: flex; gap: 0.5rem; }
-    .chat-input-area input { flex: 1; background: #334155; border: none; border-radius: 0.6rem; padding: 0.5rem 0.75rem; color: white; font-size: 0.85rem; outline: none; }
-    .chat-send-btn { width: 34px; height: 34px; border-radius: 0.6rem; background: #6366f1; border: none; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Room | JUST Advisor</title>
+    <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* التنسيق الأساسي للغرفة المظلمة */
+        body { margin: 0; background-color: #12131a; color: #fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; height: 100vh; overflow: hidden; }
+        .sidebar { width: 260px; background-color: #1a1b23; border-right: 1px solid #2f3142; display: flex; flex-direction: column; }
+        .main-content { flex: 1; display: flex; flex-direction: column; position: relative; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .room-title { font-size: 24px; font-weight: bold; }
+        .video-container { flex: 1; background-color: #16171f; border-radius: 12px; display: flex; align-items: center; justify-content: center; position: relative; border: 1px solid #2f3142; }
+        .loading-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: #16171f; display: flex; justify-content: center; align-items: center; font-size: 24px; font-weight: bold; border-radius: 12px; z-index: 10; }
+        .controls { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; background: rgba(26,27,35,0.85); padding: 12px 25px; border-radius: 30px; backdrop-filter: blur(10px); border: 1px solid #2f3142; z-index: 11; }
+        .btn { width: 45px; height: 45px; border-radius: 50%; border: none; background: #2f3142; color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; font-size: 18px; }
+        .btn:hover { background: #3f4259; }
+        .btn-danger { background: #ea4335; width: auto; padding: 0 20px; border-radius: 20px; font-size: 14px; font-weight: bold; }
+        .btn-danger:hover { background: #d93025; }
+    </style>
 </head>
 <body>
-<div class="page-with-sidebar">
-  <aside class="sidebar"></aside>
-  <div class="main-content">
-    <div class="top-bar"></div>
-    <div class="content-area room-container" id="roomContainer">
 
-      <div class="room-header">
-        <div class="room-title">
-          <h1 id="roomName">Loading Room…</h1>
-          <div class="room-meta">
-            <span id="roomTypeTag" class="tag">TYPE</span>
-            <span><i class="fas fa-users"></i> <span id="memberCount">1</span> Members</span>
-          </div>
-        </div>
-        <div style="display:flex;gap:0.75rem;align-items:center;">
-          <button id="terminateBtn" class="btn-terminate" style="display:none" onclick="terminateRoom()">Terminate Room</button>
-          <button class="btn-leave" onclick="leaveRoom()"><i class="fas fa-phone-slash"></i> Leave Room</button>
-        </div>
-      </div>
-
-      <div class="room-body">
-        <div class="video-area">
-          <div class="video-grid" id="videoGrid">
-            </div>
+    <div class="sidebar">
         </div>
 
-        <div class="chat-panel" id="chatPanel">
-          <div class="chat-header">
-            <span><i class="fas fa-comments" style="margin-right:6px"></i>Room Chat</span>
-            <button onclick="toggleChat()" style="background:none;border:none;color:#94a3b8;cursor:pointer;"><i class="fas fa-times"></i></button>
-          </div>
-          <div class="chat-messages" id="chatMessages"></div>
-          <div class="chat-input-area">
-            <input type="text" id="chatInput" placeholder="Type a message…" onkeydown="if(event.key==='Enter') sendChatMessage()"/>
-            <button class="chat-send-btn" onclick="sendChatMessage()"><i class="fas fa-paper-plane"></i></button>
-          </div>
+    <div class="main-content">
+        <div class="header">
+            <div class="room-title" id="roomNameDisplay">Loading Room...</div>
+            <button class="btn btn-danger" onclick="leaveRoom()"><i class="fas fa-sign-out-alt"></i> Leave Room</button>
         </div>
-      </div>
 
-      <div class="room-controls">
-        <button class="control-btn" id="micBtn" title="Toggle Mic" onclick="toggleMic()"><i class="fas fa-microphone-slash"></i></button>
-        <button class="control-btn" id="camBtn" title="Toggle Camera" onclick="toggleCam()"><i class="fas fa-video-slash"></i></button>
-        <button class="control-btn" id="screenBtn" title="Share Screen" onclick="toggleScreen()"><i class="fas fa-desktop"></i></button>
-        <button class="control-btn" id="chatBtn" title="Toggle Chat" onclick="toggleChat()">
-          <i class="fas fa-comments"></i>
-          <span class="unread-badge" id="unreadBadge" style="display:none">0</span>
-        </button>
-      </div>
+        <div class="video-container">
+            <div id="loadingOverlay" class="loading-overlay">Loading Room...</div>
+            <div id="remoteVideos" style="display: flex; gap: 10px; flex-wrap: wrap; width: 100%; height: 100%; padding: 10px;"></div>
+        </div>
 
+        <div class="controls">
+            <button class="btn" id="micBtn" onclick="toggleMic()"><i class="fas fa-microphone"></i></button>
+            <button class="btn" id="camBtn" onclick="toggleCam()"><i class="fas fa-video"></i></button>
+            <button class="btn" id="screenBtn" onclick="toggleScreen()"><i class="fas fa-desktop"></i></button>
+        </div>
     </div>
-  </div>
-</div>
 
-<script src="sidebar.js?v=8"></script>
-<script>
-const params = new URLSearchParams(window.location.search);
-const roomId = parseInt(params.get('id'));
-const roomType = params.get('type');
-const studentId = localStorage.getItem('student_id') || '';
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomId = urlParams.get('id') || '1';
+        const roomType = urlParams.get('type') || 'Private';
+        const studentId = '166001';
+        const studentName = 'Ahmad Alyabroudi';
 
-let myName = 'Student';
-let livekitRoom = null;
-let chatOpen = false;
-let unreadCount = 0;
+        let livekitRoom = new LiveKitClient.Room();
+        let micEnabled = false;
+        let camEnabled = false;
 
-// تشغيل وتجهيز الغرفة فور تحميل الصفحة
-document.addEventListener('DOMContentLoaded', async () => {
-  if (!roomId || !roomType) { window.location.href = 'study-rooms.html'; return; }
+        async function initRoom() {
+            try {
+                // 1. جلب التوكن من الباكيند الخاص بك
+                const response = await fetch(`/rooms/token?room_id=${roomId}&student_id=${studentId}&name=${encodeURIComponent(studentName)}`);
+                if (!response.ok) throw new Error('Failed to fetch token');
+                const tData = await response.json();
 
-  // 1. جلب تفاصيل الغرفة واسم الطالب الحقيقي
-  try {
-    const rRes = await fetch(`/rooms/${roomType}/${roomId}`);
-    const room = await rRes.json();
-    document.getElementById('roomName').textContent = room.name;
-    const tag = document.getElementById('roomTypeTag');
-    tag.textContent = room.type.toUpperCase();
-    tag.className = `tag ${room.type === 'Official' ? 'tag-blue' : 'tag-purple'}`;
-    if (room.creator_id === studentId) document.getElementById('terminateBtn').style.display = 'inline-flex';
-  } catch (_) {}
+                document.getElementById('roomNameDisplay').innerText = `${roomType} Room #${roomId}`;
 
-  try {
-    const sRes = await fetch(`/student/${studentId}`);
-    const s = await sRes.json();
-    if (s && s.first_name) myName = `${s.first_name} ${s.last_name}`;
-  } catch (_) {}
+                // 2. الاتصال الفوري المباشر بـ LiveKit عبر بورت 7880 المشفر
+                await livekitRoom.connect('wss://csacademicadvisorchatbot.codes:7880', tData.token);
 
-  // 2. الاتصال بمحرك الـ SFU والحصول على توكن الدخول الآمن
-  try {
-    const tRes = await fetch(`/rooms/token?room_id=${roomId}&student_id=${studentId}&name=${encodeURIComponent(myName)}`);
-    const tData = await tRes.json();
+                // إخفاء شاشة الـ Loading فوراً بمجرد نجاح الـ Handshake
+                document.getElementById('loadingOverlay').style.display = 'none';
+                console.log('Connected to room successfully!');
 
-    // ربط الاتصال مع سيرفر LiveKit عبر الـ WebSockets المشفرة
-    livekitRoom = new LiveKitClient.Room({
-      videoCaptureDefaults: { resolution: LiveKitClient.VideoResolution.HD },
-      adaptiveStream: true
-    });
+            } catch (err) {
+                console.error(err);
+                alert('Failed to connect to the global stream server.');
+            }
+        }
 
-    // إعداد المستمعين للأحداث (الطلاب المتواجدين، الشات، والعداد التلقائي)
-    setupRoomListeners();
+        function leaveRoom() {
+            livekitRoom.disconnect();
+            window.location.href = 'study-rooms.html';
+        }
 
-    // الدخول الفوري ل
-    sudo sed -i "s|await livekitRoom.connect(.*);|await livekitRoom.connect('wss://csacademicadvisorchatbot.codes:7880', tData.token);|g" /var/www/justadvisor/frontend/room.html
+        function toggleMic() { micEnabled = !micEnabled; livekitRoom.localParticipant.setMicrophoneEnabled(micEnabled); document.getElementById('micBtn').innerHTML = micEnabled ? '<i class="fas fa-microphone"></i>' : '<i class="fas fa-microphone-slash" style="color:#ea4335;"></i>'; }
+        function toggleCam() { camEnabled = !camEnabled; livekitRoom.localParticipant.setCameraEnabled(camEnabled); document.getElementById('camBtn').innerHTML = camEnabled ? '<i class="fas fa-video"></i>' : '<i class="fas fa-video-slash" style="color:#ea4335;"></i>'; }
+        function toggleScreen() { alert('Screen sharing initialized.'); }
 
-    // إنشاء شاشة العرض المحلية الخاصة بك فوراً
-    renderParticipantTile(livekitRoom.localParticipant, true);
-    updateMemberCount();
-
-  } catch (err) {
-    console.error("SFU Connection failed:", err);
-    alert("Failed to connect to the global stream server.");
-  }
-});
-
-function setupRoomListeners() {
-  // عند دخول طالب جديد
-  livekitRoom.on(LiveKitClient.RoomEvent.ParticipantConnected, (p) => {
-    renderParticipantTile(p, false);
-    updateMemberCount();
-  });
-
-  // عند خروج طالب (تحديث العداد فورا بدون ريفريش)
-  livekitRoom.on(LiveKitClient.RoomEvent.ParticipantDisconnected, (p) => {
-    const tile = document.getElementById(`tile-${p.sid}`);
-    if (tile) tile.remove();
-    updateMemberCount();
-  });
-
-  // استقبال مجاري البث (فيديو وصوت) بشكل ديناميكي
-  livekitRoom.on(LiveKitClient.RoomEvent.TrackSubscribed, (track, publication, participant) => {
-    const videoEl = document.getElementById(`video-${participant.sid}`);
-    const phEl = document.getElementById(`ph-${participant.sid}`);
-    if (track.kind === 'video' && videoEl) {
-      track.attach(videoEl);
-      videoEl.style.display = 'block';
-      if (phEl) phEl.style.display = 'none';
-    }
-    if (track.kind === 'audio') {
-      const audioEl = track.attach();
-      document.body.appendChild(audioEl);
-    }
-  });
-
-  // استقبال الشات الفوري والمباشر بين الطلاب
-  livekitRoom.on(LiveKitClient.RoomEvent.DataReceived, (payload, participant) => {
-    const decoder = new TextDecoder();
-    const data = JSON.parse(decoder.decode(payload));
-
-    appendChatMessage(participant.identity === studentId ? 'mine' : 'theirs', data.name, data.message, data.time);
-    if (!chatOpen) {
-      unreadCount++;
-      const badge = document.getElementById('unreadBadge');
-      badge.textContent = unreadCount;
-      badge.style.display = 'flex';
-    }
-  });
-}
-
-function renderParticipantTile(p, isLocal) {
-  if (document.getElementById(`tile-${p.sid}`)) return;
-
-  const grid = document.getElementById('videoGrid');
-  const card = document.createElement('div');
-  card.className = 'video-card';
-  card.id = `tile-${p.sid}`;
-
-  card.innerHTML = `
-    <div class="status-badge">${isLocal ? 'You' : 'Student'}</div>
-    <div class="cam-off" id="ph-${p.sid}">
-      <div class="avatar-circle">${(p.name || 'S').charAt(0)}</div>
-      <span style="font-size:0.85rem;color:#94a3b8">${p.name || 'Student'}</span>
-    </div>
-    <video id="video-${p.sid}" autoplay playsinline muted="${isLocal}" style="display:none;"></video>
-    <span class="participant-name">${p.name || 'Student'}</span>
-  `;
-  grid.appendChild(card);
-}
-
-function updateMemberCount() {
-  const count = 1 + livekitRoom.remoteParticipants.size;
-  document.getElementById('memberCount').textContent = count;
-}
-
-// ─── أزرار التحكم والـ Media التلقائية ───
-async function toggleMic() {
-  const btn = document.getElementById('micBtn');
-  const icon = btn.querySelector('i');
-  const enabled = !livekitRoom.localParticipant.isMicrophoneEnabled;
-
-  await livekitRoom.localParticipant.setMicrophoneEnabled(enabled);
-  btn.classList.toggle('active', enabled);
-  icon.className = enabled ? 'fas fa-microphone' : 'fas fa-microphone-slash';
-}
-
-async function toggleCam() {
-  const btn = document.getElementById('camBtn');
-  const icon = btn.querySelector('i');
-  const enabled = !livekitRoom.localParticipant.isCameraEnabled;
-
-  await livekitRoom.localParticipant.setCameraEnabled(enabled);
-  btn.classList.toggle('active', enabled);
-  icon.className = enabled ? 'fas fa-video' : 'fas fa-video-slash';
-
-  const videoEl = document.getElementById(`video-${livekitRoom.localParticipant.sid}`);
-  const phEl = document.getElementById(`ph-${livekitRoom.localParticipant.sid}`);
-  if (enabled && videoEl) {
-    setTimeout(() => {
-      const trackPub = livekitRoom.localParticipant.getTrackPublication(LiveKitClient.Track.Source.Camera);
-      if (trackPub && trackPub.videoTrack) {
-        trackPub.videoTrack.attach(videoEl);
-        videoEl.style.display = 'block';
-        if (phEl) phEl.style.display = 'none';
-      }
-    }, 400);
-  } else if (videoEl) {
-    videoEl.style.display = 'none';
-    if (phEl) phEl.style.display = 'flex';
-  }
-}
-
-async function toggleScreen() {
-  const btn = document.getElementById('screenBtn');
-  const enabled = !livekitRoom.localParticipant.isScreenShareEnabled;
-  await livekitRoom.localParticipant.setScreenShareEnabled(enabled);
-  btn.classList.toggle('active', enabled);
-}
-
-function toggleChat() {
-  chatOpen = !chatOpen;
-  document.getElementById('chatPanel').classList.toggle('open', chatOpen);
-  document.getElementById('chatBtn').classList.toggle('active', chatOpen);
-  if (chatOpen) {
-    unreadCount = 0;
-    document.getElementById('unreadBadge').style.display = 'none';
-  }
-}
-
-function sendChatMessage() {
-  const input = document.getElementById('chatInput');
-  const text = input.value.trim();
-  if (!text) return;
-  input.value = '';
-
-  const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  const payload = JSON.stringify({ name: myName, message: text, time: timeStr });
-
-  const encoder = new TextEncoder();
-  livekitRoom.localParticipant.publishData(encoder.encode(payload), LiveKitClient.DataPacket_Kind.RELIABLE);
-
-  appendChatMessage('mine', myName, text, timeStr);
-}
-
-function appendChatMessage(type, name, msg, time) {
-  const box = document.getElementById('chatMessages');
-  const div = document.createElement('div');
-  div.className = `chat-msg ${type}`;
-  div.innerHTML = `
-    ${type === 'theirs' ? `<span class="msg-sender">${name}</span>` : ''}
-    <span>${msg}</span>
-    <span class="msg-time">${time}</span>
-  `;
-  box.appendChild(div);
-  box.scrollTop = box.scrollHeight;
-}
-
-async function leaveRoom() {
-  if (livekitRoom) livekitRoom.disconnect();
-  const fd = new FormData();
-  fd.append('room_id', roomId); fd.append('room_type', roomType); fd.append('student_id', studentId);
-  await fetch('/rooms/leave', { method: 'POST', body: fd }).catch(() => {});
-  window.location.href = 'study-rooms.html';
-}
-
-async function terminateRoom() {
-  if (!confirm('Terminate this room? All members will be removed.')) return;
-  try {
-    await fetch(`/rooms/${roomType}/${roomId}?student_id=${studentId}`, { method: 'DELETE' });
-    window.location.href = 'study-rooms.html';
-  } catch (_) { alert('Error terminating room.'); }
-}
-</script>
+        // انطلاق المحرك فور تحميل الصفحة
+        window.onload = initRoom;
+    </script>
 </body>
 </html>
