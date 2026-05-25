@@ -5,3 +5,6 @@ rtc:
   use_external_ip: true
 keys:
   devkey: "secret"
+tls:
+  cert: /etc/letsencrypt/live/csacademicadvisorchatbot.codes/fullchain.pem
+  key: /etc/letsencrypt/live/csacademicadvisorchatbot.codes/privkey.pem
