@@ -303,7 +303,7 @@ function escapeHtml(str) {
 
 // ─── Room params ──────────────────────────────────────────────────────────────
 const params     = new URLSearchParams(window.location.search);
-const roomId     = parseInt(params.get('id')); // 👈 التعديل هون (تحويل لـ Integer)
+const roomId     = parseInt(params.get('id'));
 const roomType   = params.get('type');
 const studentId  = localStorage.getItem('student_id') || '';
 
