@@ -10,8 +10,7 @@ Group=root
 WorkingDirectory=/var/www/justadvisor/backend
 Environment=PYTHONPATH=/var/www/justadvisor/backend
 EnvironmentFile=/var/www/justadvisor/backend/.env
-ExecStart=/var/www/justadvisor/backend/venv/bin/python3 -m uvicorn main:socket_app --host 127.0.0.1 --port 8000 --workers 1 --reload
-Restart=always
+ExecStart=/var/www/justadvisor/backend/venv/bin/python3 -m uvicorn main:socket_app --host 127.0.0.1 --port 8000 --workers 1Restart=always
 RestartSec=3s
 StandardOutput=journal
 StandardError=journal
