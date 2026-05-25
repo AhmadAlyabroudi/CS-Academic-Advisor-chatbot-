@@ -3,9 +3,5 @@ rtc:
   port_range_start: 7882
   port_range_end: 7882
   use_external_ip: true
-  force_tcp: true
 keys:
   devkey: "secret"
-tls:
-  cert: /etc/letsencrypt/live/csacademicadvisorchatbot.codes/fullchain.pem
-  key: /etc/letsencrypt/live/csacademicadvisorchatbot.codes/privkey.pem
