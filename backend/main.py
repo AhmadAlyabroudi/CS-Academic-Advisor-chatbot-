@@ -169,6 +169,22 @@ def seed():
 
         db.commit()
 
+        # --- Student verification whitelist ---
+        # Only email + university_id pairs in this table are allowed to sign up.
+        # Add new students here (or insert directly into student_verification) to
+        # let them register through /signup.
+        verification_data = [
+            StudentVerification(email="ymtashtoush@cit.just.edu.jo",    university_id="160991"),
+            StudentVerification(email="rymohaidat22@cit.just.edu.jo.jo", university_id="160309"),
+            StudentVerification(email="csalnimri22@cit.just.edu.jo",   university_id="162256"),
+        ]
+        for v in verification_data:
+            existing_v = db.query(StudentVerification).filter_by(email=v.email).first()
+            if not existing_v:
+                db.add(v)
+
+        db.commit()
+
         # --- Recalculate GPA for every existing student (universal, idempotent) ---
         all_students = db.query(Student).all()
         for stu in all_students:
