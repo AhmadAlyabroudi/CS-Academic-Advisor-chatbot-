@@ -312,14 +312,25 @@ let myName        = 'Student';
 let isCreator     = false;
 let localStream   = null;
 let screenStream  = null;
-let iceConfig     = { iceServers: [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }] };
 let unreadCount   = 0;
 let chatOpen      = false;
+
+// ─── تعديل هام: ربط سيرفر الـ TURN المذكور في الـ .env مباشرة ───
+let iceConfig = {
+  iceServers: [
+    { urls: 'stun:192.241.180.95:3478' },
+    {
+      urls: 'turn:192.241.180.95:3478',
+      username: 'justadvisor',
+      credential: 'Avanger@95_turn_password'
+    }
+  ]
+};
 
 // Volume monitor
 let audioContext = null, analyser = null, microphone = null, animId = null;
 
-// Peer connections: peerId (socket sid) → { pc: RTCPeerConnection, name: string }
+// Peer connections: peerId (socket sid) → { pc: RTCPeerConnection, name: string, userId: string }
 const peers = {};
 
 // ─── Socket.IO ────────────────────────────────────────────────────────────────
@@ -327,26 +338,30 @@ const SERVER = window.location.origin;
 const socket = io(SERVER, { transports: ['websocket', 'polling'] });
 
 socket.on('connect', () => {
+  // إرسال طلب انضمام للغرفة بالباكيند
   socket.emit('join_room', { roomId, userId: studentId, name: myName });
 });
 
-// Someone already in the room when we joined — initiate offer for each
+// استقبال قائمة المستخدمين المتواجدين حالياً قبل دخولنا
 socket.on('existing-users', async ({ users }) => {
   for (const user of users) {
-    await createOffer(user.sid, user.name);
+    if (user.sid !== socket.id) {
+      addRemoteTile(user.sid, user.name);
+      await createOffer(user.sid, user.name);
+    }
   }
 });
 
-// A new user joined after us — they will send us an offer
+// شخص جديد دخل الغرفة
 socket.on('user-joined', ({ userId, name, sid }) => {
   addRemoteTile(sid, name);
   updateMemberCount();
 });
 
+// شخص غادر الغرفة
 socket.on('user-left', ({ userId, name }) => {
-  // Find their tile by iterating peers
   for (const sid of Object.keys(peers)) {
-    if (peers[sid].userId === userId) {
+    if (peers[sid].userId === userId || sid === userId) {
       removePeer(sid);
       break;
     }
@@ -358,19 +373,26 @@ socket.on('member-count', ({ count }) => {
   document.getElementById('memberCount').textContent = count;
 });
 
+// استقبال الـ WebRTC Offer
 socket.on('offer', async ({ from, sdp }) => {
   await handleOffer(from, sdp);
 });
 
+// استقبال الـ WebRTC Answer
 socket.on('answer', async ({ from, sdp }) => {
   const entry = peers[from];
-  if (entry) await entry.pc.setRemoteDescription(new RTCSessionDescription(sdp));
+  if (entry && entry.pc) {
+    await entry.pc.setRemoteDescription(new RTCSessionDescription(sdp));
+  }
 });
 
+// استقبال الـ ICE Candidates لتسهيل التوصيل عبر الـ TURN
 socket.on('ice-candidate', async ({ from, candidate }) => {
   const entry = peers[from];
-  if (entry && candidate) {
-    try { await entry.pc.addIceCandidate(new RTCIceCandidate(candidate)); } catch (_) {}
+  if (entry && entry.pc && candidate) {
+    try {
+      await entry.pc.addIceCandidate(new RTCIceCandidate(candidate));
+    } catch (_) {}
   }
 });
 
@@ -384,22 +406,23 @@ socket.on('receive-message', ({ userId, name, message, timestamp }) => {
   }
 });
 
-socket.on('room-list-updated', () => {});
-
-// ─── WebRTC helpers ───────────────────────────────────────────────────────────
+// ─── WebRTC Engine ───────────────────────────────────────────────────────────
 function createPeerConnection(remoteSid, remoteName) {
   const pc = new RTCPeerConnection(iceConfig);
 
+  // إرسال الصوت والكاميرا المحلية للشخص البعيد فوراً
   if (localStream) {
     localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
   }
 
+  // تبادل الـ ICE Candidates عبر السيرفر
   pc.onicecandidate = (e) => {
     if (e.candidate) {
-      socket.emit('ice_candidate', { target: remoteSid, candidate: e.candidate.toJSON() });
+      socket.emit('ice_candidate', { target: remoteSid, candidate: e.candidate });
     }
   };
 
+  // استقبال البث المباشر (صوت/صورة) من الطرف الآخر وعرضه في نافذته
   pc.ontrack = (e) => {
     const stream = e.streams[0];
     attachRemoteStream(remoteSid, stream);
@@ -411,7 +434,7 @@ function createPeerConnection(remoteSid, remoteName) {
     }
   };
 
-  peers[remoteSid] = { pc, name: remoteName, userId: null };
+  peers[remoteSid] = { pc, name: remoteName, userId: remoteSid };
   return pc;
 }
 
@@ -423,27 +446,21 @@ async function createOffer(remoteSid, remoteName) {
 }
 
 async function handleOffer(fromSid, sdp) {
-  // Find the name from the pending tile or default
-  const entry = peers[fromSid];
-  const name = entry ? entry.name : 'Student';
-
-  let pc;
-  if (entry) {
-    pc = entry.pc;
-  } else {
-    pc = createPeerConnection(fromSid, name).pc || peers[fromSid].pc;
+  let entry = peers[fromSid];
+  if (!entry) {
+    addRemoteTile(fromSid, 'Student');
+    createPeerConnection(fromSid, 'Student');
+    entry = peers[fromSid];
   }
-  // createPeerConnection returns the pc directly
-  const realPc = peers[fromSid].pc;
 
-  await realPc.setRemoteDescription(new RTCSessionDescription(sdp));
-  const answer = await realPc.createAnswer();
-  await realPc.setLocalDescription(answer);
-  socket.emit('answer', { target: fromSid, sdp: realPc.localDescription });
+  await entry.pc.setRemoteDescription(new RTCSessionDescription(sdp));
+  const answer = await entry.pc.createAnswer();
+  await entry.pc.setLocalDescription(answer);
+  socket.emit('answer', { target: fromSid, sdp: entry.pc.localDescription });
 }
 
 function addRemoteTile(sid, name) {
-  if (document.getElementById(`tile-${sid}`)) return; // already exists
+  if (document.getElementById(`tile-${sid}`)) return;
 
   const card = document.createElement('div');
   card.className = 'video-card';
@@ -468,7 +485,6 @@ function attachRemoteStream(sid, stream) {
     video.style.display = 'block';
     if (ph) ph.style.display = 'none';
   } else {
-    // Tile not yet created — wait a tick and retry
     setTimeout(() => attachRemoteStream(sid, stream), 200);
   }
 }
@@ -492,13 +508,7 @@ function updateMemberCount() {
 document.addEventListener('DOMContentLoaded', async () => {
   if (!roomId || !roomType) { window.location.href = 'study-rooms.html'; return; }
 
-  // Fetch ICE server config from backend
-  try {
-    const iceRes = await fetch('/api/ice-servers');
-    if (iceRes.ok) iceConfig = await iceRes.json();
-  } catch (_) {}
-
-  // Load room info
+  // جلب معلومات الغرفة وتحديث العناوين بالصفحة
   try {
     const rRes = await fetch(`/rooms/${roomType}/${roomId}`);
     const room = await rRes.json();
@@ -507,14 +517,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     tag.textContent = room.type.toUpperCase();
     tag.className = `tag ${room.type === 'Official' ? 'tag-blue' : 'tag-purple'}`;
 
-    const existing = JSON.parse(sessionStorage.getItem('active_meeting') || '{}');
-    sessionStorage.setItem('active_meeting', JSON.stringify({ ...existing, id: roomId, type: roomType, name: room.name }));
-
     isCreator = (room.creator_id === studentId);
     if (isCreator) document.getElementById('terminateBtn').style.display = 'inline-flex';
   } catch (_) {}
 
-  // Load student name
+  // جلب اسم الطالب الحالي من قاعدة البيانات لتقديمه للآخرين بالغرفة
   try {
     const sRes = await fetch(`/student/${studentId}`);
     const s = await sRes.json();
@@ -523,13 +530,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.getElementById('localName').textContent = myName;
       document.getElementById('localDisplayName').textContent = myName;
       document.getElementById('avatarInitial').textContent = s.first_name.charAt(0).toUpperCase();
+
+      // تحديث البيانات في السيرفر بعد جلب الاسم الحقيقي
+      socket.emit('join_room', { roomId, userId: studentId, name: myName });
     }
   } catch (_) {}
 
-  // Restore media if returning to the room
-  const saved = JSON.parse(sessionStorage.getItem('active_meeting') || '{}');
-  if (saved.mic) setTimeout(() => toggleMic(), 600);
-  if (saved.cam) setTimeout(() => toggleCam(), 700);
+  // تشغيل المايك والكاميرا افتراضياً عند الدخول للروم
+  await toggleMic();
+  await toggleCam();
 });
 
 // ─── Media controls ───────────────────────────────────────────────────────────
@@ -549,9 +558,8 @@ async function toggleMic() {
     track.enabled = active;
     icon.className = active ? 'fas fa-microphone' : 'fas fa-microphone-slash';
     active ? startVolumeMonitor() : stopVolumeMonitor();
-    _saveState('mic', active);
     _addTrackToPeers(localStream);
-  } catch (err) { alert('Microphone access denied.'); }
+  } catch (err) { console.log('Microphone toggled'); }
 }
 
 async function toggleCam() {
@@ -574,9 +582,8 @@ async function toggleCam() {
       video.style.display = 'none';
       ph.style.display = 'flex';
     }
-    _saveState('cam', active);
     _addTrackToPeers(localStream);
-  } catch (err) { alert('Camera access denied.'); }
+  } catch (err) { console.log('Camera toggled'); }
 }
 
 async function toggleScreen() {
@@ -594,7 +601,6 @@ async function toggleScreen() {
     cont.style.borderRadius = '1.5rem';
     btn.classList.remove('active');
     icon.className = 'fas fa-desktop';
-    _saveState('screen', false);
   } else {
     try {
       screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
@@ -604,8 +610,8 @@ async function toggleScreen() {
       cont.style.borderRadius = '0.5rem';
       btn.classList.add('active');
       icon.className = 'fas fa-desktop';
-      _saveState('screen', true);
       screenStream.getVideoTracks()[0].onended = () => toggleScreen();
+      _addTrackToPeers(screenStream);
     } catch (_) {}
   }
 }
@@ -618,12 +624,6 @@ function _addTrackToPeers(stream) {
       else         { pc.addTrack(newTrack, stream); }
     });
   }
-}
-
-function _saveState(key, val) {
-  const m = JSON.parse(sessionStorage.getItem('active_meeting') || '{}');
-  m[key] = val;
-  sessionStorage.setItem('active_meeting', JSON.stringify(m));
 }
 
 // ─── Volume monitor ───────────────────────────────────────────────────────────
@@ -639,6 +639,7 @@ function startVolumeMonitor() {
   const data   = new Uint8Array(analyser.frequencyBinCount);
   const micBtn = document.getElementById('micBtn');
   function check() {
+    if(!analyser) return;
     analyser.getByteFrequencyData(data);
     const avg = data.reduce((a, b) => a + b, 0) / data.length;
     avg > 20 ? micBtn.classList.add('speaking') : micBtn.classList.remove('speaking');
@@ -702,12 +703,11 @@ async function leaveRoom() {
   Object.keys(peers).forEach(sid => { peers[sid].pc.close(); delete peers[sid]; });
   if (localStream)  localStream.getTracks().forEach(t => t.stop());
   if (screenStream) screenStream.getTracks().forEach(t => t.stop());
-  sessionStorage.removeItem('active_meeting');
 
   const fd = new FormData();
   fd.append('room_id', roomId); fd.append('room_type', roomType); fd.append('student_id', studentId);
   await fetch('/rooms/leave', { method: 'POST', body: fd }).catch(() => {});
-  socket.emit('room_created', {}); // trigger lobby refresh
+  socket.emit('room_created', {});
   window.location.href = 'study-rooms.html';
 }
 
@@ -715,13 +715,12 @@ async function terminateRoom() {
   if (!confirm('Terminate this room? All members will be removed.')) return;
   try {
     await fetch(`/rooms/${roomType}/${roomId}?student_id=${studentId}`, { method: 'DELETE' });
-    sessionStorage.removeItem('active_meeting');
-    socket.emit('room_created', {}); // trigger lobby refresh
+    socket.emit('room_created', {});
     window.location.href = 'study-rooms.html';
   } catch (_) { alert('Error terminating room.'); }
 }
 
-// ─── Drag (presentation PiP) ──────────────────────────────────────────────────
+// ─── Drag ──────────────────────────────────────────────────
 let isDragging = false, curX, curY, initX, initY, offX = 0, offY = 0;
 const videoArea = document.querySelector('.video-area');
 videoArea.addEventListener('mousedown', (e) => {
