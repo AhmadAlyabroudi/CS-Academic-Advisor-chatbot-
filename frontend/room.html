@@ -1,14 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Study Room | JUST Advisor</title>
   <link rel="stylesheet" href="styles.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
-
-  <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
+  <!-- Socket.IO client -->
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   <style>
     :root {
       --meeting-bg: #0f172a;
@@ -37,6 +36,7 @@
     .room-title h1 { font-size: 1.3rem; margin: 0; color: white; }
     .room-meta { display: flex; gap: 0.75rem; align-items: center; margin-top: 0.25rem; font-size:0.85rem; }
 
+    /* ── Body: video area + optional chat panel ── */
     .room-body {
       flex: 1;
       display: flex;
@@ -59,6 +59,11 @@
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 1rem;
       align-content: center;
+    }
+    .video-grid.presentation-mode {
+      display: block;
+      position: relative;
+      height: 100%;
     }
     .video-card {
       background: var(--tile-bg);
@@ -93,7 +98,18 @@
       padding: 2px 10px; border-radius: 0.5rem;
       font-size: 0.75rem; backdrop-filter: blur(4px);
     }
+    /* Screen-share card in presentation mode */
+    .video-grid.presentation-mode #screenShareCard {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1;
+    }
+    .video-grid.presentation-mode .video-card:not(#screenShareCard) {
+      position: absolute; bottom: 1.5rem; right: 1.5rem;
+      width: 240px; height: 150px; z-index: 2;
+      border: 2px solid #6366f1;
+      cursor: grab; user-select: none;
+    }
 
+    /* ── Controls ── */
     .room-controls {
       display: flex; justify-content: center; align-items: center; gap: 1.25rem;
       padding: 1rem 1.5rem;
@@ -115,12 +131,17 @@
     .control-btn.active { background: #10b981; color: white; box-shadow: 0 0 14px rgba(16,185,129,0.4); }
     .control-btn.active#screenBtn { background: #3b82f6; }
     .control-btn.active#chatBtn { background: #8b5cf6; }
-
+    .control-btn.speaking { animation: speak-pulse 1s infinite; }
     .unread-badge {
       position: absolute; top: -4px; right: -4px;
       background: #ef4444; color: white; border-radius: 50%;
       width: 18px; height: 18px; font-size: 10px; font-weight: 700;
       display: flex; align-items: center; justify-content: center;
+    }
+    @keyframes speak-pulse {
+      0%   { box-shadow: 0 0 0 0   rgba(16,185,129,0.7); }
+      70%  { box-shadow: 0 0 0 12px rgba(16,185,129,0); }
+      100% { box-shadow: 0 0 0 0   rgba(16,185,129,0); }
     }
     .btn-leave {
       background: #ef4444; color: white; padding: 0.55rem 1.1rem;
@@ -145,6 +166,7 @@
       flex-direction: column;
       overflow: hidden;
       border: 1px solid rgba(255,255,255,0.08);
+      margin-top: 0; margin-bottom: 0;
     }
     .chat-panel.open { display: flex; }
     .chat-header {
@@ -157,6 +179,8 @@
       flex: 1; overflow-y: auto; padding: 0.75rem;
       display: flex; flex-direction: column; gap: 0.6rem;
     }
+    .chat-messages::-webkit-scrollbar { width: 4px; }
+    .chat-messages::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
     .chat-msg { padding: 0.5rem 0.75rem; border-radius: 0.65rem; max-width: 100%; word-break: break-word; font-size: 0.82rem; }
     .chat-msg.mine { background: #6366f1; color: white; align-self: flex-end; }
     .chat-msg.theirs { background: #334155; color: #e2e8f0; align-self: flex-start; }
@@ -169,18 +193,17 @@
     }
     .chat-input-area input {
       flex: 1; background: #334155; border: none; border-radius: 0.6rem;
-      padding: 0.5rem 0.75rem; color: white; font-size: 0.85rem; outline: none;
+      padding: 0.5rem 0.75rem; color: white; font-size: 0.85rem; font-family: inherit;
+      outline: none;
     }
+    .chat-input-area input::placeholder { color: #64748b; }
     .chat-send-btn {
       width: 34px; height: 34px; border-radius: 0.6rem;
       background: #6366f1; border: none; color: white;
       cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem; transition: background 0.2s;
     }
-    .loading-overlay {
-      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-      background: var(--meeting-bg); display: flex; justify-content: center;
-      align-items: center; font-size: 1.5rem; font-weight: bold; z-index: 99;
-    }
+    .chat-send-btn:hover { background: #4f46e5; }
   </style>
 </head>
 <body>
@@ -190,16 +213,10 @@
     <div class="top-bar"></div>
     <div class="content-area room-container" id="roomContainer">
 
-      <div id="loadingOverlay" class="loading-overlay">
-        <div style="text-align: center;">
-          <i class="fas fa-spinner fa-spin" style="font-size: 3rem; color: #6366f1; margin-bottom: 1rem;"></i>
-          <div>Loading Study Room...</div>
-        </div>
-      </div>
-
+      <!-- Header -->
       <div class="room-header">
         <div class="room-title">
-          <h1 id="roomName">Connecting…</h1>
+          <h1 id="roomName">Loading Room…</h1>
           <div class="room-meta">
             <span id="roomTypeTag" class="tag">TYPE</span>
             <span><i class="fas fa-users"></i> <span id="memberCount">1</span> Members</span>
@@ -215,25 +232,33 @@
         </div>
       </div>
 
+      <!-- Body: video + chat -->
       <div class="room-body">
         <div class="video-area">
           <div class="video-grid" id="videoGrid">
-            <div class="video-card" id="localTile">
+            <!-- Local tile -->
+            <div class="video-card" id="localCard">
               <div class="status-badge">You</div>
-              <div class="cam-off" id="localPlaceholder">
+              <video id="localVideo" autoplay playsinline muted style="display:none;"></video>
+              <div id="localPlaceholder" class="cam-off">
                 <div class="avatar-circle" id="avatarInitial">A</div>
                 <span style="font-size:0.85rem;color:#94a3b8" id="localName">You</span>
               </div>
-              <div id="localVideoContainer" style="width:100%; height:100%; display:none;"></div>
               <span class="participant-name" id="localDisplayName">You</span>
+            </div>
+            <!-- Screen-share tile (hidden until active) -->
+            <div class="video-card" id="screenShareCard" style="display:none">
+              <div class="status-badge">Screen Share</div>
+              <video id="localScreen" autoplay playsinline style="width:100%;height:100%;object-fit:contain;"></video>
             </div>
           </div>
         </div>
 
+        <!-- Chat panel -->
         <div class="chat-panel" id="chatPanel">
           <div class="chat-header">
             <span><i class="fas fa-comments" style="margin-right:6px"></i>Room Chat</span>
-            <button onclick="toggleChat()" style="background:none;border:none;color:#94a3b8;cursor:pointer;">
+            <button onclick="toggleChat()" style="background:none;border:none;color:#94a3b8;cursor:pointer;font-size:1rem;">
               <i class="fas fa-times"></i>
             </button>
           </div>
@@ -245,6 +270,7 @@
         </div>
       </div>
 
+      <!-- Controls -->
       <div class="room-controls">
         <button class="control-btn" id="micBtn" title="Toggle Mic" onclick="toggleMic()">
           <i class="fas fa-microphone-slash"></i>
@@ -268,21 +294,221 @@
 
 <script src="sidebar.js?v=8"></script>
 <script>
+// ─── XSS helper ──────────────────────────────────────────────────────────────
+function escapeHtml(str) {
+  const d = document.createElement('div');
+  d.textContent = String(str ?? '');
+  return d.innerHTML;
+}
+
+// ─── Room params ──────────────────────────────────────────────────────────────
 const params     = new URLSearchParams(window.location.search);
 const roomId     = parseInt(params.get('id'));
 const roomType   = params.get('type');
 const studentId  = localStorage.getItem('student_id') || '';
 
+// ─── State ────────────────────────────────────────────────────────────────────
 let myName        = 'Student';
-let currentRoom   = null;
+let isCreator     = false;
+let localStream   = null;
+let screenStream  = null;
 let unreadCount   = 0;
 let chatOpen      = false;
 
-// انطلاق محرك الغرفة فور تحميل الـ DOM
+// ─── تعديل هام: ربط سيرفر الـ TURN المذكور في الـ .env مباشرة ───
+let iceConfig = {
+  iceServers: [
+    { urls: 'stun:192.241.180.95:3478' },
+    {
+      urls: 'turn:192.241.180.95:3478',
+      username: 'justadvisor',
+      credential: 'Avanger@95_turn_password'
+    }
+  ]
+};
+
+// Volume monitor
+let audioContext = null, analyser = null, microphone = null, animId = null;
+
+// Peer connections: peerId (socket sid) → { pc: RTCPeerConnection, name: string, userId: string }
+const peers = {};
+
+// ─── Socket.IO ────────────────────────────────────────────────────────────────
+const SERVER = 'https://csacademicadvisorchatbot.codes';
+const socket = io(SERVER, { transports: ['websocket', 'polling'] });
+
+socket.on('connect', () => {
+  // إرسال طلب انضمام للغرفة بالباكيند
+  socket.emit('join_room', { room_id: roomId, user_id: studentId, name: myName });
+});
+
+// استقبال قائمة المستخدمين المتواجدين حالياً قبل دخولنا
+socket.on('existing-users', async ({ users }) => {
+  for (const user of users) {
+    if (user.sid !== socket.id) {
+      addRemoteTile(user.sid, user.name);
+      await createOffer(user.sid, user.name);
+    }
+  }
+});
+
+// شخص جديد دخل الغرفة
+socket.on('user-joined', ({ user_id, name, sid }) => {
+  addRemoteTile(sid, name);
+  updateMemberCount();
+});
+
+// شخص غادر الغرفة
+socket.on('user-left', ({ user_id, name }) => {
+  for (const sid of Object.keys(peers)) {
+    if (peers[sid].user_id === user_id || sid === user_id) {
+      removePeer(sid);
+      break;
+    }
+  }
+  updateMemberCount();
+});
+
+socket.on('member-count', ({ count }) => {
+  document.getElementById('memberCount').textContent = count;
+});
+
+// استقبال الـ WebRTC Offer
+socket.on('offer', async ({ from, sdp }) => {
+  await handleOffer(from, sdp);
+});
+
+// استقبال الـ WebRTC Answer
+socket.on('answer', async ({ from, sdp }) => {
+  const entry = peers[from];
+  if (entry && entry.pc) {
+    await entry.pc.setRemoteDescription(new RTCSessionDescription(sdp));
+  }
+});
+
+// استقبال الـ ICE Candidates لتسهيل التوصيل عبر الـ TURN
+socket.on('ice-candidate', async ({ from, candidate }) => {
+  const entry = peers[from];
+  if (entry && entry.pc && candidate) {
+    try {
+      await entry.pc.addIceCandidate(new RTCIceCandidate(candidate));
+    } catch (_) {}
+  }
+});
+
+socket.on('receive-message', ({ userId, name, message, timestamp }) => {
+  appendChatMessage(userId === studentId ? 'mine' : 'theirs', name, message, timestamp);
+  if (!chatOpen) {
+    unreadCount++;
+    const badge = document.getElementById('unreadBadge');
+    badge.textContent = unreadCount;
+    badge.style.display = 'flex';
+  }
+});
+
+// ─── WebRTC Engine ───────────────────────────────────────────────────────────
+function createPeerConnection(remoteSid, remoteName) {
+  const pc = new RTCPeerConnection(iceConfig);
+
+  // إرسال الصوت والكاميرا المحلية للشخص البعيد فوراً
+  if (localStream) {
+    localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
+  }
+
+  // تبادل الـ ICE Candidates عبر السيرفر
+  pc.onicecandidate = (e) => {
+    if (e.candidate) {
+      socket.emit('ice_candidate', { target: remoteSid, candidate: e.candidate });
+    }
+  };
+
+  // استقبال البث المباشر (صوت/صورة) من الطرف الآخر وعرضه في نافذته
+  pc.ontrack = (e) => {
+    const stream = e.streams[0];
+    attachRemoteStream(remoteSid, stream);
+  };
+
+  pc.onconnectionstatechange = () => {
+    if (['disconnected', 'failed', 'closed'].includes(pc.connectionState)) {
+      removePeer(remoteSid);
+    }
+  };
+
+  peers[remoteSid] = { pc, name: remoteName, userId: remoteSid };
+  return pc;
+}
+
+async function createOffer(remoteSid, remoteName) {
+  const pc = createPeerConnection(remoteSid, remoteName);
+  const offer = await pc.createOffer();
+  await pc.setLocalDescription(offer);
+  socket.emit('offer', { target: remoteSid, sdp: pc.localDescription });
+}
+
+async function handleOffer(fromSid, sdp) {
+  let entry = peers[fromSid];
+  if (!entry) {
+    addRemoteTile(fromSid, 'Student');
+    createPeerConnection(fromSid, 'Student');
+    entry = peers[fromSid];
+  }
+
+  await entry.pc.setRemoteDescription(new RTCSessionDescription(sdp));
+  const answer = await entry.pc.createAnswer();
+  await entry.pc.setLocalDescription(answer);
+  socket.emit('answer', { target: fromSid, sdp: entry.pc.localDescription });
+}
+
+function addRemoteTile(sid, name) {
+  if (document.getElementById(`tile-${sid}`)) return;
+
+  const card = document.createElement('div');
+  card.className = 'video-card';
+  card.id = `tile-${sid}`;
+  const safeName = escapeHtml(name);
+  card.innerHTML = `
+    <div class="cam-off" id="ph-${sid}">
+      <div class="avatar-circle">${escapeHtml((name || 'S').charAt(0).toUpperCase())}</div>
+      <span style="font-size:0.85rem;color:#94a3b8">${safeName}</span>
+    </div>
+    <video id="rv-${sid}" autoplay playsinline style="display:none;width:100%;height:100%;object-fit:cover;"></video>
+    <span class="participant-name">${safeName}</span>
+  `;
+  document.getElementById('videoGrid').appendChild(card);
+}
+
+function attachRemoteStream(sid, stream) {
+  const video = document.getElementById(`rv-${sid}`);
+  const ph = document.getElementById(`ph-${sid}`);
+  if (video) {
+    video.srcObject = stream;
+    video.style.display = 'block';
+    if (ph) ph.style.display = 'none';
+  } else {
+    setTimeout(() => attachRemoteStream(sid, stream), 200);
+  }
+}
+
+function removePeer(sid) {
+  const entry = peers[sid];
+  if (entry) {
+    entry.pc.close();
+    delete peers[sid];
+  }
+  const tile = document.getElementById(`tile-${sid}`);
+  if (tile) tile.remove();
+}
+
+function updateMemberCount() {
+  const count = 1 + Object.keys(peers).length;
+  document.getElementById('memberCount').textContent = count;
+}
+
+// ─── Page init ────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
   if (!roomId || !roomType) { window.location.href = 'study-rooms.html'; return; }
 
-  // 1. جلب معلومات الغرفة لتحديث الهيدر والـ UI
+  // جلب معلومات الغرفة وتحديث العناوين بالصفحة
   try {
     const rRes = await fetch(`/rooms/${roomType}/${roomId}`);
     const room = await rRes.json();
@@ -291,12 +517,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     tag.textContent = room.type.toUpperCase();
     tag.className = `tag ${room.type === 'Official' ? 'tag-blue' : 'tag-purple'}`;
 
-    if (room.creator_id === studentId) {
-      document.getElementById('terminateBtn').style.display = 'inline-flex';
-    }
+    isCreator = (room.creator_id === studentId);
+    if (isCreator) document.getElementById('terminateBtn').style.display = 'inline-flex';
   } catch (_) {}
 
-  // 2. جلب اسم الطالب الحالي من الـ API لبثه للآخرين داخل الـ SFU
+  // جلب اسم الطالب الحالي من قاعدة البيانات لتقديمه للآخرين بالغرفة
   try {
     const sRes = await fetch(`/student/${studentId}`);
     const s = await sRes.json();
@@ -305,208 +530,130 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.getElementById('localName').textContent = myName;
       document.getElementById('localDisplayName').textContent = myName;
       document.getElementById('avatarInitial').textContent = s.first_name.charAt(0).toUpperCase();
+
+      // تحديث البيانات في السيرفر بعد جلب الاسم الحقيقي
+      socket.emit('join_room', { room_id: roomId, user_id: studentId, name: myName });
     }
   } catch (_) {}
 
-  // 3. بدء عملية توليد التوكن والاتصال التلقائي بالـ LiveKit SFU
-  await connectToLiveKit();
+  // تشغيل المايك والكاميرا افتراضياً عند الدخول للروم
+  await toggleMic();
+  await toggleCam();
 });
 
-async function connectToLiveKit() {
-  try {
-    // جلب التوكن الرسمي الآمن من نقطة الباكيند لـ FastAPI الخاص بك
-    const response = await fetch(`/rooms/token?room_id=${roomId}&student_id=${studentId}&name=${encodeURIComponent(myName)}`);
-    if (!response.ok) throw new Error('Failed to fetch token from backend');
-    const tData = await response.json();
-
-    // إنشاء كائن الغرفة من مكتبة LiveKit Client الرسمية
-    currentRoom = new LiveKitClient.Room({
-      adaptiveStream: true,
-      dynacast: true,
-    });
-
-    // إعداد مستمعي الأحداث البرمجية للـ SFU (إضافة مشاركين، بث ميديا، شات حي)
-    setupRoomListeners();
-
-    // التوصيل الذهبي المباشر عبر منفذ الـ SSL المستقل
-    await currentRoom.connect('wss://csacademicadvisorchatbot.codes:7880', tData.token);
-
-    // إخفاء شاشة الانتظار فور نجاح الاتصال
-    document.getElementById('loadingOverlay').style.display = 'none';
-    updateMemberCount();
-
-  } catch (err) {
-    console.error('LiveKit connection error:', err);
-    alert('Failed to connect to the global stream server.');
+// ─── Media controls ───────────────────────────────────────────────────────────
+async function ensureLocalStream() {
+  if (!localStream) {
+    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
   }
 }
 
-function setupRoomListeners() {
-  // عند دخول شخص جديد للغرفة
-  currentRoom.on(LiveKitClient.RoomEvent.ParticipantConnected, (participant) => {
-    addRemoteTile(participant);
-    updateMemberCount();
-  });
-
-  // عند خروج شخص من الغرفة
-  currentRoom.on(LiveKitClient.RoomEvent.ParticipantDisconnected, (participant) => {
-    removeRemoteTile(participant);
-    updateMemberCount();
-  });
-
-  // عندما يقوم شخص ما (قريب أو بعيد) بفتح الكاميرا أو المايكروفون
-  currentRoom.on(LiveKitClient.RoomEvent.TrackSubscribed, (track, publication, participant) => {
-    if (track.kind === LiveKitClient.Track.Kind.Video) {
-      attachTrack(track, participant);
-    } else if (track.kind === LiveKitClient.Track.Kind.Audio) {
-      const audioElement = track.attach();
-      document.body.appendChild(audioElement);
-    }
-  });
-
-  // عندما يقوم شخص بإغلاق الكاميرا أو المايكروفون
-  currentRoom.on(LiveKitClient.RoomEvent.TrackUnsubscribed, (track, publication, participant) => {
-    if (track.kind === LiveKitClient.Track.Kind.Video) {
-      track.detach();
-      togglePlaceholderVisibility(participant, true);
-    }
-  });
-
-  // استقبال وإرسال رسائل الشات الحية المدمجة في الـ SFU Data Channel
-  currentRoom.on(LiveKitClient.RoomEvent.DataReceived, (payload, participant) => {
-    const str = new TextDecoder().decode(payload);
-    try {
-      const data = JSON.parse(str);
-      if (data.type === 'chat') {
-        appendChatMessage('theirs', participant ? participant.identity : 'Student', data.message, data.time);
-        if (!chatOpen) {
-          unreadCount++;
-          const badge = document.getElementById('unreadBadge');
-          badge.textContent = unreadCount;
-          badge.style.display = 'flex';
-        }
-      }
-    } catch (_) {}
-  });
-}
-
-function addRemoteTile(participant) {
-  if (document.getElementById(`tile-${participant.sid}`)) return;
-
-  const grid = document.getElementById('videoGrid');
-  const card = document.createElement('div');
-  card.className = 'video-card';
-  card.id = `tile-${participant.sid}`;
-
-  const initial = (participant.identity || 'S').charAt(0).toUpperCase();
-  card.innerHTML = `
-    <div class="cam-off" id="ph-${participant.sid}">
-      <div class="avatar-circle">${initial}</div>
-      <span style="font-size:0.85rem;color:#94a3b8">${participant.identity}</span>
-    </div>
-    <div id="vcont-${participant.sid}" style="width:100%; height:100%; display:none;"></div>
-    <span class="participant-name">${participant.identity}</span>
-  `;
-  grid.appendChild(card);
-}
-
-function removeRemoteTile(participant) {
-  const tile = document.getElementById(`tile-${participant.sid}`);
-  if (tile) tile.remove();
-}
-
-function attachTrack(track, participant) {
-  const isLocal = participant.sid === currentRoom.localParticipant.sid;
-  const containerId = isLocal ? 'localVideoContainer' : `vcont-${participant.sid}`;
-  const phId = isLocal ? 'localPlaceholder' : `ph-${participant.sid}`;
-
-  if (!isLocal && !document.getElementById(`tile-${participant.sid}`)) {
-    addRemoteTile(participant);
-  }
-
-  const container = document.getElementById(containerId);
-  const ph = document.getElementById(phId);
-
-  if (container) {
-    container.innerHTML = '';
-    const el = track.attach();
-    el.style.width = '100%';
-    el.style.height = '100%';
-    el.style.objectFit = 'cover';
-    container.appendChild(el);
-    container.style.display = 'block';
-    if (ph) ph.style.display = 'none';
-  }
-}
-
-function togglePlaceholderVisibility(participant, showPlaceholder) {
-  const isLocal = participant.sid === currentRoom.localParticipant.sid;
-  const containerId = isLocal ? 'localVideoContainer' : `vcont-${participant.sid}`;
-  const phId = isLocal ? 'localPlaceholder' : `ph-${participant.sid}`;
-
-  const container = document.getElementById(containerId);
-  const ph = document.getElementById(phId);
-
-  if (showPlaceholder) {
-    if (container) container.style.display = 'none';
-    if (ph) ph.style.display = 'flex';
-  } else {
-    if (container) container.style.display = 'block';
-    if (ph) ph.style.display = 'none';
-  }
-}
-
-function updateMemberCount() {
-  if (!currentRoom) return;
-  const count = 1 + currentRoom.remoteParticipants.size;
-  document.getElementById('memberCount').textContent = count;
-}
-
-// ─── أزرار التحكم بالميديا باستخدام الـ LiveKit API المباشر ───
 async function toggleMic() {
-  if (!currentRoom) return;
-  const btn = document.getElementById('micBtn');
-  const icon = btn.querySelector('i');
-  const isEnabled = currentRoom.localParticipant.isMicrophoneEnabled;
-
-  await currentRoom.localParticipant.setMicrophoneEnabled(!isEnabled);
-  btn.classList.toggle('active', !isEnabled);
-  icon.className = !isEnabled ? 'fas fa-microphone' : 'fas fa-microphone-slash';
+  try {
+    await ensureLocalStream();
+    const track = localStream.getAudioTracks()[0];
+    const btn   = document.getElementById('micBtn');
+    const icon  = btn.querySelector('i');
+    const active = btn.classList.toggle('active');
+    track.enabled = active;
+    icon.className = active ? 'fas fa-microphone' : 'fas fa-microphone-slash';
+    active ? startVolumeMonitor() : stopVolumeMonitor();
+    _addTrackToPeers(localStream);
+  } catch (err) { console.log('Microphone toggled'); }
 }
 
 async function toggleCam() {
-  if (!currentRoom) return;
-  const btn = document.getElementById('camBtn');
-  const icon = btn.querySelector('i');
-  const isEnabled = currentRoom.localParticipant.isCameraEnabled;
+  try {
+    await ensureLocalStream();
+    const track = localStream.getVideoTracks()[0];
+    const btn   = document.getElementById('camBtn');
+    const icon  = btn.querySelector('i');
+    const active = btn.classList.toggle('active');
+    track.enabled = active;
+    icon.className = active ? 'fas fa-video' : 'fas fa-video-slash';
 
-  await currentRoom.localParticipant.setCameraEnabled(!isEnabled);
-  btn.classList.toggle('active', !isEnabled);
-  icon.className = !isEnabled ? 'fas fa-video' : 'fas fa-video-slash';
-
-  // معالجة الفيديو المحلي فوراً للعرض على الشاشة الشخصية
-  if (!isEnabled) {
-    const trackPub = currentRoom.localParticipant.getTrackPublication(LiveKitClient.Track.Source.Camera);
-    if (trackPub && trackPub.track) {
-      attachTrack(trackPub.track, currentRoom.localParticipant);
+    const video = document.getElementById('localVideo');
+    const ph    = document.getElementById('localPlaceholder');
+    if (active) {
+      video.srcObject = localStream;
+      video.style.display = 'block';
+      ph.style.display = 'none';
+    } else {
+      video.style.display = 'none';
+      ph.style.display = 'flex';
     }
-  } else {
-    togglePlaceholderVisibility(currentRoom.localParticipant, true);
-  }
+    _addTrackToPeers(localStream);
+  } catch (err) { console.log('Camera toggled'); }
 }
 
 async function toggleScreen() {
-  if (!currentRoom) return;
-  const btn = document.getElementById('screenBtn');
-  const isEnabled = currentRoom.localParticipant.isScreenShareEnabled;
+  const btn  = document.getElementById('screenBtn');
+  const icon = btn.querySelector('i');
+  const grid = document.getElementById('videoGrid');
+  const card = document.getElementById('screenShareCard');
+  const cont = document.getElementById('roomContainer');
 
-  try {
-    await currentRoom.localParticipant.setScreenShareEnabled(!isEnabled);
-    btn.classList.toggle('active', !isEnabled);
-  } catch (_) {}
+  if (btn.classList.contains('active')) {
+    screenStream.getTracks().forEach(t => t.stop());
+    screenStream = null;
+    card.style.display = 'none';
+    grid.classList.remove('presentation-mode');
+    cont.style.borderRadius = '1.5rem';
+    btn.classList.remove('active');
+    icon.className = 'fas fa-desktop';
+  } else {
+    try {
+      screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+      document.getElementById('localScreen').srcObject = screenStream;
+      card.style.display = 'flex';
+      grid.classList.add('presentation-mode');
+      cont.style.borderRadius = '0.5rem';
+      btn.classList.add('active');
+      icon.className = 'fas fa-desktop';
+      screenStream.getVideoTracks()[0].onended = () => toggleScreen();
+      _addTrackToPeers(screenStream);
+    } catch (_) {}
+  }
 }
 
-// ─── إدارة الدردشة الفورية المستقرة عبر الـ SFU Data Channels ───
+function _addTrackToPeers(stream) {
+  for (const { pc } of Object.values(peers)) {
+    stream.getTracks().forEach(newTrack => {
+      const sender = pc.getSenders().find(s => s.track && s.track.kind === newTrack.kind);
+      if (sender) { sender.replaceTrack(newTrack); }
+      else         { pc.addTrack(newTrack, stream); }
+    });
+  }
+}
+
+// ─── Volume monitor ───────────────────────────────────────────────────────────
+function startVolumeMonitor() {
+  if (!localStream || !localStream.getAudioTracks()[0]?.enabled) return;
+  if (!audioContext) {
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    analyser     = audioContext.createAnalyser();
+    microphone   = audioContext.createMediaStreamSource(localStream);
+    microphone.connect(analyser);
+    analyser.fftSize = 256;
+  }
+  const data   = new Uint8Array(analyser.frequencyBinCount);
+  const micBtn = document.getElementById('micBtn');
+  function check() {
+    if(!analyser) return;
+    analyser.getByteFrequencyData(data);
+    const avg = data.reduce((a, b) => a + b, 0) / data.length;
+    avg > 20 ? micBtn.classList.add('speaking') : micBtn.classList.remove('speaking');
+    animId = requestAnimationFrame(check);
+  }
+  check();
+}
+
+function stopVolumeMonitor() {
+  if (animId) { cancelAnimationFrame(animId); animId = null; }
+  document.getElementById('micBtn').classList.remove('speaking');
+}
+
+// ─── Chat ─────────────────────────────────────────────────────────────────────
 function toggleChat() {
   chatOpen = !chatOpen;
   const panel = document.getElementById('chatPanel');
@@ -526,59 +673,69 @@ function handleChatKey(e) {
 function sendChatMessage() {
   const input = document.getElementById('chatInput');
   const msg   = input.value.trim();
-  if (!msg || !currentRoom) return;
-
-  const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  const chatPayload = JSON.stringify({ type: 'chat', message: msg, time: timeStr });
-
-  // إرسال الرسالة لجميع الحاضرين عبر قنوات البيانات الفورية الخفيفة
-  const encoder = new TextEncoder();
-  currentRoom.localParticipant.publishData(encoder.encode(chatPayload), { reliable: true });
-
-  appendChatMessage('mine', myName, msg, timeStr);
+  if (!msg) return;
   input.value = '';
+  socket.emit('send_message', {
+    roomId,
+    userId: studentId,
+    name: myName,
+    message: msg,
+    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+  });
 }
 
 function appendChatMessage(type, name, message, timestamp) {
   const box = document.getElementById('chatMessages');
   const div = document.createElement('div');
   div.className = `chat-msg ${type}`;
-
-  // إخفاء الرموز لحماية الصفحة من الـ XSS
-  const cleanName = document.createElement('div'); cleanName.textContent = name;
-  const cleanMsg  = document.createElement('div'); cleanMsg.textContent = message;
-
   div.innerHTML = `
-    ${type === 'theirs' ? `<div class="msg-sender">${cleanName.innerHTML}</div>` : ''}
-    <div>${cleanMsg.innerHTML}</div>
-    <div class="msg-time">${timestamp || ''}</div>
+    ${type === 'theirs' ? `<div class="msg-sender">${escapeHtml(name)}</div>` : ''}
+    <div>${escapeHtml(message)}</div>
+    <div class="msg-time">${escapeHtml(timestamp || '')}</div>
   `;
   box.appendChild(div);
   box.scrollTop = box.scrollHeight;
 }
 
-// ─── المغادرة والإغلاق الرسمي للغرفة ───
+// ─── Leave / Terminate ────────────────────────────────────────────────────────
 async function leaveRoom() {
-  if (currentRoom) {
-    currentRoom.disconnect();
-  }
+  socket.emit('leave_room', { roomId, userId: studentId, name: myName });
+  Object.keys(peers).forEach(sid => { peers[sid].pc.close(); delete peers[sid]; });
+  if (localStream)  localStream.getTracks().forEach(t => t.stop());
+  if (screenStream) screenStream.getTracks().forEach(t => t.stop());
 
-  // إعلام الباكيند لإسقاط وحذف الجلسة الحالية من الداتابيز
   const fd = new FormData();
   fd.append('room_id', roomId); fd.append('room_type', roomType); fd.append('student_id', studentId);
   await fetch('/rooms/leave', { method: 'POST', body: fd }).catch(() => {});
-
+  socket.emit('room_created', {});
   window.location.href = 'study-rooms.html';
 }
 
 async function terminateRoom() {
   if (!confirm('Terminate this room? All members will be removed.')) return;
   try {
-    if (currentRoom) currentRoom.disconnect();
     await fetch(`/rooms/${roomType}/${roomId}?student_id=${studentId}`, { method: 'DELETE' });
+    socket.emit('room_created', {});
     window.location.href = 'study-rooms.html';
   } catch (_) { alert('Error terminating room.'); }
 }
+
+// ─── Drag ──────────────────────────────────────────────────
+let isDragging = false, curX, curY, initX, initY, offX = 0, offY = 0;
+const videoArea = document.querySelector('.video-area');
+videoArea.addEventListener('mousedown', (e) => {
+  if (!document.getElementById('videoGrid').classList.contains('presentation-mode')) return;
+  const card = e.target.closest('.video-card');
+  if (card && card.id !== 'screenShareCard') { initX = e.clientX - offX; initY = e.clientY - offY; isDragging = true; }
+});
+videoArea.addEventListener('mouseup',   () => { initX = curX; initY = curY; isDragging = false; });
+videoArea.addEventListener('mousemove', (e) => {
+  if (!isDragging) return;
+  e.preventDefault();
+  curX = e.clientX - initX; curY = e.clientY - initY; offX = curX; offY = curY;
+  const el = document.querySelector('.video-card:not(#screenShareCard)');
+  if (el) el.style.transform = `translate3d(${curX}px,${curY}px,0)`;
+});
 </script>
 </body>
 </html>
