@@ -303,7 +303,7 @@ function escapeHtml(str) {
 
 // ─── Room params ──────────────────────────────────────────────────────────────
 const params     = new URLSearchParams(window.location.search);
-const roomId     = params.get('id');
+const roomId     = parseInt(params.get('id')); // 👈 التعديل هون (تحويل لـ Integer)
 const roomType   = params.get('type');
 const studentId  = localStorage.getItem('student_id') || '';
 
@@ -334,7 +334,7 @@ let audioContext = null, analyser = null, microphone = null, animId = null;
 const peers = {};
 
 // ─── Socket.IO ────────────────────────────────────────────────────────────────
-const SERVER = window.location.origin;
+const SERVER = 'https://csacademicadvisorchatbot.codes:8080';
 const socket = io(SERVER, { transports: ['websocket', 'polling'] });
 
 socket.on('connect', () => {
