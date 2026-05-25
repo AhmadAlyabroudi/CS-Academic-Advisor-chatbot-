@@ -156,7 +156,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupRoomListeners();
 
     // الدخول الفوري للغرفة
-    await livekitRoom.connect('wss://csacademicadvisorchatbot.codes/livekit', tData.token);
+    await livekitRoom.connect('wss://csacademicadvisorchatbot.codes:7880', tData.token);
 
     // إنشاء شاشة العرض المحلية الخاصة بك فوراً
     renderParticipantTile(livekitRoom.localParticipant, true);
