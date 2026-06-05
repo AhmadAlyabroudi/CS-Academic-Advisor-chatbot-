@@ -253,7 +253,7 @@ def get_advisor() -> Optional[AdvisorChain]:
 
     load_dotenv(BASE_DIR / ".env")
 
-    groq_key = os.getenv("GROQ_API_KEY", "").strip()
+    groq_key = os.getenv("GROQ_API_KEY", "").strip() or os.getenv("GEMINI_API_KEY", "").strip()
 
     if not _is_valid_key(groq_key):
         logger.warning("GROQ_API_KEY not set — running demo mode.")
