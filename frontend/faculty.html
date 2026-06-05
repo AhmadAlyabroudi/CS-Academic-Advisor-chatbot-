@@ -129,7 +129,7 @@
     document.getElementById('filterBtn').addEventListener('click', applyFilters);
 
     try {
-      const response = await fetch('/faculty');
+      const response = await fetch('/faculty/');
       if (!response.ok) throw new Error('Failed to fetch faculty');
       allFaculty = await response.json();
       
