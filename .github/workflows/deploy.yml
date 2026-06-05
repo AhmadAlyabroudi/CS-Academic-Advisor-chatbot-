@@ -25,6 +25,12 @@ jobs:
             cd /var/www/justadvisor
             git fetch origin main
             git reset --hard origin/main
+            
+            # Stop the old systemd service and free port 8000 to prevent conflicts
+            sudo systemctl stop justadvisor || true
+            sudo systemctl disable justadvisor || true
+            sudo fuser -k 8000/tcp || true
+            
             # Build and restart the container (detecting docker compose version)
             if docker compose version &>/dev/null; then
               docker compose down
