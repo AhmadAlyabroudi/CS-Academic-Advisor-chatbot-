@@ -51,11 +51,25 @@
             </div>
             <div class="form-group">
               <label for="universityId">University ID <span style="color:#ef4444">*</span></label>
-              <input type="text" id="universityId" placeholder="e.g. 202301" required/>
+              <input type="text" id="universityId" placeholder="e.g. 202301" maxlength="6" pattern="[0-9]{6}" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required/>
             </div>
             <div class="form-group">
               <label for="phone">Phone Number <span style="color:#ef4444">*</span></label>
-              <input type="tel" id="phone" placeholder="e.g. 0791234567" required/>
+              <div style="display: flex; gap: 8px;">
+                <select id="countryCode" style="width: 110px; flex-shrink: 0; padding: 10px; border-radius: var(--radius-md); border: 1px solid var(--gray-200); background: var(--page-bg); color: var(--dark-text); outline: none; font-size: 13.5px;">
+                  <option value="+962" selected>🇯🇴 +962</option>
+                  <option value="+966">🇸🇦 +966</option>
+                  <option value="+971">🇦🇪 +971</option>
+                  <option value="+965">🇰🇼 +965</option>
+                  <option value="+974">🇶🇦 +974</option>
+                  <option value="+973">🇧🇭 +973</option>
+                  <option value="+20">🇪🇬 +20</option>
+                  <option value="+964">🇮🇶 +964</option>
+                  <option value="+963">🇸🇾 +963</option>
+                  <option value="+961">🇱🇧 +961</option>
+                </select>
+                <input type="tel" id="phone" placeholder="e.g. 791234567" oninput="this.value = this.value.replace(/[^0-9]/g, ''); if(this.value.startsWith('0')) this.value = this.value.substring(1);" style="flex: 1;" required/>
+              </div>
             </div>
             <div class="form-group">
               <label for="password">Password <span style="color:#ef4444">*</span></label>

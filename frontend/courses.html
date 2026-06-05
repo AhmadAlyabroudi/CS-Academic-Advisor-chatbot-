@@ -209,13 +209,34 @@
     renderCourses(filtered);
   }
 
+  function formatPrerequisites(prereqStr) {
+    if (!prereqStr || prereqStr.toLowerCase() === 'none') {
+      return 'None';
+    }
+    const sortedCodes = allCourses.map(c => c.code).sort((a, b) => b.length - a.length);
+    let html = prereqStr;
+    sortedCodes.forEach(code => {
+      const match = code.match(/^([A-Za-z]+)(\d+.*)$/);
+      if (match) {
+        const alpha = match[1];
+        const num = match[2];
+        const regex = new RegExp(`\\b${alpha}\\s*${num}\\b`, 'gi');
+        html = html.replace(regex, `<span onclick="openCourseDetails('${code}')" style="color: var(--yellow); cursor: pointer; text-decoration: underline; font-weight: bold;">$&</span>`);
+      } else {
+        const regex = new RegExp(`\\b${code}\\b`, 'gi');
+        html = html.replace(regex, `<span onclick="openCourseDetails('${code}')" style="color: var(--yellow); cursor: pointer; text-decoration: underline; font-weight: bold;">$&</span>`);
+      }
+    });
+    return html;
+  }
+
   function openCourseDetails(code) {
     const course = allCourses.find(c => c.code === code);
     if (!course) return;
 
     document.getElementById('modalCourseCode').innerText = course.code;
     document.getElementById('modalCourseName').innerText = course.name;
-    document.getElementById('modalPrereq').innerText = course.prerequisites || 'None';
+    document.getElementById('modalPrereq').innerHTML = formatPrerequisites(course.prerequisites);
 
     const detailsGrid = document.getElementById('modalDetailsGrid');
     detailsGrid.innerHTML = `

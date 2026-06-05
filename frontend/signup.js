@@ -1,5 +1,17 @@
 const API = '';
 const GRADES = ['A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','F'];
+const COUNTRY_PHONE_LENGTHS = {
+  "+962": { length: 9, placeholder: "e.g. 791234567", name: "Jordan" },
+  "+966": { length: 9, placeholder: "e.g. 501234567", name: "Saudi Arabia" },
+  "+971": { length: 9, placeholder: "e.g. 501234567", name: "UAE" },
+  "+965": { length: 8, placeholder: "e.g. 51234567", name: "Kuwait" },
+  "+974": { length: 8, placeholder: "e.g. 55123456", name: "Qatar" },
+  "+973": { length: 8, placeholder: "e.g. 33123456", name: "Bahrain" },
+  "+20":  { length: 10, placeholder: "e.g. 1012345678", name: "Egypt" },
+  "+964": { length: 10, placeholder: "e.g. 7701234567", name: "Iraq" },
+  "+963": { length: 9, placeholder: "e.g. 931234567", name: "Syria" },
+  "+961": { length: 8, placeholder: "e.g. 71123456", name: "Lebanon" }
+};
 
 let allCourses = [];
 
@@ -108,6 +120,21 @@ async function submitSignup() {
     return;
   }
 
+  // University ID validation (exactly 6 digits)
+  if (universityId.length !== 6 || !/^\d{6}$/.test(universityId)) {
+    showError('University ID must be exactly 6 digits.');
+    return;
+  }
+
+  // Phone number validation based on selected country code
+  const countryCode = document.getElementById('countryCode').value;
+  const rule = COUNTRY_PHONE_LENGTHS[countryCode];
+  if (rule && phone.length !== rule.length) {
+    showError(`Phone number for ${rule.name} must be exactly ${rule.length} digits long (excluding leading zero).`);
+    return;
+  }
+  const fullPhone = countryCode + phone;
+
   // Collect completed courses
   const completedCourses = [];
   let hasEmptyCompleted = false;
@@ -147,7 +174,7 @@ async function submitSignup() {
         last_name: lastName,
         email,
         university_id: universityId,
-        phone_number: phone,
+        phone_number: fullPhone,
         password,
         completed_courses: completedCourses,
         current_enrolled: currentEnrolled,
@@ -171,5 +198,27 @@ async function submitSignup() {
     btn.innerHTML = '<i class="fas fa-user-check" style="margin-right:8px"></i>Create Account';
   }
 }
+
+// Dynamic placeholder and maxLength adjustment for phone input
+function updatePhoneValidation() {
+  const countryCodeSelect = document.getElementById('countryCode');
+  const phoneInput = document.getElementById('phone');
+  if (countryCodeSelect && phoneInput) {
+    const code = countryCodeSelect.value;
+    const rule = COUNTRY_PHONE_LENGTHS[code];
+    if (rule) {
+      phoneInput.placeholder = rule.placeholder;
+      phoneInput.maxLength = rule.length;
+    }
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const countryCodeSelect = document.getElementById('countryCode');
+  if (countryCodeSelect) {
+    countryCodeSelect.addEventListener('change', updatePhoneValidation);
+    updatePhoneValidation();
+  }
+});
 
 loadCourses();
