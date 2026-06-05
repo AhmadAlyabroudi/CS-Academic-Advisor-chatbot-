@@ -173,10 +173,6 @@ def terminate_room(
 
 @router.get("/token")
 def get_livekit_access_token(room_id: str, student_id: str, name: str):
-    """
-    توليد توكن دخول آمن ومشفر لكل طالب للغرفة عبر سيرفر الـ SFU
-    """
-    # جلب مفاتيح التشفير السرية المثبتة بملف الـ .env بالسيرفر
     api_key = os.getenv("LIVEKIT_API_KEY", "devkey")
     api_secret = os.getenv("LIVEKIT_API_SECRET", "secret")
 

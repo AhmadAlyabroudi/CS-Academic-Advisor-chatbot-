@@ -13,19 +13,19 @@ JUST Advisor is a full-stack web application that serves as an intelligent acade
 |---|---|
 | Student Portal & Roadmap | FastAPI · SQLAlchemy · PostgreSQL |
 | Real-Time Study Rooms | WebRTC Mesh · Socket.IO · coturn |
-| Hybrid AI Chatbot | LangChain · Pinecone · Gemini 2.0 Flash |
+| Hybrid AI Chatbot | Groq SDK · Llama 3.3 70B |
 
 ---
 
 ## Features
 
-- **AI Academic Advisor** — Hybrid RAG pipeline answers course and policy questions using official JUST data, with source-confidence badges (Official Source / AI-Generated Insight)
-- **Course Roadmap** — Visual semester-by-semester roadmap synced with completed grades and GPA
+- **AI Academic Advisor** — Groq-powered academic advisor answers course and policy questions using official JUST data, with source-confidence badges (Official Source / AI-Generated Insight)
+- **Interactive Course Roadmap** — Visual semester-by-semester roadmap allowing dynamic grade modifications, failed state highlights (red failing cards), and automatic prerequisite unlocking/locking updates
 - **GPA Calculator** — Semester and cumulative GPA simulator with chart visualizations
 - **Study Rooms** — Real-time WebRTC video/audio/chat rooms with Socket.IO lobby and TURN relay
 - **Faculty Directory** — Office hours, email, and location for all CS department faculty
-- **Course Catalog** — Full CS curriculum listing with prerequisites
-- **Profile Management** — Edit personal info, change password, view academic standing
+- **Course Catalog** — Full CS curriculum listing with prerequisites and clickable prereq links
+- **Profile Management** — Edit personal info, change password, view academic standing, with dynamic country code phone validation and exactly 6-digit University ID verification
 
 ---
 
@@ -51,10 +51,10 @@ Internet
  coturn  (TURN/STUN server — ports 3478, 5349, UDP 49152–65535)
 
 AI Pipeline (per chatbot request):
-  Question → gemini-embedding-001 (768d) → Pinecone top-3 query
-           ↓ score ≥ 0.7                  ↓ score < 0.7
-     Gemini in-context mode         Gemini general mode
-     "Official Source" badge        "AI-Generated Insight" badge
+  Question → Token Overlap Classifier (Stop-word filtering & ratio check)
+           ↓ overlap ≥ 0.30              ↓ overlap < 0.30
+     Llama Official Mode (In-context) Llama General Mode
+     "Official Source" badge         "AI-Generated Insight" badge
 ```
 
 ---
@@ -163,13 +163,8 @@ uvicorn main:socket_app --reload --port 8000
 Without API keys the chatbot runs in demo mode. To enable full AI:
 
 ```bash
-# Add to .env
-GEMINI_API_KEY=your_key
-PINECONE_API_KEY=your_key
-PINECONE_INDEX_NAME=just-cs-advisor
-
-# Seed the knowledge base (run once, re-run when documents change)
-python scripts/seed_knowledge_base.py
+# Add to backend/.env
+GROQ_API_KEY=your_groq_api_key
 
 # Restart the server
 uvicorn main:socket_app --reload --port 8000
@@ -187,12 +182,12 @@ All variables are loaded from `backend/.env`. Copy from `backend/.env.example`.
 | `DATABASE_URL` | Yes | — | Full PostgreSQL SQLAlchemy connection URL |
 | `ENVIRONMENT` | No | `development` | `development` or `production` |
 | `ALLOWED_ORIGINS` | No | `*` | Comma-separated CORS origins |
-| `GEMINI_API_KEY` | No* | — | Google AI Studio key |
-| `PINECONE_API_KEY` | No* | — | Pinecone vector DB key |
-| `PINECONE_INDEX_NAME` | No | `just-cs-advisor` | Pinecone index name |
+| `GROQ_API_KEY` | No* | — | Groq Llama 3 API service key |
 | `TURN_SERVER_IP` | No | — | coturn Droplet public IP |
 | `TURN_USERNAME` | No | — | coturn credential username |
 | `TURN_CREDENTIAL` | No | — | coturn credential password |
+| `LIVEKIT_API_KEY` | No | — | LiveKit token generation API key |
+| `LIVEKIT_API_SECRET` | No | — | LiveKit token generation API secret |
 
 \* Required for full AI functionality.
 
@@ -218,6 +213,7 @@ Interactive docs available at `/docs` when the server is running.
 | `PUT` | `/student/{id}` | Update name / phone |
 | `PUT` | `/student/{id}/password` | Change password |
 | `GET` | `/roadmap/{id}` | Roadmap with grades |
+| `POST` | `/roadmap/{id}/update-course` | Update course status/grade & cascade lock dependencies |
 | `GET` | `/roadmap/{id}/sync-stats` | Recalculate credit counts |
 | `GET` | `/roadmap/{id}/recalculate-gpa` | Recalculate and persist GPA |
 | `GET` | `/faculty` | Faculty directory |

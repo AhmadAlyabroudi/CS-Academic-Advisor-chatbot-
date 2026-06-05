@@ -6,14 +6,14 @@
 set -euo pipefail
 
 APP_DIR="/var/www/justadvisor"
-VENV="$APP_DIR/backend/venv/bin" # التأكد من مسار البيئة الوهمية الصحيح بالباك إند
+VENV="$APP_DIR/backend/venv/bin"
 
 cd "$APP_DIR"
 
 echo "[deploy] Installing / updating Python dependencies..."
 "$VENV/pip" install --upgrade pip
 "$VENV/pip" install -r backend/requirements.txt
-"$VENV/pip" install "bcrypt==4.0.1" # تثبيت إصدار بي كريبت المتوافق لمنع إيرور الـ passlib
+"$VENV/pip" install "bcrypt==4.0.1"
 
 echo "[deploy] Running database migrations (Alembic)..."
 cd "$APP_DIR/backend"

@@ -35,7 +35,6 @@ app = FastAPI(
     version="0.1.0"
 )
 
-# تأمين بناء الجداول لضمان عدم انهيار التطبيق إذا كانت القاعدة ممتلئة أو غير جاهزة لحظياً
 try:
     Base.metadata.create_all(bind=engine)
 except Exception as db_err:
@@ -222,7 +221,6 @@ def seed():
         db.close()
 
 
-# حماية تشغيل الـ seed ليعمل فقط في البيئة الحية وليس عند استيراد الملف بشكل مكرر
 if __name__ == "__main__":
     seed()
 
