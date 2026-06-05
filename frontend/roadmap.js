@@ -89,8 +89,12 @@
             const gradeCorner = isCompleted && c.grade
               ? `<span class="rdm-card__grade-corner">${c.grade}</span>`
               : '';
+            
+            // Safe escape for course name string in onclick handler
+            const safeName = (c.course_name || '').replace(/'/g, "\\'");
+            
             return `
-              <div class="rdm-card rdm-card--${cfg.cls}">
+              <div class="rdm-card rdm-card--${cfg.cls}" style="cursor:pointer; position:relative;" onclick="openEditModal('${c.course_code}', '${safeName}', '${c.status}', '${c.grade || ''}', '${c.credit_hours}')">
                 <div class="rdm-card__top">
                   <span class="rdm-card__dot" style="background:${cfg.dot}"></span>
                   <span class="rdm-card__code">${c.course_code}</span>
@@ -111,4 +115,111 @@
     console.error(err);
     container.innerHTML = "<p style='text-align:center;padding:2rem;color:#ef4444'>Failed to load roadmap. Make sure the backend is running.</p>";
   }
+
+  // ── Modal Interaction Logic ────────────────────────────────────────────────
+  const editCourseModal = document.getElementById('editCourseModal');
+  const modalCourseTitle = document.getElementById('modalCourseTitle');
+  const modalCourseSubtitle = document.getElementById('modalCourseSubtitle');
+  const courseStatusSelect = document.getElementById('courseStatusSelect');
+  const courseGradeSelect = document.getElementById('courseGradeSelect');
+  const gradeContainer = document.getElementById('gradeContainer');
+  const modalErrorMsg = document.getElementById('modalErrorMsg');
+  
+  let currentEditingCourseCode = '';
+
+  // Expose function to window so inline onclick works
+  window.openEditModal = function(code, name, status, grade, credits) {
+    currentEditingCourseCode = code;
+    modalCourseTitle.textContent = `${code} - ${name}`;
+    modalCourseSubtitle.textContent = `Credit Hours: ${credits}`;
+    
+    // Set values
+    courseStatusSelect.value = status;
+    courseGradeSelect.value = grade || '';
+    
+    // Show/hide grade container
+    toggleGradeContainer(status);
+    
+    modalErrorMsg.style.display = 'none';
+    editCourseModal.style.display = 'flex';
+  };
+
+  function toggleGradeContainer(status) {
+    if (status === 'Completed') {
+      gradeContainer.style.display = 'flex';
+    } else {
+      gradeContainer.style.display = 'none';
+    }
+  }
+
+  // Handle status select change
+  if (courseStatusSelect) {
+    courseStatusSelect.addEventListener('change', (e) => {
+      toggleGradeContainer(e.target.value);
+    });
+  }
+
+  // Close modal
+  function closeEditModal() {
+    if (editCourseModal) {
+      editCourseModal.style.display = 'none';
+    }
+  }
+
+  const closeBtn = document.getElementById('closeEditModalBtn');
+  if (closeBtn) closeBtn.addEventListener('click', closeEditModal);
+
+  const cancelBtn = document.getElementById('cancelEditBtn');
+  if (cancelBtn) cancelBtn.addEventListener('click', closeEditModal);
+  
+  // Close when clicking overlay background
+  if (editCourseModal) {
+    editCourseModal.addEventListener('click', (e) => {
+      if (e.target === editCourseModal) closeEditModal();
+    });
+  }
+
+  // Save changes
+  const saveBtn = document.getElementById('saveEditBtn');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', async () => {
+      const status = courseStatusSelect.value;
+      const grade = courseGradeSelect.value;
+      
+      if (status === 'Completed' && !grade) {
+        modalErrorMsg.textContent = 'Please select a grade for the completed course.';
+        modalErrorMsg.style.display = 'block';
+        return;
+      }
+      
+      modalErrorMsg.style.display = 'none';
+      
+      try {
+        const response = await fetch(`/roadmap/${studentId}/update-course`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            course_code: currentEditingCourseCode,
+            status: status,
+            grade: status === 'Completed' ? grade : null
+          })
+        });
+        
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.detail || 'Failed to update course');
+        }
+        
+        closeEditModal();
+        // Reload page to refresh roadmap cards & summary stats
+        window.location.reload();
+        
+      } catch (err) {
+        modalErrorMsg.textContent = err.message;
+        modalErrorMsg.style.display = 'block';
+      }
+    });
+  }
 })();
+
+

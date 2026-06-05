@@ -21,9 +21,66 @@
       <!-- Legend -->
       <div id="roadmapContainer"></div>
     </div>
-    <footer class="site-footer"></footer>
+</div>
+</div>
+
+<!-- Course Edit Modal -->
+<div id="editCourseModal" class="modal-overlay" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center; padding: 20px;">
+  <div class="modal-content animate-in" style="background: var(--card-bg); width: 100%; max-width: 500px; border-radius: var(--radius-xl); border: 1px solid var(--gray-200); box-shadow: var(--shadow-lg); overflow: hidden; display: flex; flex-direction: column;">
+    <!-- Header -->
+    <div style="padding: 24px; border-bottom: 1px solid var(--gray-100); display: flex; justify-content: space-between; align-items: center; background: var(--gray-50);">
+      <div>
+        <h2 id="modalCourseTitle" style="font-size: 20px; font-weight: 700; color: var(--dark-text); margin: 0;">Update Course</h2>
+        <p id="modalCourseSubtitle" style="font-size: 13px; color: var(--gray-400); margin: 5px 0 0 0;"></p>
+      </div>
+      <button id="closeEditModalBtn" style="background: none; border: none; font-size: 20px; color: var(--gray-400); cursor: pointer; transition: color 0.2s;"><i class="fas fa-times"></i></button>
+    </div>
+    
+    <!-- Body -->
+    <div style="padding: 24px; display: flex; flex-direction: column; gap: 20px;">
+      <!-- Status -->
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <label for="courseStatusSelect" style="font-size: 14px; font-weight: 600; color: var(--gray-700);">Course Status</label>
+        <select id="courseStatusSelect" style="width: 100%; padding: 12px; border: 1px solid var(--gray-200); border-radius: var(--radius-md); background: var(--card-bg); color: var(--dark-text); font-size: 15px; outline: none; transition: border-color 0.2s;">
+          <option value="Completed">Completed</option>
+          <option value="Currently Enrolled">Currently Enrolled</option>
+          <option value="Available">Available</option>
+          <option value="locked">Locked</option>
+        </select>
+      </div>
+      
+      <!-- Grade (Visible only when completed) -->
+      <div id="gradeContainer" style="display: flex; flex-direction: column; gap: 8px;">
+        <label for="courseGradeSelect" style="font-size: 14px; font-weight: 600; color: var(--gray-700);">Grade Received</label>
+        <select id="courseGradeSelect" style="width: 100%; padding: 12px; border: 1px solid var(--gray-200); border-radius: var(--radius-md); background: var(--card-bg); color: var(--dark-text); font-size: 15px; outline: none; transition: border-color 0.2s;">
+          <option value="">Select a Grade...</option>
+          <option value="A+">A+ (4.2)</option>
+          <option value="A">A (4.0)</option>
+          <option value="A-">A- (3.75)</option>
+          <option value="B+">B+ (3.5)</option>
+          <option value="B">B (3.0)</option>
+          <option value="B-">B- (2.75)</option>
+          <option value="C+">C+ (2.5)</option>
+          <option value="C">C (2.0)</option>
+          <option value="C-">C- (1.75)</option>
+          <option value="D+">D+ (1.5)</option>
+          <option value="D">D (1.0)</option>
+          <option value="F">F (0.5)</option>
+        </select>
+      </div>
+      
+      <!-- Error Message -->
+      <div id="modalErrorMsg" style="display: none; color: #ef4444; font-size: 14px; font-weight: 500;"></div>
+    </div>
+    
+    <!-- Footer -->
+    <div style="padding: 16px 24px; border-top: 1px solid var(--gray-100); display: flex; justify-content: flex-end; gap: 12px; background: var(--gray-50);">
+      <button id="cancelEditBtn" style="padding: 10px 16px; border: 1px solid var(--gray-200); border-radius: var(--radius-md); background: var(--card-bg); color: var(--gray-600); font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s;">Cancel</button>
+      <button id="saveEditBtn" style="padding: 10px 20px; border: none; border-radius: var(--radius-md); background: var(--yellow); color: #000; font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 4px rgba(234, 179, 8, 0.2);">Save Changes</button>
+    </div>
   </div>
 </div>
+
 <script src="sidebar.js?v=8"></script>
 <script src="roadmap.js"></script>
 </body>
