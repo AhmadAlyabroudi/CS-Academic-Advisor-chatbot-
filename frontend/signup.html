@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <meta name="description" content="Sign up for the CS Academic Advisor portal at JUST."/>
@@ -19,8 +20,8 @@
         <span>CS Academic Advisor Chatbot</span>
       </div>
       <div class="nav-center">
-        <a href="index.html">Home</a>
-        <a href="index.html#features">Features</a>
+        <a href="/">Home</a>
+        <a href="/#features">Features</a>
       </div>
     </div>
   </nav>
@@ -102,7 +103,7 @@
         </form>
 
         <div class="signup-login-link">
-          Already have an account? <a href="index.html">Sign in</a>
+          Already have an account? <a href="/">Sign in</a>
         </div>
       </div>
     </div>
@@ -113,7 +114,7 @@
       document.body.classList.add('dark-mode');
     }
     if (localStorage.getItem('student_id')) {
-      window.location.href = 'chatbot.html';
+      window.location.href = '/chatbot';
     }
   </script>
   <script src="signup.js"></script>

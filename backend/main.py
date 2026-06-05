@@ -235,6 +235,8 @@ print(
     else "AI advisor: DEMO MODE — GROQ_API_KEY missing or invalid in backend/.env"
 )
 
+from fastapi.responses import FileResponse
+
 # Register REST routers
 app.include_router(student_router)
 app.include_router(faculty_router)
@@ -245,13 +247,58 @@ app.include_router(chatbot_router)
 app.include_router(gpa_router)
 app.include_router(config_router)
 
-# Mount static files
-app.mount("/frontend", StaticFiles(directory="../frontend"), name="frontend")
-
-
+# ── Clean URL HTML routes ───────────────────────────────────────────────────
+# We define these BEFORE mounting StaticFiles so they take precedence.
 @app.get("/")
-def root():
-    return RedirectResponse(url="/frontend/index.html")
+def get_index():
+    return FileResponse("../frontend/index.html")
+
+@app.get("/about")
+def get_about():
+    return FileResponse("../frontend/about.html")
+
+@app.get("/chatbot")
+def get_chatbot():
+    return FileResponse("../frontend/chatbot.html")
+
+@app.get("/courses")
+def get_courses():
+    return FileResponse("../frontend/courses.html")
+
+@app.get("/faculty")
+def get_faculty():
+    return FileResponse("../frontend/faculty.html")
+
+@app.get("/features")
+def get_features():
+    return FileResponse("../frontend/features.html")
+
+@app.get("/gpa")
+def get_gpa():
+    return FileResponse("../frontend/gpa.html")
+
+@app.get("/profile")
+def get_profile():
+    return FileResponse("../frontend/profile.html")
+
+@app.get("/roadmap")
+def get_roadmap():
+    return FileResponse("../frontend/roadmap.html")
+
+@app.get("/signup")
+def get_signup():
+    return FileResponse("../frontend/signup.html")
+
+@app.get("/study-rooms")
+def get_study_rooms():
+    return FileResponse("../frontend/study-rooms.html")
+
+@app.get("/room")
+def get_room():
+    return FileResponse("../frontend/room.html")
+
+# Mount static files to root (/) so assets can be loaded cleanly
+app.mount("/", StaticFiles(directory="../frontend"), name="frontend")
 
 
 # Wrap FastAPI with Socket.IO — this is the ASGI app that uvicorn/gunicorn runs

@@ -3,14 +3,27 @@
   if (localStorage.getItem('theme') === 'dark') {
     document.body.classList.add('dark-mode');
   }
-  const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+  let currentPage = window.location.pathname;
+  if (currentPage.length > 1 && currentPage.endsWith('/')) {
+    currentPage = currentPage.substring(0, currentPage.length - 1);
+  }
+  if (currentPage.startsWith('/frontend/')) {
+    currentPage = currentPage.replace('/frontend/', '/');
+  }
+  if (currentPage.endsWith('.html')) {
+    currentPage = currentPage.substring(0, currentPage.length - 5);
+  }
+  if (currentPage === '/index' || currentPage === '') {
+    currentPage = '/';
+  }
+
   const urlParams = new URLSearchParams(window.location.search);
   const currentMode = urlParams.get('mode') || '';
 
   // Auth Guard
   const studentId = localStorage.getItem('student_id');
-  if (!studentId && currentPage !== 'index.html' && currentPage !== '') {
-    window.location.href = 'index.html';
+  if (!studentId && currentPage !== '/' && currentPage !== '') {
+    window.location.href = '/';
     return;
   }
 
@@ -28,7 +41,7 @@
       } else {
         // If token/ID is invalid, force logout
         localStorage.removeItem('student_id');
-        window.location.href = 'index.html';
+        window.location.href = '/';
         return;
       }
     } catch (err) {
@@ -38,25 +51,25 @@
 
   // تحديث الـ href للـ History ليمرر باراميتر مخصص يمنع التداخل
   const menuItems = [
-    { icon: 'fa-comment-dots', label: 'Active Session', href: 'chatbot.html', id: 'chatbot' },
-    { icon: 'fa-clock-rotate-left', label: 'Chat History', href: 'chatbot.html?mode=history', id: 'history' },
+    { icon: 'fa-comment-dots', label: 'Active Session', href: '/chatbot', id: 'chatbot' },
+    { icon: 'fa-clock-rotate-left', label: 'Chat History', href: '/chatbot?mode=history', id: 'history' },
   ];
 
   const uniLinks = [
-    { icon: 'fa-earth-americas', label: 'Course Roadmap', href: 'roadmap.html', id: 'roadmap' },
-    { icon: 'fa-calculator', label: 'GPA Calculator', href: 'gpa.html', id: 'gpa' },
-    { icon: 'fa-door-open', label: 'Study Rooms', href: 'study-rooms.html', id: 'study-rooms' },
-    { icon: 'fa-users', label: 'Faculty Info', href: 'faculty.html', id: 'faculty' },
-    { icon: 'fa-book', label: 'Courses Catalog', href: 'courses.html', id: 'courses' },
+    { icon: 'fa-earth-americas', label: 'Course Roadmap', href: '/roadmap', id: 'roadmap' },
+    { icon: 'fa-calculator', label: 'GPA Calculator', href: '/gpa', id: 'gpa' },
+    { icon: 'fa-door-open', label: 'Study Rooms', href: '/study-rooms', id: 'study-rooms' },
+    { icon: 'fa-users', label: 'Faculty Info', href: '/faculty', id: 'faculty' },
+    { icon: 'fa-book', label: 'Courses Catalog', href: '/courses', id: 'courses' },
   ];
 
   function isActive(item) {
     // التحقق من الصفحة والباراميتر معاً لضمان الإضاءة الصحيحة للزر الفعال
     if (item.id === 'history') {
-      return currentPage === 'chatbot.html' && currentMode === 'history';
+      return currentPage === '/chatbot' && currentMode === 'history';
     }
     if (item.id === 'chatbot') {
-      return currentPage === 'chatbot.html' && currentMode !== 'history';
+      return currentPage === '/chatbot' && currentMode !== 'history';
     }
     return currentPage === item.href;
   }
@@ -76,7 +89,7 @@
         <p>Student Portal AI</p>
       </div>
     </div>
-    <button class="btn-new" onclick="window.location.href='chatbot.html'">
+    <button class="btn-new" onclick="window.location.href='/chatbot'">
       <i class="fas fa-plus"></i> New Consultation
     </button>
     <div class="menu-label">MENU</div>
@@ -89,7 +102,7 @@
         <div class="user-name">${userName}</div>
         <div class="user-id">${displayId}</div>
       </div>
-      <a href="profile.html" class="chevron"><i class="fas fa-chevron-right"></i></a>
+      <a href="/profile" class="chevron"><i class="fas fa-chevron-right"></i></a>
     </div>
   `;
 
@@ -107,10 +120,10 @@
         <span>JUST Advisor</span>
       </div>
       <div class="tb-links">
-        <a href="javascript:void(0)" onclick="window.location.href='index.html'">Home</a>
-        <a href="javascript:void(0)" onclick="window.location.href='about.html'">About</a>
-        <a href="javascript:void(0)" onclick="window.location.href='features.html'">Features</a>
-        <button class="btn-ask" onclick="window.location.href='chatbot.html'">
+        <a href="javascript:void(0)" onclick="window.location.href='/'">Home</a>
+        <a href="javascript:void(0)" onclick="window.location.href='/about'">About</a>
+        <a href="javascript:void(0)" onclick="window.location.href='/features'">Features</a>
+        <button class="btn-ask" onclick="window.location.href='/chatbot'">
           <i class="fas fa-robot"></i> Ask AI Advisor
         </button>
       </div>
@@ -154,7 +167,7 @@
     return d.innerHTML;
   }
   const activeMeeting = JSON.parse(sessionStorage.getItem('active_meeting'));
-  if (activeMeeting && currentPage !== 'room.html') {
+  if (activeMeeting && currentPage !== '/room') {
     const widget = document.createElement('div');
     widget.id = 'miniMeetingWidget';
     widget.style.cssText = `
@@ -229,7 +242,7 @@
         if (miniStream) {
             miniStream.getTracks().forEach(track => track.stop());
         }
-        window.location.href = `room.html?id=${activeMeeting.id}&type=${activeMeeting.type}`;
+        window.location.href = `/room?id=${activeMeeting.id}&type=${activeMeeting.type}`;
     });
 
     document.getElementById('quitMiniMeeting').addEventListener('click', async () => {
