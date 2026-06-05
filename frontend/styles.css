@@ -443,6 +443,8 @@ button{font-family:inherit}
 /* Status-specific card colors */
 .rdm-card--completed{background:#f0fdf4;border-color:#86efac}
 .rdm-card--completed .rdm-card__code{color:#166534}
+.rdm-card--failed{background:#fef2f2;border-color:#fca5a5}
+.rdm-card--failed .rdm-card__code{color:#991b1b}
 .rdm-card--enrolled{background:#fefce8;border-color:#fde047}
 .rdm-card--enrolled .rdm-card__code{color:#713f12}
 .rdm-card--available{background:var(--card-bg);border-color:var(--gray-200)}
@@ -450,7 +452,11 @@ button{font-family:inherit}
 .rdm-card--locked{background:var(--gray-50);border-color:var(--gray-200);opacity:.7}
 .rdm-card--locked .rdm-card__code{color:var(--gray-500)}
 .rdm-card__grade-corner{display:inline-flex;align-items:center;font-size:11px;font-weight:700;color:#166534;background:#dcfce7;padding:2px 8px;border-radius:999px;margin-top:6px;border:1px solid #86efac;letter-spacing:.3px}
+.rdm-card--failed .rdm-card__grade-corner{color:#991b1b;background:#fee2e2;border-color:#fca5a5}
 body.dark-mode .rdm-card__grade-corner{color:#4ade80;background:rgba(74,222,128,.12);border-color:rgba(74,222,128,.3)}
+body.dark-mode .rdm-card--failed{background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.4)}
+body.dark-mode .rdm-card--failed .rdm-card__code{color:#f87171}
+body.dark-mode .rdm-card--failed .rdm-card__grade-corner{color:#f87171;background:rgba(239,68,68,0.2);border-color:rgba(239,68,68,0.4)}
 
 @media(max-width:768px){.rdm-grid{grid-template-columns:1fr 1fr}.rdm-summary{flex-direction:column}}
 @media(max-width:480px){.rdm-grid{grid-template-columns:1fr}}

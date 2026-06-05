@@ -219,11 +219,12 @@ If a student is in a live call and decides to check their Roadmap or GPA calcula
 Renders the student's degree progression on a grid:
 *   Queries `/roadmap/{student_id}` to retrieve courses mapped with completion statuses.
 *   **Green (Completed)**: Displays the grade earned.
+*   **Red (Failed)**: Displays the grade earned (`F`) and styles the card in red to easily identify failed modules that need to be repeated.
 *   **Yellow (Currently Enrolled)**: Under study this semester.
 *   **White (Available)**: Prerequisites are met, ready to take.
 *   **Gray (Locked)**: Prerequisite courses have not been successfully passed yet.
 *   **Interactive Editing Modal**: Students can click on any course card in the grid to open a details editor modal. They can dynamically change the course status and select a grade (if completed).
-*   **Automatic Dependency Resolution**: When changes are saved, a POST request is sent to `/roadmap/{student_id}/update-course`. The backend updates the database and immediately recalculates the prerequisite locking state for all remaining courses (including special rules like `"PASS 90 Credit"`). It then re-triggers overall GPA computation and statistics sync. The page refreshes automatically to display the updated, cascading locks and overall GPA stats.
+*   **Automatic Dependency Resolution**: When changes are saved, a POST request is sent to `/roadmap/{student_id}/update-course`. The backend updates the database and recalculates the prerequisite locking state for all remaining courses (including special rules like `"PASS 90 Credit"`). It then re-triggers overall GPA computation and statistics sync. The page refreshes automatically to display the updated, cascading locks and overall GPA stats.
 
 ### 2. GPA Calculator ([gpa.html](file:///c:/Users/ahmad/OneDrive/Desktop/GP2%20Project%20Website/frontend/gpa.html) / [gpa.js](file:///c:/Users/ahmad/OneDrive/Desktop/GP2%20Project%20Website/frontend/gpa.js))
 Allows interactively estimating GPAs.

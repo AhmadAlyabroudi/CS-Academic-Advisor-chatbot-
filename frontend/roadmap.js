@@ -13,7 +13,10 @@
     'locked':             { cls: 'locked',     dot: '#6b7280', label: 'Locked' },
   };
 
-  function getCfg(status) {
+  function getCfg(status, grade) {
+    if ((status || '').toLowerCase() === 'completed' && (grade || '').toUpperCase() === 'F') {
+      return { cls: 'failed', dot: '#ef4444', label: 'Failed' };
+    }
     return STATUS[(status || '').toLowerCase()] || STATUS['available'];
   }
 
@@ -83,7 +86,7 @@
         </div>
         <div class="rdm-grid">
           ${courses.map(c => {
-            const cfg = getCfg(c.status);
+            const cfg = getCfg(c.status, c.grade);
             const hasPrereq = c.prerequisites && c.prerequisites !== 'None';
             const isCompleted = (c.status || '').toLowerCase() === 'completed';
             const gradeCorner = isCompleted && c.grade
