@@ -1,16 +1,23 @@
 import os
+import re
 import logging
 from typing import Optional, Protocol
-from dotenv import load_dotenv
 from pathlib import Path
+from dotenv import load_dotenv
 
 logger = logging.getLogger(__name__)
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
+KNOWLEDGE_BASE_DIR = BASE_DIR / "knowledge_base"
 load_dotenv(BASE_DIR / ".env")
 
-SIMILARITY_THRESHOLD = 0.7
-TOP_K = 3
+GROQ_MODEL = "llama-3.3-70b-versatile"
+GROQ_TEMPERATURE = 0.3
+GROQ_MAX_TOKENS = 1024
+
+# Heuristic threshold: fraction of question keywords that must appear in the
+# loaded knowledge base for an answer to be labelled "official".
+OFFICIAL_OVERLAP_THRESHOLD = 0.30
 
 JUST_ADVISOR_SYSTEM = (
     "You are the official AI Academic Advisor for the Computer Science department "
@@ -19,119 +26,117 @@ JUST_ADVISOR_SYSTEM = (
     "GPA calculation, practical training (CS391), graduation projects (CS491/CS492), "
     "and general CS academic guidance. "
     "Be specific, cite course codes when relevant, and keep answers professional yet friendly. "
-    "If you are unsure about a JUST-specific policy, say so and suggest contacting the department."
+    "Prefer the official JUST CS data provided below when answering. "
+    "If the official data does not cover the question, answer from general CS knowledge and "
+    "tell the student to confirm JUST-specific policies with the department."
 )
 
-OFFICIAL_SYSTEM = (
-    "You are the official Academic Advisor for the Computer Science department "
-    "at Jordan University of Science and Technology (JUST). "
-    "Answer the student's question using ONLY the official university information "
-    "provided below. Be specific, cite course codes or regulation sections where "
-    "relevant, and keep the tone professional yet friendly."
-)
+OFFICIAL_DATA_HEADER = "--- Official JUST CS Department Data ---"
+OFFICIAL_DATA_FOOTER = "-----------------------------------------"
 
-OFFICIAL_PROMPT = """{system}
-
---- Official JUST CS Department Data ---
-{context}
------------------------------------------
-
-Student Question: {question}
-
-Answer based strictly on the above official data:"""
-
-GENERAL_SYSTEM = (
-    "You are a knowledgeable AI Academic Advisor for Computer Science students at "
-    "Jordan University of Science and Technology (JUST). "
-    "Answer helpfully with expertise in computer science, academic guidance, and career development. "
-    "Keep answers practical and encouraging."
-)
-
-GENERAL_PROMPT = """{system}
-
-Student Question: {question}
-
-Answer:"""
+# Stop-words ignored when computing keyword overlap with the knowledge base.
+_STOP_WORDS = {
+    "the", "a", "an", "is", "are", "was", "were", "be", "been", "being",
+    "of", "to", "in", "on", "for", "with", "by", "at", "from", "as",
+    "and", "or", "but", "if", "then", "than", "that", "this", "these", "those",
+    "i", "you", "he", "she", "we", "they", "it", "me", "us", "them",
+    "my", "your", "our", "their", "his", "her", "its",
+    "do", "does", "did", "can", "could", "should", "would", "will", "shall", "may", "might",
+    "have", "has", "had", "how", "what", "when", "where", "why", "who", "which",
+    "about", "into", "out", "up", "down", "over", "under", "again", "more", "most",
+    "any", "some", "all", "no", "not", "so", "too", "very", "just",
+}
 
 
 class AdvisorChain(Protocol):
     def query(self, question: str) -> dict: ...
 
 
-class GeminiAdvisorChain:
-    """Direct Gemini chat — used when Pinecone RAG is unavailable."""
-
-    def __init__(self, gemini_key: str) -> None:
-        from langchain_google_genai import ChatGoogleGenerativeAI
-
-        self.llm = ChatGoogleGenerativeAI(
-            model="gemini-2.0-flash",
-            google_api_key=gemini_key,
-            temperature=0.3,
-        )
-        logger.info("GeminiAdvisorChain initialised (direct Gemini mode)")
-
-    def query(self, question: str) -> dict:
-        from langchain_core.messages import HumanMessage, SystemMessage
-
-        response = self.llm.invoke([
-            SystemMessage(content=JUST_ADVISOR_SYSTEM),
-            HumanMessage(content=question),
-        ])
-
-        return {
-            "answer": response.content,
-            "source": "general",
-            "confidence": 0.0,
-        }
+def _load_knowledge_base() -> str:
+    """Concatenate every .txt file in knowledge_base/ into one block."""
+    if not KNOWLEDGE_BASE_DIR.is_dir():
+        return ""
+    parts: list[str] = []
+    for path in sorted(KNOWLEDGE_BASE_DIR.glob("*.txt")):
+        try:
+            parts.append(path.read_text(encoding="utf-8"))
+        except OSError as exc:
+            logger.warning("Could not read knowledge base file %s: %s", path, exc)
+    return "\n\n".join(parts)
 
 
-class HybridAdvisorChain:
-    """Pinecone RAG + Gemini — official data when similarity is high."""
+def _tokenize(text: str) -> set[str]:
+    return {
+        tok for tok in re.findall(r"[a-z0-9]+", text.lower())
+        if len(tok) > 2 and tok not in _STOP_WORDS
+    }
 
-    def __init__(self, gemini_key: str, pinecone_key: str, index_name: str) -> None:
-        from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
-        from pinecone import Pinecone
 
-        self.llm = ChatGoogleGenerativeAI(
-            model="gemini-2.0-flash",
-            google_api_key=gemini_key,
-            temperature=0.3,
-        )
+class GroqAdvisorChain:
+    """Groq-backed academic advisor.
 
-        self.embeddings = GoogleGenerativeAIEmbeddings(
-            model="models/gemini-embedding-001",
-            google_api_key=gemini_key,
-            task_type="retrieval_query",
-            output_dimensionality=768,
-        )
+    The full knowledge base is stuffed into the system prompt (it is small
+    enough to fit). For each question we compute a cheap keyword-overlap
+    score against the knowledge base to decide whether the answer is more
+    likely "official" or a "general" CS answer.
+    """
 
-        pc = Pinecone(api_key=pinecone_key)
-        self.index = pc.Index(index_name)
-        logger.info("HybridAdvisorChain initialised (RAG mode, index=%s)", index_name)
+    def __init__(self, groq_key: str) -> None:
+        from groq import Groq
 
-    def query(self, question: str) -> dict:
-        query_vector = self.embeddings.embed_query(question)
-        results = self.index.query(vector=query_vector, top_k=TOP_K, include_metadata=True)
+        self.client = Groq(api_key=groq_key)
+        self.knowledge_base = _load_knowledge_base()
+        self.kb_tokens = _tokenize(self.knowledge_base)
 
-        top_score: float = results.matches[0].score if results.matches else 0.0
-
-        if top_score >= SIMILARITY_THRESHOLD:
-            chunks = [m.metadata.get("text", "") for m in results.matches if m.score >= SIMILARITY_THRESHOLD]
-            context = "\n\n".join(chunks)
-            prompt_text = OFFICIAL_PROMPT.format(system=OFFICIAL_SYSTEM, context=context, question=question)
-            source = "official"
+        if self.knowledge_base:
+            self.system_prompt = (
+                f"{JUST_ADVISOR_SYSTEM}\n\n"
+                f"{OFFICIAL_DATA_HEADER}\n{self.knowledge_base}\n{OFFICIAL_DATA_FOOTER}"
+            )
+            logger.info(
+                "GroqAdvisorChain initialised (model=%s, kb=%d chars, %d tokens)",
+                GROQ_MODEL, len(self.knowledge_base), len(self.kb_tokens),
+            )
         else:
-            prompt_text = GENERAL_PROMPT.format(system=GENERAL_SYSTEM, question=question)
-            source = "general"
+            self.system_prompt = JUST_ADVISOR_SYSTEM
+            logger.warning(
+                "GroqAdvisorChain initialised without knowledge base — running general mode only."
+            )
 
-        from langchain_core.messages import HumanMessage
-        response = self.llm.invoke([HumanMessage(content=prompt_text)])
+    def _classify(self, question: str) -> tuple[str, float]:
+        if not self.kb_tokens:
+            return "general", 0.0
+        q_tokens = _tokenize(question)
+        if not q_tokens:
+            return "general", 0.0
+        overlap = len(q_tokens & self.kb_tokens) / len(q_tokens)
+        source = "official" if overlap >= OFFICIAL_OVERLAP_THRESHOLD else "general"
+        return source, round(overlap, 3)
+
+    def query(self, question: str) -> dict:
+        source, confidence = self._classify(question)
+
+        completion = self.client.chat.completions.create(
+            model=GROQ_MODEL,
+            temperature=GROQ_TEMPERATURE,
+            max_tokens=GROQ_MAX_TOKENS,
+            messages=[
+                {"role": "system", "content": self.system_prompt},
+                {"role": "user", "content": question},
+            ],
+        )
+
+        answer = (completion.choices[0].message.content or "").strip()
+        if not answer:
+            answer = (
+                "I couldn't generate an answer for that question. "
+                "Please try rephrasing it."
+            )
 
         return {
-            "answer": response.content,
+            "answer": answer,
             "source": source,
-            "confidence": round(float(top_score), 3),
+            "confidence": confidence,
         }
 
 
@@ -151,25 +156,18 @@ def get_advisor() -> Optional[AdvisorChain]:
 
     load_dotenv(BASE_DIR / ".env")
 
-    gemini_key = os.getenv("GEMINI_API_KEY", "").strip()
-    pinecone_key = os.getenv("PINECONE_API_KEY", "").strip()
-    index_name = os.getenv("PINECONE_INDEX_NAME", "just-cs-advisor")
+    # Support both GROQ_API_KEY and the legacy GEMINI_API_KEY slot
+    # (some deployments still ship the old variable name with a Groq key).
+    groq_key = os.getenv("GROQ_API_KEY", "").strip() or os.getenv("GEMINI_API_KEY", "").strip()
 
-    if not _is_valid_key(gemini_key):
-        logger.warning("GEMINI_API_KEY not set — running demo mode.")
+    if not _is_valid_key(groq_key):
+        logger.warning("GROQ_API_KEY not set — running demo mode.")
         return None
 
-    if _is_valid_key(pinecone_key):
-        try:
-            _advisor_instance = HybridAdvisorChain(gemini_key, pinecone_key, index_name)
-            return _advisor_instance
-        except Exception as exc:
-            logger.warning("Hybrid RAG init failed (%s) — falling back to direct Gemini.", exc)
-
     try:
-        _advisor_instance = GeminiAdvisorChain(gemini_key)
+        _advisor_instance = GroqAdvisorChain(groq_key)
     except Exception as exc:
-        logger.error("Failed to initialise GeminiAdvisorChain: %s", exc)
+        logger.error("Failed to initialise GroqAdvisorChain: %s", exc)
         _advisor_instance = None
 
     return _advisor_instance

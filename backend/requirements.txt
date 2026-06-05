@@ -10,9 +10,7 @@ python-socketio==5.11.4
 python-dotenv==1.0.1
 gunicorn==23.0.0
 passlib[bcrypt]==1.7.4
-# ── AI / RAG stack ────────────────────────────────────────────────────────────
-langchain-google-genai>=2.0.0   # ChatGoogleGenerativeAI + GoogleGenerativeAIEmbeddings
-langchain-core>=0.3.0           # HumanMessage, prompt primitives
-pinecone>=5.0.0                 # vector DB client (queried directly — no langchain-pinecone needed)
+# ── AI stack (Groq) ───────────────────────────────────────────────────────────
+groq>=0.11.0                    # Official Groq Python SDK (chat completions)
 livekit
 livekit.api

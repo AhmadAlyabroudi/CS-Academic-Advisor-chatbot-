@@ -10,8 +10,8 @@ class ChatbotHistory(Base):
     student_id = Column(String, ForeignKey("students.university_id"), nullable=False)
     message_content = Column(Text, nullable=False)
     sender_type = Column(String, default="user")  # "user" or "bot"
-    # "official" = grounded in Pinecone university data
-    # "general"  = Gemini general-knowledge fallback
+    # "official" = grounded in JUST CS knowledge base
+    # "general"  = Groq general-knowledge answer
     # None       = legacy messages or user messages
     source = Column(String, nullable=True)
     timestamp = Column(DateTime(timezone=True), server_default=func.now())

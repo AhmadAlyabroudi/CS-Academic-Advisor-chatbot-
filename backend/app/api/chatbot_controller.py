@@ -10,11 +10,10 @@ from app.models.student import Student
 router = APIRouter(prefix="/chat", tags=["Chatbot"])
 
 DEMO_RESPONSES = [
-    "I'm your AI Academic Advisor at JUST! To enable full AI capabilities with RAG "
-    "(Retrieval-Augmented Generation), please configure GEMINI_API_KEY and "
-    "PINECONE_API_KEY in your environment. Once configured, I can answer questions "
-    "about courses, prerequisites, graduation requirements, and more using official "
-    "JUST CS department data.",
+    "I'm your AI Academic Advisor at JUST! To enable full AI capabilities, please "
+    "configure GROQ_API_KEY in your environment. Once configured, I can answer "
+    "questions about courses, prerequisites, graduation requirements, and more "
+    "using official JUST CS department data.",
     "The CS degree at JUST requires 132 credit hours. You'll cover foundational "
     "courses in Year 1-2, advanced CS topics in Year 3, and the Graduation Project "
     "in Year 4. Check your roadmap page for your personal progress.",
@@ -63,15 +62,15 @@ def get_chat_history(student_id: str, db: Session = Depends(get_db)):
 @router.post("/ai")
 def ai_chat(req: AiChatRequest, db: Session = Depends(get_db)):
     """
-    Hybrid RAG endpoint.
+    Groq-backed chat endpoint.
 
     Flow:
       1. Save the user's question to chat history (logged-in students only).
-      2. Run HybridAdvisorChain (Pinecone → threshold → Gemini).
+      2. Run GroqAdvisorChain (Groq LLM grounded in the JUST CS knowledge base).
       3. Save the bot answer with its source tag.
       4. Return { answer, source, confidence }.
 
-    If API keys are not configured the endpoint returns a helpful demo answer
+    If the API key is not configured the endpoint returns a helpful demo answer
     so the UI remains functional during local development.
     """
     global _demo_counter
