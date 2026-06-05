@@ -183,11 +183,9 @@ def get_livekit_access_token(room_id: str, student_id: str, name: str):
     if not room_id or not student_id:
         raise HTTPException(status_code=400, detail="Missing parameters")
 
-    # صياغة التصاريح الرسمية للبث (دخول الغرفة، تفعيل المايك والكاميرا)
-        # صياغة التصاريح الرسمية للبث (دخول الغرفة، تفعيل المايك والكاميرا)
-        grant = AccessToken(api_key, api_secret) \
-            .with_identity(student_id) \
-            .with_name(name) \
-            .with_grants(VideoGrants(room_join=True, room=room_id))
+    grant = AccessToken(api_key, api_secret) \
+        .with_identity(student_id) \
+        .with_name(name) \
+        .with_grants(VideoGrants(room_join=True, room=room_id))
 
     return {"token": grant.to_jwt()}

@@ -95,7 +95,7 @@ function escapeHtml(str) {
 }
 
 // ── Real-time lobby via Socket.IO ─────────────────────────────────────────────
-const socket = io('https://csacademicadvisorchatbot.codes', { transports: ['websocket', 'polling'] });
+const socket = io(window.location.origin, { transports: ['websocket', 'polling'] });
 socket.on('connect', () => { socket.emit('join_lobby', {}); });
 socket.on('room-list-updated', () => { loadRooms(); });
 socket.on('disconnect', () => { socket.emit('leave_lobby', {}); });

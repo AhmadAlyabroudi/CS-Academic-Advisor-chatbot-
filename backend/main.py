@@ -14,7 +14,6 @@ from app.api.roadmap_controller import router as roadmap_router
 from app.api.rooms_controller import router as rooms_router
 from app.api.chatbot_controller import router as chatbot_router
 from app.api.gpa_controller import router as gpa_router
-from app.api.gpa_controller import router as gpa_router
 from app.api.config_controller import router as config_router
 from app.models.student_roadmap import StudentRoadmap
 from app.models.study_rooms import OfficialRooms, PrivateStudyRooms
@@ -39,7 +38,7 @@ except Exception as db_err:
 
 def seed():
     """
-    Seed ONLY universal reference data:
+    SeedONLY universal reference data:
       - Faculty directory
       - CS curriculum (courses)
       - Official study rooms (one per course)

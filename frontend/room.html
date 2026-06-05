@@ -305,6 +305,7 @@ function escapeHtml(str) {
 const params     = new URLSearchParams(window.location.search);
 const roomId     = parseInt(params.get('id'));
 const roomType   = params.get('type');
+const roomKey    = `${roomType}:${roomId}`;
 const studentId  = localStorage.getItem('student_id') || '';
 
 // ─── State ────────────────────────────────────────────────────────────────────
@@ -315,15 +316,10 @@ let screenStream  = null;
 let unreadCount   = 0;
 let chatOpen      = false;
 
-// ─── تعديل هام: ربط سيرفر الـ TURN المذكور في الـ .env مباشرة ───
 let iceConfig = {
   iceServers: [
-    { urls: 'stun:192.241.180.95:3478' },
-    {
-      urls: 'turn:192.241.180.95:3478',
-      username: 'justadvisor',
-      credential: 'Avanger@95_turn_password'
-    }
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:stun1.l.google.com:19302' },
   ]
 };
 
@@ -334,34 +330,44 @@ let audioContext = null, analyser = null, microphone = null, animId = null;
 const peers = {};
 
 // ─── Socket.IO ────────────────────────────────────────────────────────────────
-const SERVER = 'https://csacademicadvisorchatbot.codes';
-const socket = io(SERVER, { transports: ['websocket', 'polling'] });
+const socket = io(window.location.origin, { transports: ['websocket', 'polling'] });
+let socketReady = false;
+
+function emitJoinRoom() {
+  if (!roomKey || roomKey.includes('null') || roomKey.includes('undefined')) return;
+  socket.emit('join_room', {
+    room_id: roomId,
+    room_type: roomType,
+    user_id: studentId,
+    name: myName,
+  });
+}
 
 socket.on('connect', () => {
-  // إرسال طلب انضمام للغرفة بالباكيند
-  socket.emit('join_room', { room_id: roomId, user_id: studentId, name: myName });
+  if (socketReady) emitJoinRoom();
 });
 
 // استقبال قائمة المستخدمين المتواجدين حالياً قبل دخولنا
 socket.on('existing-users', async ({ users }) => {
   for (const user of users) {
     if (user.sid !== socket.id) {
-      addRemoteTile(user.sid, user.name);
-      await createOffer(user.sid, user.name);
+      addRemoteTile(user.sid, user.name, user.user_id);
+      await createOffer(user.sid, user.name, user.user_id);
     }
   }
 });
 
-// شخص جديد دخل الغرفة
+// شخص جديد دخل الغرفة — عرض البلاطة فقط؛ المتصل الجديد يرسل العرض عبر existing-users
 socket.on('user-joined', ({ user_id, name, sid }) => {
-  addRemoteTile(sid, name);
+  if (sid === socket.id) return;
+  addRemoteTile(sid, name, user_id);
   updateMemberCount();
 });
 
 // شخص غادر الغرفة
-socket.on('user-left', ({ user_id, name }) => {
+socket.on('user-left', ({ user_id }) => {
   for (const sid of Object.keys(peers)) {
-    if (peers[sid].user_id === user_id || sid === user_id) {
+    if (peers[sid].userId === user_id) {
       removePeer(sid);
       break;
     }
@@ -396,8 +402,9 @@ socket.on('ice-candidate', async ({ from, candidate }) => {
   }
 });
 
-socket.on('receive-message', ({ userId, name, message, timestamp }) => {
-  appendChatMessage(userId === studentId ? 'mine' : 'theirs', name, message, timestamp);
+socket.on('receive-message', ({ userId, user_id, name, message, timestamp }) => {
+  const uid = userId || user_id;
+  appendChatMessage(uid === studentId ? 'mine' : 'theirs', name, message, timestamp);
   if (!chatOpen) {
     unreadCount++;
     const badge = document.getElementById('unreadBadge');
@@ -407,7 +414,7 @@ socket.on('receive-message', ({ userId, name, message, timestamp }) => {
 });
 
 // ─── WebRTC Engine ───────────────────────────────────────────────────────────
-function createPeerConnection(remoteSid, remoteName) {
+function createPeerConnection(remoteSid, remoteName, remoteUserId) {
   const pc = new RTCPeerConnection(iceConfig);
 
   // إرسال الصوت والكاميرا المحلية للشخص البعيد فوراً
@@ -434,12 +441,12 @@ function createPeerConnection(remoteSid, remoteName) {
     }
   };
 
-  peers[remoteSid] = { pc, name: remoteName, userId: remoteSid };
+  peers[remoteSid] = { pc, name: remoteName, userId: remoteUserId || remoteSid };
   return pc;
 }
 
-async function createOffer(remoteSid, remoteName) {
-  const pc = createPeerConnection(remoteSid, remoteName);
+async function createOffer(remoteSid, remoteName, remoteUserId) {
+  const pc = createPeerConnection(remoteSid, remoteName, remoteUserId);
   const offer = await pc.createOffer();
   await pc.setLocalDescription(offer);
   socket.emit('offer', { target: remoteSid, sdp: pc.localDescription });
@@ -448,8 +455,8 @@ async function createOffer(remoteSid, remoteName) {
 async function handleOffer(fromSid, sdp) {
   let entry = peers[fromSid];
   if (!entry) {
-    addRemoteTile(fromSid, 'Student');
-    createPeerConnection(fromSid, 'Student');
+    addRemoteTile(fromSid, 'Student', fromSid);
+    createPeerConnection(fromSid, 'Student', fromSid);
     entry = peers[fromSid];
   }
 
@@ -459,7 +466,7 @@ async function handleOffer(fromSid, sdp) {
   socket.emit('answer', { target: fromSid, sdp: entry.pc.localDescription });
 }
 
-function addRemoteTile(sid, name) {
+function addRemoteTile(sid, name, userId) {
   if (document.getElementById(`tile-${sid}`)) return;
 
   const card = document.createElement('div');
@@ -505,8 +512,22 @@ function updateMemberCount() {
 }
 
 // ─── Page init ────────────────────────────────────────────────────────────────
+async function loadIceServers() {
+  try {
+    const res = await fetch('/api/ice-servers');
+    if (res.ok) {
+      const data = await res.json();
+      if (data.iceServers?.length) {
+        iceConfig = { iceServers: data.iceServers };
+      }
+    }
+  } catch (_) {}
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   if (!roomId || !roomType) { window.location.href = 'study-rooms.html'; return; }
+
+  await loadIceServers();
 
   // جلب معلومات الغرفة وتحديث العناوين بالصفحة
   try {
@@ -530,11 +551,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.getElementById('localName').textContent = myName;
       document.getElementById('localDisplayName').textContent = myName;
       document.getElementById('avatarInitial').textContent = s.first_name.charAt(0).toUpperCase();
-
-      // تحديث البيانات في السيرفر بعد جلب الاسم الحقيقي
-      socket.emit('join_room', { room_id: roomId, user_id: studentId, name: myName });
     }
   } catch (_) {}
+
+  socketReady = true;
+  if (socket.connected) emitJoinRoom();
 
   // تشغيل المايك والكاميرا افتراضياً عند الدخول للروم
   await toggleMic();
@@ -676,8 +697,9 @@ function sendChatMessage() {
   if (!msg) return;
   input.value = '';
   socket.emit('send_message', {
-    roomId,
-    userId: studentId,
+    room_id: roomId,
+    room_type: roomType,
+    user_id: studentId,
     name: myName,
     message: msg,
     timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -699,7 +721,7 @@ function appendChatMessage(type, name, message, timestamp) {
 
 // ─── Leave / Terminate ────────────────────────────────────────────────────────
 async function leaveRoom() {
-  socket.emit('leave_room', { roomId, userId: studentId, name: myName });
+  socket.emit('leave_room', { room_id: roomId, room_type: roomType, user_id: studentId, name: myName });
   Object.keys(peers).forEach(sid => { peers[sid].pc.close(); delete peers[sid]; });
   if (localStream)  localStream.getTracks().forEach(t => t.stop());
   if (screenStream) screenStream.getTracks().forEach(t => t.stop());

@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.ai_advisor import get_advisor
 from app.models.chatbot_history import ChatbotHistory
+from app.models.student import Student
 
 router = APIRouter(prefix="/chat", tags=["Chatbot"])
 
@@ -28,10 +29,19 @@ class AiChatRequest(BaseModel):
     question: str
 
 
+def _can_persist_history(student_id: str, db: Session) -> bool:
+    if not student_id or student_id == "guest":
+        return False
+    return db.query(Student).filter(Student.university_id == student_id).first() is not None
+
+
 # ── Endpoints ─────────────────────────────────────────────────────────────────
 
 @router.get("/history/{student_id}")
 def get_chat_history(student_id: str, db: Session = Depends(get_db)):
+    if not _can_persist_history(student_id, db):
+        return []
+
     history = (
         db.query(ChatbotHistory)
         .filter(ChatbotHistory.student_id == student_id)
@@ -56,7 +66,7 @@ def ai_chat(req: AiChatRequest, db: Session = Depends(get_db)):
     Hybrid RAG endpoint.
 
     Flow:
-      1. Save the user's question to chat history.
+      1. Save the user's question to chat history (logged-in students only).
       2. Run HybridAdvisorChain (Pinecone → threshold → Gemini).
       3. Save the bot answer with its source tag.
       4. Return { answer, source, confidence }.
@@ -66,19 +76,19 @@ def ai_chat(req: AiChatRequest, db: Session = Depends(get_db)):
     """
     global _demo_counter
 
-    # 1. Save user message
-    db.add(ChatbotHistory(
-        student_id=req.student_id,
-        message_content=req.question,
-        sender_type="user",
-        source=None,
-    ))
-    db.flush()
+    persist = _can_persist_history(req.student_id, db)
 
-    # 2. Run AI pipeline
+    if persist:
+        db.add(ChatbotHistory(
+            student_id=req.student_id,
+            message_content=req.question,
+            sender_type="user",
+            source=None,
+        ))
+        db.flush()
+
     advisor = get_advisor()
     if advisor is None:
-        # Demo / no-key mode
         answer = DEMO_RESPONSES[_demo_counter % len(DEMO_RESPONSES)]
         _demo_counter += 1
         source = "demo"
@@ -100,17 +110,18 @@ def ai_chat(req: AiChatRequest, db: Session = Depends(get_db)):
                 source = "error"
                 confidence = 0.0
             else:
-                db.rollback()
+                if persist:
+                    db.rollback()
                 raise HTTPException(status_code=503, detail="AI service is currently unavailable. Please try again later.")
 
-    # 3. Save bot answer
-    db.add(ChatbotHistory(
-        student_id=req.student_id,
-        message_content=answer,
-        sender_type="bot",
-        source=source,
-    ))
-    db.commit()
+    if persist:
+        db.add(ChatbotHistory(
+            student_id=req.student_id,
+            message_content=answer,
+            sender_type="bot",
+            source=source,
+        ))
+        db.commit()
 
     return {"answer": answer, "source": source, "confidence": confidence}
 
@@ -125,6 +136,8 @@ def save_chat_message(
     """Legacy endpoint kept for backward compatibility."""
     if sender_type not in ("user", "bot"):
         sender_type = "user"
+    if not _can_persist_history(student_id, db):
+        return {"message": "Message not saved (guest or unknown student)"}
     db.add(ChatbotHistory(
         student_id=student_id,
         message_content=message_content,

@@ -404,7 +404,11 @@
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        addMessage(err.detail || 'Sorry, something went wrong. Please try again.', 'bot', null, null);
+        const detail = err.detail;
+        const msg = Array.isArray(detail)
+          ? detail.map(d => d.msg || String(d)).join(', ')
+          : (detail || 'Sorry, something went wrong. Please try again.');
+        addMessage(msg, 'bot', null, null);
         return;
       }
 
