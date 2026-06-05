@@ -146,9 +146,8 @@
             <span>Jordan University of Science and Technology</span>
           </div>
           <div class="ft-links">
-            <a href="#">Privacy Policy</a>
-            <a href="#">Terms of Service</a>
-            <a href="#">Help Center</a>
+            <a href="javascript:void(0)" onclick="showPrivacyPolicy()">Privacy Policy</a>
+            <a href="javascript:void(0)" onclick="showHelpCenter()">Help Center</a>
           </div>
         </div>
         <div class="footer-bottom">
@@ -279,4 +278,77 @@
       widget.remove();
     });
   }
+
+  // ── Footer link modal logic ──────────────────────────────────────────────
+  let footerModal = document.getElementById('footerLinkModal');
+  if (!footerModal) {
+    footerModal = document.createElement('div');
+    footerModal.id = 'footerLinkModal';
+    footerModal.style.cssText = `
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      backdrop-filter: blur(4px);
+      z-index: 11000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    `;
+    footerModal.innerHTML = `
+      <div class="modal-content animate-in" style="background: var(--card-bg); width: 100%; max-width: 500px; border-radius: var(--radius-xl); border: 1px solid var(--gray-200); box-shadow: var(--shadow-lg); overflow: hidden; display: flex; flex-direction: column;">
+        <div style="padding: 20px 24px; border-bottom: 1px solid var(--gray-100); display: flex; justify-content: space-between; align-items: center; background: var(--gray-50);">
+          <h2 id="footerModalTitle" style="font-size: 18px; font-weight: 700; color: var(--dark-text); margin: 0;"></h2>
+          <button id="closeFooterModalBtn" style="background: none; border: none; font-size: 20px; color: var(--gray-400); cursor: pointer;"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="footerModalBody" style="padding: 24px; color: var(--gray-600); font-size: 14px; line-height: 1.6; max-height: 400px; overflow-y: auto;">
+        </div>
+        <div style="padding: 16px 24px; border-top: 1px solid var(--gray-100); display: flex; justify-content: flex-end; background: var(--gray-50);">
+          <button id="closeFooterModalOkBtn" style="padding: 8px 18px; border: none; border-radius: var(--radius-md); background: var(--yellow); color: #000; font-weight: 700; font-size: 14px; cursor: pointer;">OK</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(footerModal);
+    
+    const closeAll = () => { footerModal.style.display = 'none'; };
+    document.getElementById('closeFooterModalBtn').addEventListener('click', closeAll);
+    document.getElementById('closeFooterModalOkBtn').addEventListener('click', closeAll);
+    footerModal.addEventListener('click', (e) => { if (e.target === footerModal) closeAll(); });
+  }
+
+  window.showPrivacyPolicy = function() {
+    const title = document.getElementById('footerModalTitle');
+    const body = document.getElementById('footerModalBody');
+    if (title && body) {
+      title.textContent = "Privacy Policy";
+      body.innerHTML = `
+        <p style="margin-top: 0; margin-bottom: 12px;">We take your privacy seriously. This system is designed solely for academic advisement at the Jordan University of Science and Technology (JUST).</p>
+        <strong style="color: var(--dark-text); display: block; margin-top: 12px; margin-bottom: 4px;">Data Collection:</strong>
+        <p style="margin-top: 0; margin-bottom: 12px;">We store your academic records, completed courses, and grades in a secure database. Your password is encrypted using strong bcrypt hashing.</p>
+        <strong style="color: var(--dark-text); display: block; margin-top: 12px; margin-bottom: 4px;">AI Assistant Integration:</strong>
+        <p style="margin-top: 0; margin-bottom: 0;">To provide helpful advice, your course roadmap structure and basic academic stats are sent to the AI service (Groq Llama 3.3). Your passwords and credentials are never shared.</p>
+      `;
+      footerModal.style.display = 'flex';
+    }
+  };
+
+  window.showHelpCenter = function() {
+    const title = document.getElementById('footerModalTitle');
+    const body = document.getElementById('footerModalBody');
+    if (title && body) {
+      title.textContent = "Help Center";
+      body.innerHTML = `
+        <p style="margin-top: 0; margin-bottom: 16px;">Need assistance or have any issues with registration, degree roadmaps, or video classrooms? Please contact our support team:</p>
+        <div style="background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: var(--radius-md); padding: 16px;">
+          <strong style="color: var(--dark-text); display: block; margin-bottom: 8px;">Support Emails:</strong>
+          <ul style="margin: 0; padding-left: 20px; color: var(--gray-700); line-height: 1.8;">
+            <li><a href="mailto:amalyabroudi22@cit.just.edu.jo" style="color: #6366f1; text-decoration: none; font-weight: 600;">amalyabroudi22@cit.just.edu.jo</a></li>
+            <li><a href="mailto:csalnimri22@cit.just.edu.jo" style="color: #6366f1; text-decoration: none; font-weight: 600;">csalnimri22@cit.just.edu.jo</a></li>
+            <li><a href="mailto:rymohaidat22@cit.just.edu.jo" style="color: #6366f1; text-decoration: none; font-weight: 600;">rymohaidat22@cit.just.edu.jo</a></li>
+          </ul>
+        </div>
+      `;
+      footerModal.style.display = 'flex';
+    }
+  };
 })();
