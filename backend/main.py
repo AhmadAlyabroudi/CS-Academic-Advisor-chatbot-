@@ -174,6 +174,8 @@ def seed():
             StudentVerification(email="ymtashtoush@cit.just.edu.jo",    university_id="160991"),
             StudentVerification(email="rymohaidat22@cit.just.edu.jo.jo", university_id="160309"),
             StudentVerification(email="csalnimri22@cit.just.edu.jo",   university_id="162256"),
+
+
         ]
 
         for v in verification_data:
