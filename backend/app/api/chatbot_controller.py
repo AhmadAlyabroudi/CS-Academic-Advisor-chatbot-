@@ -246,26 +246,10 @@ def ai_chat(req: AiChatRequest, db: Session = Depends(get_db)):
             source = result["source"]
             confidence = result["confidence"]
         except Exception as exc:
-            err_str = str(exc).lower()
-            if any(kw in err_str for kw in ("api key", "invalid_argument", "expired", "quota", "rate_limit", "authentication")):
-                answer = (
-                    "⚠️ **AI Service Temporarily Unavailable**\n\n"
-                    "The API key may have expired or exceeded its quota. "
-                    "Please contact the administrator to renew the key.\n\n"
-                    "In the meantime, you can still use:\n"
-                    "- 📋 **Course Roadmap** — view your degree progression\n"
-                    "- 📊 **GPA Calculator** — calculate your GPA\n"
-                    "- 👥 **Study Rooms** — join study sessions"
-                )
-                source = "error"
-                confidence = 0.0
-            else:
-                if persist:
-                    db.rollback()
-                raise HTTPException(
-                    status_code=503,
-                    detail="AI service is currently unavailable. Please try again later.",
-                )
+            import traceback
+            answer = f"⚠️ **AI Service Temporarily Unavailable**\n\nException: {str(exc)}\n\nTraceback:\n{traceback.format_exc()}"
+            source = "error"
+            confidence = 0.0
 
     # Save bot response
     if persist:
