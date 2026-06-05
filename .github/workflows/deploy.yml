@@ -25,7 +25,9 @@ jobs:
             cd /var/www/justadvisor
             git fetch origin main
             git reset --hard origin/main
-            bash deploy/scripts/deploy.sh
+            # Build and restart the container
+            docker compose down
+            docker compose up -d --build
 
       - name: Notify success
         if: success()

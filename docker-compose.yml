@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  chatbot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: just_advisor_app
+    ports:
+      - "8000:8000"
+    env_file:
+      - backend/.env
+    restart: always

@@ -8,6 +8,9 @@
   <link rel="stylesheet" href="styles.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <!-- Markdown rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
   <style>
     /* ── Source badges ─────────────────────────────────────────────────────── */
     .source-badge {
@@ -37,6 +40,12 @@
       color: #94a3b8;
       border: 1px solid rgba(148, 163, 184, 0.25);
     }
+    .badge-error {
+      background: rgba(239, 68, 68, 0.12);
+      color: #ef4444;
+      border: 1px solid rgba(239, 68, 68, 0.25);
+    }
+
     /* ── Typing indicator ──────────────────────────────────────────────────── */
     .typing-indicator {
       display: flex;
@@ -61,6 +70,7 @@
       0%, 80%, 100% { transform: translateY(0); opacity: 0.5; }
       40%            { transform: translateY(-6px); opacity: 1; }
     }
+
     /* ── Message wrapper ───────────────────────────────────────────────────── */
     .msg-bot .msg-bubble {
       position: relative;
@@ -72,6 +82,7 @@
       margin-top: 4px;
       flex-wrap: wrap;
     }
+
     /* ── Confidence micro-bar ──────────────────────────────────────────────── */
     .confidence-bar {
       display: inline-flex;
@@ -92,9 +103,109 @@
       border-radius: 2px;
       background: #6366f1;
     }
+
+    /* ── Markdown content styling inside bot messages ──────────────────────── */
+    .msg-bot .msg-bubble .md-content {
+      line-height: 1.7;
+      font-size: 0.92rem;
+    }
+    .msg-bot .msg-bubble .md-content h1,
+    .msg-bot .msg-bubble .md-content h2,
+    .msg-bot .msg-bubble .md-content h3 {
+      margin: 12px 0 6px 0;
+      font-weight: 700;
+      color: #e2e8f0;
+      line-height: 1.3;
+    }
+    .msg-bot .msg-bubble .md-content h1 { font-size: 1.15rem; }
+    .msg-bot .msg-bubble .md-content h2 { font-size: 1.05rem; }
+    .msg-bot .msg-bubble .md-content h3 { font-size: 0.95rem; }
+
+    .msg-bot .msg-bubble .md-content p {
+      margin: 6px 0;
+    }
+    .msg-bot .msg-bubble .md-content ul,
+    .msg-bot .msg-bubble .md-content ol {
+      margin: 6px 0;
+      padding-left: 1.4rem;
+    }
+    .msg-bot .msg-bubble .md-content li {
+      margin: 3px 0;
+    }
+    .msg-bot .msg-bubble .md-content strong {
+      color: #c7d2fe;
+      font-weight: 700;
+    }
+    .msg-bot .msg-bubble .md-content code {
+      background: rgba(99, 102, 241, 0.15);
+      color: #a5b4fc;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 0.85em;
+    }
+    .msg-bot .msg-bubble .md-content pre {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+      padding: 12px 16px;
+      overflow-x: auto;
+      margin: 8px 0;
+    }
+    .msg-bot .msg-bubble .md-content pre code {
+      background: none;
+      padding: 0;
+      color: #e2e8f0;
+    }
+
+    /* Tables */
+    .msg-bot .msg-bubble .md-content table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 10px 0;
+      font-size: 0.85rem;
+    }
+    .msg-bot .msg-bubble .md-content th,
+    .msg-bot .msg-bubble .md-content td {
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 8px 12px;
+      text-align: left;
+    }
+    .msg-bot .msg-bubble .md-content th {
+      background: rgba(99, 102, 241, 0.15);
+      color: #c7d2fe;
+      font-weight: 700;
+    }
+    .msg-bot .msg-bubble .md-content td {
+      background: rgba(255,255,255,0.02);
+    }
+    .msg-bot .msg-bubble .md-content tr:hover td {
+      background: rgba(99, 102, 241, 0.05);
+    }
+
+    /* Blockquotes */
+    .msg-bot .msg-bubble .md-content blockquote {
+      border-left: 3px solid #6366f1;
+      margin: 8px 0;
+      padding: 4px 12px;
+      color: #94a3b8;
+      background: rgba(99, 102, 241, 0.05);
+      border-radius: 0 6px 6px 0;
+    }
+
+    /* Links */
+    .msg-bot .msg-bubble .md-content a {
+      color: #818cf8;
+      text-decoration: none;
+    }
+    .msg-bot .msg-bubble .md-content a:hover {
+      text-decoration: underline;
+    }
+
     /* ── Quick-action cards ────────────────────────────────────────────────── */
     .qa-card { cursor: pointer; }
     .qa-card:hover { transform: translateY(-2px); }
+
     /* ── Clear history button ──────────────────────────────────────────────── */
     .clear-chat-btn {
       background: none;
@@ -107,7 +218,8 @@
       transition: 0.2s;
     }
     .clear-chat-btn:hover { color: #ef4444; border-color: rgba(239,68,68,0.4); }
-    /* ── Chat header bar (shows when conversation starts) ─────────────────── */
+
+    /* ── Chat header bar ──────────────────────────────────────────────────── */
     #chatHeader {
       display: none;
       justify-content: space-between;
@@ -122,6 +234,33 @@
       color: #64748b;
       text-transform: uppercase;
       letter-spacing: 0.08em;
+    }
+
+    /* ── Message entrance animation ───────────────────────────────────────── */
+    .chat-msg {
+      animation: msgSlideIn 0.3s ease-out;
+    }
+    @keyframes msgSlideIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Connection status indicator ──────────────────────────────────────── */
+    .connection-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.7rem;
+      color: #64748b;
+    }
+    .connection-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #22c55e;
+    }
+    .connection-dot.offline {
+      background: #ef4444;
     }
   </style>
 </head>
@@ -193,7 +332,13 @@
       </div>
 
       <div id="chatHeader">
-        <span class="chat-label"><i class="fas fa-comments" style="margin-right:5px;"></i>Conversation</span>
+        <span class="chat-label">
+          <i class="fas fa-comments" style="margin-right:5px;"></i>Conversation
+          <span class="connection-status" id="connStatus" style="margin-left:10px;">
+            <span class="connection-dot" id="connDot"></span>
+            <span id="connText">Connected</span>
+          </span>
+        </span>
         <button class="clear-chat-btn" onclick="clearHistory()">
           <i class="fas fa-trash-alt" style="margin-right:4px;"></i>Clear History
         </button>
@@ -218,14 +363,59 @@
 
 <script src="sidebar.js?v=8"></script>
 <script>
-  const chatInput   = document.getElementById('chatInput');
-  const sendBtn     = document.getElementById('sendBtn');
+  // ── Configure marked.js ──────────────────────────────────────────────────────
+  marked.setOptions({
+    breaks: true,       // Convert \n to <br>
+    gfm: true,          // GitHub Flavored Markdown
+    headerIds: false,    // Don't add IDs to headers
+    mangle: false,       // Don't mangle email links
+  });
+
+  // ── DOM references ───────────────────────────────────────────────────────────
+  const chatInput    = document.getElementById('chatInput');
+  const sendBtn      = document.getElementById('sendBtn');
   const chatMessages = document.getElementById('chatMessages');
-  const studentId   = localStorage.getItem('student_id') || '';
+  const studentId    = localStorage.getItem('student_id') || '';
 
+  // Session-local conversation history for guest users (not persisted)
+  let sessionHistory = [];
   let conversationStarted = false;
+  let isProcessing = false;  // Prevent double-sends
 
-  // ── XSS helper ─────────────────────────────────────────────────────────────
+  // ── Sanitize HTML (XSS protection) ───────────────────────────────────────────
+  function sanitizeHtml(html) {
+    if (typeof DOMPurify !== 'undefined') {
+      return DOMPurify.sanitize(html, {
+        ALLOWED_TAGS: [
+          'p', 'br', 'strong', 'em', 'b', 'i', 'u', 'code', 'pre',
+          'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+          'ul', 'ol', 'li', 'a', 'table', 'thead', 'tbody', 'tr', 'th', 'td',
+          'blockquote', 'hr', 'span', 'div', 'del', 'sup', 'sub',
+        ],
+        ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'style'],
+      });
+    }
+    // Fallback: basic escape
+    const d = document.createElement('div');
+    d.textContent = html;
+    return d.innerHTML;
+  }
+
+  // ── Render Markdown to safe HTML ─────────────────────────────────────────────
+  function renderMarkdown(text) {
+    if (!text) return '';
+    try {
+      const rawHtml = marked.parse(text);
+      return sanitizeHtml(rawHtml);
+    } catch {
+      // Fallback: escape and convert newlines
+      const d = document.createElement('div');
+      d.textContent = text;
+      return d.innerHTML.replace(/\n/g, '<br/>');
+    }
+  }
+
+  // ── Escape plain text (for user messages) ────────────────────────────────────
   function esc(str) {
     const d = document.createElement('div');
     d.textContent = String(str ?? '');
@@ -273,6 +463,14 @@
           </span>
         </div>`;
     }
+    if (source === 'error') {
+      return `
+        <div class="msg-meta">
+          <span class="source-badge badge-error">
+            <i class="fas fa-exclamation-triangle"></i> Service Error
+          </span>
+        </div>`;
+    }
     return '';
   }
 
@@ -280,20 +478,17 @@
   function addMessage(text, sender, source, confidence) {
     revealConversation();
     const div = document.createElement('div');
-    // تعديل كلاس السندير ليتوافق مع الـ CSS المرفق
     div.className = 'chat-msg ' + (sender === 'user' ? 'msg-user' : 'msg-bot');
 
-    const safeText = esc(text);
-    const formatted = safeText
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\n/g, '<br/>');
-
     if (sender === 'user') {
-      div.innerHTML = `<div class="msg-bubble">${formatted}</div>`;
+      // User messages: plain text, escaped
+      div.innerHTML = `<div class="msg-bubble">${esc(text)}</div>`;
     } else {
+      // Bot messages: render Markdown
+      const renderedContent = renderMarkdown(text);
       div.innerHTML = `
         <div class="msg-bubble">
-          ${formatted}
+          <div class="md-content">${renderedContent}</div>
           ${source ? sourceBadge(source, confidence) : ''}
         </div>`;
     }
@@ -324,7 +519,7 @@
     document.getElementById('typingIndicator')?.remove();
   }
 
-  // ── Load chat history (التحكم بالـ Mode وفصل الصفحات) ──────────────────────
+  // ── Load chat history ──────────────────────────────────────────────────────
   async function loadHistory() {
     if (!studentId) return;
 
@@ -332,7 +527,6 @@
     const mode = urlParams.get('mode');
 
     if (mode === 'history') {
-      // وضع الأرشيف: إخفاء الترحيب وسحب الداتا فوراً
       revealConversation();
       chatMessages.innerHTML = '<div style="text-align:center;color:var(--gray-400);padding:2rem;"><i class="fas fa-spinner fa-spin"></i> Loading past chat history...</div>';
 
@@ -341,7 +535,7 @@
         if (!res.ok) throw new Error("Fetch failed");
         const history = await res.json();
 
-        chatMessages.innerHTML = ''; // تنظيف مؤشر التحميل
+        chatMessages.innerHTML = '';
         if (history.length === 0) {
           chatMessages.innerHTML = '<div style="text-align:center;color:var(--gray-400);padding:2rem;">Your chat history is empty.</div>';
           return;
@@ -356,7 +550,6 @@
         chatMessages.innerHTML = '<div style="text-align:center;color:#ef4444;padding:2rem;">Failed to fetch chat history from server.</div>';
       }
     } else {
-      // وضع الـ Active Session: اترك الشاشة ترحب بالطالب ولا تسحب داتا قديمة
       conversationStarted = false;
       document.getElementById('chatHeader').classList.remove('visible');
       document.getElementById('chatWelcome').style.display   = '';
@@ -370,28 +563,43 @@
   async function clearHistory() {
     if (!confirm('Clear your entire chat history? This cannot be undone.')) return;
 
-    // إخفاء الواجهة وتحويل المستخدم لصفحة Active session نظيفة
+    // Clear UI
     chatMessages.innerHTML = '';
+    sessionHistory = [];
     conversationStarted = false;
     document.getElementById('chatHeader').classList.remove('visible');
     document.getElementById('chatWelcome').style.display   = '';
     document.getElementById('quickActions').style.display  = '';
     document.getElementById('quickNav').style.display      = '';
 
-    // تحويل الرابط لـ session طبيعية لمنع إعادة تحميل الداتا الممسوحة
+    // Clear from server if logged in
+    if (studentId) {
+      try {
+        await fetch(`/chat/clear/${studentId}`, { method: 'POST' });
+      } catch (e) {
+        console.error('Could not clear server history', e);
+      }
+    }
+
     window.history.pushState({}, document.title, window.location.pathname);
   }
 
   // ── Send a message ──────────────────────────────────────────────────────────
   async function sendMessage(text) {
     const msg = (text || chatInput.value).trim();
-    if (!msg) return;
+    if (!msg || isProcessing) return;
 
     chatInput.value = '';
+    isProcessing = true;
     sendBtn.disabled = true;
+    chatInput.disabled = true;
 
     addMessage(msg, 'user');
     showTyping();
+
+    // Update connection status
+    const connDot = document.getElementById('connDot');
+    const connText = document.getElementById('connText');
 
     try {
       const res = await fetch('/chat/ai', {
@@ -405,20 +613,37 @@
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         const detail = err.detail;
-        const msg = Array.isArray(detail)
+        const errMsg = Array.isArray(detail)
           ? detail.map(d => d.msg || String(d)).join(', ')
           : (detail || 'Sorry, something went wrong. Please try again.');
-        addMessage(msg, 'bot', null, null);
+        addMessage(errMsg, 'bot', 'error', 0);
         return;
       }
 
       const data = await res.json();
       addMessage(data.answer, 'bot', data.source, data.confidence);
+
+      // Track in session history for context display
+      sessionHistory.push({ role: 'user', content: msg });
+      sessionHistory.push({ role: 'assistant', content: data.answer });
+
+      // Update connection status to connected
+      if (connDot) connDot.className = 'connection-dot';
+      if (connText) connText.textContent = 'Connected';
+
     } catch (_) {
       hideTyping();
-      addMessage('Could not connect to the server. Please make sure the backend is running.', 'bot', null, null);
+      addMessage(
+        '⚠️ **Connection Error**\n\nCould not connect to the server. Please make sure the backend is running and try again.',
+        'bot', 'error', 0
+      );
+      // Update connection status to offline
+      if (connDot) connDot.className = 'connection-dot offline';
+      if (connText) connText.textContent = 'Offline';
     } finally {
+      isProcessing = false;
       sendBtn.disabled = false;
+      chatInput.disabled = false;
       chatInput.focus();
     }
   }
@@ -428,7 +653,12 @@
 
   // ── Event listeners ─────────────────────────────────────────────────────────
   sendBtn.addEventListener('click', () => sendMessage());
-  chatInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) sendMessage(); });
+  chatInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
 
   // ── Init ────────────────────────────────────────────────────────────────────
   loadHistory();
