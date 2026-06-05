@@ -25,9 +25,14 @@ jobs:
             cd /var/www/justadvisor
             git fetch origin main
             git reset --hard origin/main
-            # Build and restart the container
-            docker compose down
-            docker compose up -d --build
+            # Build and restart the container (detecting docker compose version)
+            if docker compose version &>/dev/null; then
+              docker compose down
+              docker compose up -d --build
+            else
+              docker-compose down
+              docker-compose up -d --build
+            fi
 
       - name: Notify success
         if: success()
