@@ -41,8 +41,18 @@ jobs:
             # Build and restart the container (detecting docker compose version)
             if docker compose version &>/dev/null; then
               docker compose up -d --build
+              sleep 5
+              echo "=== Docker Status ==="
+              docker compose ps
+              echo "=== Container Logs ==="
+              docker compose logs --tail=50
             else
               docker-compose up -d --build
+              sleep 5
+              echo "=== Docker Status ==="
+              docker-compose ps
+              echo "=== Container Logs ==="
+              docker-compose logs --tail=50
             fi
 
       - name: Notify success
