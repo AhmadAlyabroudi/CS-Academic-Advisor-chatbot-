@@ -503,6 +503,7 @@ body.dark-mode .rdm-card--failed .rdm-card__grade-corner{color:#f87171;backgroun
 @media(max-width:768px){
   .sessions-grid{grid-template-columns:1fr}
   .study-search{flex-direction:column}
+  .page-with-sidebar .main-content .top-bar .tb-links{display:none}
 }
 /* Faculty Page Styles */
 .faculty-search{display:flex;gap:12px;margin-bottom:24px;align-items:center}

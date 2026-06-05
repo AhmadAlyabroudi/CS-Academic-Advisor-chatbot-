@@ -1,5 +1,5 @@
 // Sidebar component - injects sidebar HTML and highlights active page
-(async function() {
+(async function () {
   if (localStorage.getItem('theme') === 'dark') {
     document.body.classList.add('dark-mode');
   }
@@ -116,6 +116,11 @@
   if (topbar) {
     topbar.innerHTML = `
       <div class="tb-brand">
+        <button class="hamburger-btn" style="margin-right: 12px;">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
         <div class="dot">J</div>
         <span>JUST Advisor</span>
       </div>
@@ -155,8 +160,26 @@
 
   // Mobile sidebar toggle
   document.querySelectorAll('.hamburger-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
       document.querySelector('.sidebar')?.classList.toggle('open');
+    });
+  });
+
+  // Close sidebar on click outside
+  document.addEventListener('click', (e) => {
+    const sidebar = document.querySelector('.sidebar');
+    if (sidebar && sidebar.classList.contains('open')) {
+      if (!sidebar.contains(e.target)) {
+        sidebar.classList.remove('open');
+      }
+    }
+  });
+
+  // Close sidebar when clicking any menu item inside it
+  document.querySelectorAll('.sidebar a').forEach(link => {
+    link.addEventListener('click', () => {
+      document.querySelector('.sidebar')?.classList.remove('open');
     });
   });
 
@@ -227,33 +250,33 @@
     let miniStream = null;
 
     if (activeMeeting.cam) {
-        navigator.mediaDevices.getUserMedia({ video: true, audio: false })
-            .then(stream => {
-                miniStream = stream;
-                miniVideo.srcObject = stream;
-                miniPlaceholder.style.display = 'none';
-            })
-            .catch(() => {
-                console.log("Camera access denied or not available for mini-widget");
-            });
+      navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+        .then(stream => {
+          miniStream = stream;
+          miniVideo.srcObject = stream;
+          miniPlaceholder.style.display = 'none';
+        })
+        .catch(() => {
+          console.log("Camera access denied or not available for mini-widget");
+        });
     }
 
     document.getElementById('returnToMeeting').addEventListener('click', () => {
-        if (miniStream) {
-            miniStream.getTracks().forEach(track => track.stop());
-        }
-        window.location.href = `/room?id=${activeMeeting.id}&type=${activeMeeting.type}`;
+      if (miniStream) {
+        miniStream.getTracks().forEach(track => track.stop());
+      }
+      window.location.href = `/room?id=${activeMeeting.id}&type=${activeMeeting.type}`;
     });
 
     document.getElementById('quitMiniMeeting').addEventListener('click', async () => {
-        const formData = new FormData();
-        formData.append("room_id", activeMeeting.id);
-        formData.append("room_type", activeMeeting.type);
-        formData.append("student_id", studentId);
+      const formData = new FormData();
+      formData.append("room_id", activeMeeting.id);
+      formData.append("room_type", activeMeeting.type);
+      formData.append("student_id", studentId);
 
-        await fetch("/rooms/leave", { method: "POST", body: formData });
-        sessionStorage.removeItem('active_meeting');
-        widget.remove();
+      await fetch("/rooms/leave", { method: "POST", body: formData });
+      sessionStorage.removeItem('active_meeting');
+      widget.remove();
     });
   }
 })();
