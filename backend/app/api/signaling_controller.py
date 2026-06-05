@@ -87,7 +87,7 @@ async def disconnect(sid):
             ]
             await sio.emit(
                 "user-left",
-                {"user_id": participant["user_id"], "name": participant["name"]},
+                {"user_id": participant["user_id"], "name": participant["name"], "sid": sid},
                 room=room_key,
                 skip_sid=sid,
             )
@@ -111,7 +111,7 @@ async def leave_room(sid, data):
         if participant:
             await sio.emit(
                 "user-left",
-                {"user_id": participant["user_id"], "name": participant["name"]},
+                {"user_id": participant["user_id"], "name": participant["name"], "sid": sid},
                 room=room_key,
                 skip_sid=sid,
             )
@@ -164,4 +164,20 @@ async def ice_candidate(sid, data):
             "ice-candidate",
             {"from": sid, "candidate": data.get("candidate")},
             to=target,
+        )
+
+
+@sio.event
+async def toggle_media(sid, data):
+    room_key = _room_key(data)
+    if room_key:
+        await sio.emit(
+            "user-media-toggled",
+            {
+                "sid": sid,
+                "mic": data.get("mic"),
+                "cam": data.get("cam"),
+            },
+            room=room_key,
+            skip_sid=sid,
         )
