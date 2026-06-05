@@ -31,12 +31,18 @@ jobs:
             sudo systemctl disable justadvisor || true
             sudo fuser -k 8000/tcp || true
             
+            # Force stop and remove any Docker containers using port 8000 or named just_advisor_app
+            sudo docker rm -f just_advisor_app || true
+            sudo docker-compose down || true
+            sudo docker compose down || true
+            
+            # Find and force remove any container binding to port 8000
+            sudo docker ps -a --filter "publish=8000" -q | xargs -r sudo docker rm -f || true
+            
             # Build and restart the container (detecting docker compose version)
             if docker compose version &>/dev/null; then
-              docker compose down
               docker compose up -d --build
             else
-              docker-compose down
               docker-compose up -d --build
             fi
 
