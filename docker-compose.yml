@@ -5,8 +5,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    ports:
-      - "127.0.0.1:8080:8000"
+    network_mode: "host"
+    command: uvicorn main:socket_app --host 127.0.0.1 --port 8080
     env_file:
       - backend/.env
     restart: always
