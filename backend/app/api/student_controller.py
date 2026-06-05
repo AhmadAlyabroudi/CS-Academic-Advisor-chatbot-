@@ -225,6 +225,15 @@ def signup(signup_data: StudentSignup, db: Session = Depends(get_db)):
     else:
         academic_standing = "fourth year"
 
+    # Query all advisors from CsFacultyInfo and pick a random one
+    import random
+    from app.models.cs_faculty_info import CsFacultyInfo
+    
+    advisors = db.query(CsFacultyInfo).all()
+    chosen_advisor_id = None
+    if advisors:
+        chosen_advisor_id = random.choice(advisors).email
+
     # 8. Create student record with hashed password
     student = Student(
         university_id=signup_data.university_id,
@@ -238,6 +247,7 @@ def signup(signup_data: StudentSignup, db: Session = Depends(get_db)):
         academic_standing=academic_standing,
         completed_credits=completed_credit_count,
         remaining_courses=len(signup_data.remaining_courses),
+        advisor_id=chosen_advisor_id,
     )
     db.add(student)
     db.flush()

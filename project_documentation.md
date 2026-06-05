@@ -136,9 +136,10 @@ sequenceDiagram
     end
 ```
 
-### Form Input Validation Details
+### Form Input Validation & Registration Details
 *   **University ID**: Enforces `maxlength="6"` and regular expressions (`/^\d{6}$/`) ensuring only a 6-digit numerical string is accepted.
 *   **Phone Number**: Leverages a Country Code Select dropdown (+962, +966, etc.) which maps countries to their exact valid mobile digit length. Any typed leading zero is stripped dynamically via JavaScript on the frontend. The combined number (`+962791234567`) is sent to the backend.
+*   **Random Academic Advisor Assignment**: To balance academic advisor loads across the faculty, the backend queries all registered faculty members in `CsFacultyInfo` on signup, selects one at random, and assigns their email as the student's `advisor_id` foreign key. This relationship is displayed directly on the student profile dashboard.
 
 ---
 
