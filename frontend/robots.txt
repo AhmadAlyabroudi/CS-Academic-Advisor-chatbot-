@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /profile
+Disallow: /roadmap
+Disallow: /room
+Disallow: /api/
+
+Sitemap: https://csacademicadvisorchatbot.codes/sitemap.xml
