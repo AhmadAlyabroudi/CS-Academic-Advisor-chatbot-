@@ -25,12 +25,12 @@ def _find_rooms_for_sid(sid: str) -> list[str]:
 
 @sio.event
 async def join_lobby(sid, data):
-    sio.enter_room(sid, LOBBY_ROOM)
+    await sio.enter_room(sid, LOBBY_ROOM)
 
 
 @sio.event
 async def leave_lobby(sid, data):
-    sio.leave_room(sid, LOBBY_ROOM)
+    await sio.leave_room(sid, LOBBY_ROOM)
 
 
 @sio.event
@@ -47,7 +47,7 @@ async def join_room(sid, data):
     if not room_key:
         return
 
-    sio.enter_room(sid, room_key)
+    await sio.enter_room(sid, room_key)
 
     if room_key not in room_participants:
         room_participants[room_key] = []
@@ -102,7 +102,7 @@ async def leave_room(sid, data):
     room_key = _room_key(data)
     participant = _find_participant(room_key, sid)
 
-    sio.leave_room(sid, room_key)
+    await sio.leave_room(sid, room_key)
 
     if room_key in room_participants:
         room_participants[room_key] = [
