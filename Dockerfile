@@ -26,5 +26,5 @@ WORKDIR /app/backend
 # Expose FastAPI port
 EXPOSE 8000
 
-# Run uvicorn server with the correct socket_app attribute
-CMD ["uvicorn", "app:socket_app", "--host", "0.0.0.0", "--port", "8000"]
+# Run uvicorn server pointing to main.py to avoid import name conflicts with the app/ directory
+CMD ["uvicorn", "main:socket_app", "--host", "0.0.0.0", "--port", "8000"]
