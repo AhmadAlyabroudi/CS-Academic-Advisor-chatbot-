@@ -1,3 +1,9 @@
+# Load .env BEFORE any app.* imports so os.getenv() works regardless of
+# which submodule happens to be imported first.
+from pathlib import Path
+from dotenv import load_dotenv
+load_dotenv(Path(__file__).resolve().parent / ".env")
+
 import socketio
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -174,8 +180,7 @@ def seed():
             StudentVerification(email="ymtashtoush@cit.just.edu.jo",    university_id="160991"),
             StudentVerification(email="rymohaidat22@cit.just.edu.jo.jo", university_id="160309"),
             StudentVerification(email="csalnimri22@cit.just.edu.jo",   university_id="162256"),
-
-
+            StudentVerification(email="amalnimri22@cit.just.edu.jo", university_id="166666"),
         ]
 
         for v in verification_data:
@@ -219,6 +224,16 @@ def seed():
 # حماية تشغيل الـ seed ليعمل فقط في البيئة الحية وليس عند استيراد الملف بشكل مكرر
 if __name__ == "__main__":
     seed()
+
+# Warm up the AI advisor so any init failure surfaces in the boot log,
+# not in a user's first chat message.
+from app.core.ai_advisor import get_advisor as _get_advisor
+_advisor = _get_advisor()
+print(
+    f"AI advisor: ready ({type(_advisor).__name__})"
+    if _advisor is not None
+    else "AI advisor: DEMO MODE — GROQ_API_KEY missing or invalid in backend/.env"
+)
 
 # Register REST routers
 app.include_router(student_router)

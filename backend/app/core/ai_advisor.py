@@ -141,7 +141,6 @@ class GroqAdvisorChain:
 
 
 _advisor_instance: Optional[AdvisorChain] = None
-_init_attempted: bool = False
 
 
 def _is_valid_key(key: str | None) -> bool:
@@ -149,10 +148,16 @@ def _is_valid_key(key: str | None) -> bool:
 
 
 def get_advisor() -> Optional[AdvisorChain]:
-    global _advisor_instance, _init_attempted
-    if _init_attempted:
+    """Return a Groq advisor, building it on first call.
+
+    Only successful instances are cached. If init fails (missing key,
+    network blip, SDK error) we return None and try again on the next
+    call, so a transient failure cannot lock the worker into demo mode
+    for its whole lifetime.
+    """
+    global _advisor_instance
+    if _advisor_instance is not None:
         return _advisor_instance
-    _init_attempted = True
 
     load_dotenv(BASE_DIR / ".env")
 
@@ -166,8 +171,7 @@ def get_advisor() -> Optional[AdvisorChain]:
 
     try:
         _advisor_instance = GroqAdvisorChain(groq_key)
+        return _advisor_instance
     except Exception as exc:
         logger.error("Failed to initialise GroqAdvisorChain: %s", exc)
-        _advisor_instance = None
-
-    return _advisor_instance
+        return None
