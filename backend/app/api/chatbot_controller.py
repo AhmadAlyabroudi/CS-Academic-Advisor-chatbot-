@@ -247,7 +247,10 @@ def ai_chat(req: AiChatRequest, db: Session = Depends(get_db)):
             confidence = result["confidence"]
         except Exception as exc:
             import traceback
-            answer = f"⚠️ **AI Service Temporarily Unavailable**\n\nException: {str(exc)}\n\nTraceback:\n{traceback.format_exc()}"
+            import os
+            raw_key = os.getenv("GROQ_API_KEY", "")
+            obfuscated_key = f"{raw_key[:8]}...{raw_key[-8:]}" if len(raw_key) > 15 else "SHORT/EMPTY"
+            answer = f"⚠️ **AI Service Temporarily Unavailable**\n\nException: {str(exc)}\n\nConfigured Key: {obfuscated_key}\n\nTraceback:\n{traceback.format_exc()}"
             source = "error"
             confidence = 0.0
 
