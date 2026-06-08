@@ -23,8 +23,8 @@ COPY frontend ./frontend
 # Change workdir to backend so that relative path "../frontend" resolves correctly
 WORKDIR /app/backend
 
-# Expose FastAPI port
-EXPOSE 8000
+# Expose the application port (must match docker-compose & nginx upstream)
+EXPOSE 8080
 
-# Run uvicorn server pointing to main.py to avoid import name conflicts with the app/ directory
-CMD ["uvicorn", "main:socket_app", "--host", "0.0.0.0", "--port", "8000"]
+# Run uvicorn with socket_app (FastAPI + Socket.IO) on port 8080
+CMD ["uvicorn", "main:socket_app", "--host", "127.0.0.1", "--port", "8080"]
