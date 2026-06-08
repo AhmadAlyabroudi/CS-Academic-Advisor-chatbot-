@@ -45,7 +45,7 @@ def seed():
     """
     SeedONLY universal reference data:
       - Faculty directory
-      - CS curriculum (courses
+      - CS curriculum (courses)
       - Official study rooms (one per course)
       - GPA recompute for every existing student (idempotent)
     """
