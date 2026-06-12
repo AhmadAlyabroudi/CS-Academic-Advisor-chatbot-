@@ -177,7 +177,7 @@ def seed():
         # --- Student verification whitelist ---
         verification_data = [
             StudentVerification(email="ymtashtoush@cit.just.edu.jo",    university_id="160991"),
-            StudentVerification(email="rymohaidat22@cit.just.edu.jo.jo", university_id="160309"),
+            StudentVerification(email="rymohaidat22@cit.just.edu.jo", university_id="160309"),
             StudentVerification(email="csalnimri22@cit.just.edu.jo",   university_id="162256"),
             StudentVerification(email="amalnimri22@cit.just.edu.jo", university_id="166666"),
             StudentVerification(email="test22@cit.just.edu.jo", university_id="666666"),
