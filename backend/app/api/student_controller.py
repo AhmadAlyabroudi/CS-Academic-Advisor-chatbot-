@@ -100,7 +100,7 @@ def login(
     if not student:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User with this email not found.",
+            detail="Incorrect email or password.",
         )
 
     # Support bcrypt-hashed passwords; fall back to plaintext for legacy accounts
@@ -116,7 +116,7 @@ def login(
     if not authenticated:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect password.",
+            detail="Incorrect email or password.",
         )
 
     return {"message": "Login successful", "student_id": student.university_id}
