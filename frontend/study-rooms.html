@@ -57,27 +57,49 @@
 </div>
 
 <!-- Create Room Modal -->
-<div id="createRoomModal" class="modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
-    <div class="modal-content" style="background:var(--bg-card); padding:2rem; border-radius:1rem; max-width:500px; width:90%; position:relative;">
-        <button onclick="closeCreateModal()" style="position:absolute; top:1rem; right:1rem; background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--text-muted);">&times;</button>
-        <h2 style="margin-bottom:1.5rem;">Create New Study Room</h2>
-        <form id="createRoomForm">
-            <div style="margin-bottom:1rem;">
-                <label style="display:block; margin-bottom:0.5rem; font-weight:600;">Room Name</label>
-                <input type="text" id="newRoomName" class="form-input" placeholder="e.g. Algorithms Review" required />
+<div id="createRoomModal" class="modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); backdrop-filter:blur(6px); z-index:1000; align-items:center; justify-content:center; padding:20px;">
+    <div class="modal-content animate-in" style="background:var(--card-bg); width:100%; max-width:480px; border-radius:var(--radius-xl); border:1px solid var(--gray-200); box-shadow:var(--shadow-lg); overflow:hidden; display:flex; flex-direction:column;">
+        <!-- Header -->
+        <div style="padding:24px 28px; border-bottom:1px solid var(--gray-100); display:flex; justify-content:space-between; align-items:center; background:var(--gray-50);">
+            <div>
+                <h2 style="font-size:20px; font-weight:700; color:var(--dark-text); margin:0;">Create New Study Room</h2>
+                <p style="font-size:13px; color:var(--gray-400); margin:5px 0 0 0;">Start a collaborative study session</p>
             </div>
-            <div style="margin-bottom:1rem;">
-                <label style="display:block; margin-bottom:0.5rem; font-weight:600;">Room Type</label>
-                <select id="newRoomType" class="form-input">
-                    <option value="Public">Public (Anyone can join)</option>
-                    <option value="Private">Private (Password protected)</option>
-                </select>
+            <button onclick="closeCreateModal()" style="background:none; border:none; font-size:20px; color:var(--gray-400); cursor:pointer; transition:color 0.2s; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border-radius:var(--radius-sm);" onmouseover="this.style.color='var(--dark-text)';this.style.background='var(--gray-100)'" onmouseout="this.style.color='var(--gray-400)';this.style.background='none'"><i class="fas fa-times"></i></button>
+        </div>
+
+        <!-- Body -->
+        <form id="createRoomForm" style="display:flex; flex-direction:column;">
+            <div style="padding:24px 28px; display:flex; flex-direction:column; gap:20px;">
+                <!-- Room Name -->
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <label for="newRoomName" style="font-size:13px; font-weight:600; color:var(--gray-600); display:flex; align-items:center; gap:6px;"><i class="fas fa-pen" style="font-size:11px; color:var(--gray-400);"></i> Room Name</label>
+                    <input type="text" id="newRoomName" class="form-input" placeholder="e.g. Algorithms Review, Data Structures Study" required style="padding:12px 14px; font-size:14px;"/>
+                </div>
+
+                <!-- Room Type -->
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <label for="newRoomType" style="font-size:13px; font-weight:600; color:var(--gray-600); display:flex; align-items:center; gap:6px;"><i class="fas fa-globe" style="font-size:11px; color:var(--gray-400);"></i> Room Type</label>
+                    <select id="newRoomType" class="form-input" style="padding:12px 14px; font-size:14px; cursor:pointer;">
+                        <option value="Public">🌐 Public — Anyone can join</option>
+                        <option value="Private">🔒 Private — Password protected</option>
+                    </select>
+                </div>
+
+                <!-- Password (hidden by default) -->
+                <div id="passwordField" style="display:none; flex-direction:column; gap:8px;">
+                    <label for="newRoomPassword" style="font-size:13px; font-weight:600; color:var(--gray-600); display:flex; align-items:center; gap:6px;"><i class="fas fa-lock" style="font-size:11px; color:var(--gray-400);"></i> Password</label>
+                    <input type="password" id="newRoomPassword" class="form-input" placeholder="Enter a secure password" style="padding:12px 14px; font-size:14px;"/>
+                </div>
             </div>
-            <div id="passwordField" style="display:none; margin-bottom:1rem;">
-                <label style="display:block; margin-bottom:0.5rem; font-weight:600;">Password</label>
-                <input type="password" id="newRoomPassword" class="form-input" placeholder="Enter room password" />
+
+            <!-- Footer -->
+            <div style="padding:16px 28px; border-top:1px solid var(--gray-100); display:flex; justify-content:flex-end; gap:12px; background:var(--gray-50);">
+                <button type="button" onclick="closeCreateModal()" style="padding:10px 18px; border:1px solid var(--gray-200); border-radius:var(--radius-md); background:var(--card-bg); color:var(--gray-600); font-weight:600; font-size:14px; cursor:pointer; transition:all 0.2s; font-family:inherit;" onmouseover="this.style.borderColor='var(--gray-300)';this.style.background='var(--gray-50)'" onmouseout="this.style.borderColor='var(--gray-200)';this.style.background='var(--card-bg)'">Cancel</button>
+                <button type="submit" class="btn-primary" style="padding:10px 24px; font-size:14px; font-weight:700; border-radius:var(--radius-md); gap:8px;">
+                    <i class="fas fa-plus"></i> Create Room
+                </button>
             </div>
-            <button type="submit" class="btn-primary" style="width:100%;">Create Room</button>
         </form>
     </div>
 </div>
@@ -105,7 +127,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loadRooms();
 
     document.getElementById("newRoomType").addEventListener("change", (e) => {
-        document.getElementById("passwordField").style.display = e.target.value === "Private" ? "block" : "none";
+        document.getElementById("passwordField").style.display = e.target.value === "Private" ? "flex" : "none";
     });
 
     document.getElementById("createRoomForm").addEventListener("submit", async (e) => {
