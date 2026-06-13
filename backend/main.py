@@ -183,6 +183,8 @@ def seed():
             StudentVerification(email="test22@cit.just.edu.jo", university_id="666666"),
             StudentVerification(email="test21@cit.just.edu.jo", university_id="666665"),
             StudentVerification(email="test19@cit.just.edu.jo", university_id="666655"),
+            StudentVerification(email="test119@cit.just.edu.jo", university_id="666555"),
+
         ]
 
         for v in verification_data:
