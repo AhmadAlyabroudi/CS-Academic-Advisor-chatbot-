@@ -472,22 +472,28 @@
     }
     
     .btn-terminate {
-      background: transparent;
-      color: var(--text-muted);
-      border: 1.5px solid rgba(255, 255, 255, 0.15);
-      padding: 0 1.25rem;
-      height: 40px;
-      border-radius: 8px;
+      background: rgba(239, 68, 68, 0.08);
+      color: #f87171;
+      border: 1.5px solid rgba(239, 68, 68, 0.25);
+      padding: 0 1.5rem;
+      height: 42px;
+      border-radius: 30px;
       font-size: 0.8rem;
-      font-weight: 600;
+      font-weight: 700;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      letter-spacing: 0.2px;
     }
     
     .btn-terminate:hover {
-      background: rgba(239, 68, 68, 0.1);
-      color: var(--danger);
-      border-color: var(--danger);
+      background: rgba(239, 68, 68, 0.18);
+      color: #ef4444;
+      border-color: rgba(239, 68, 68, 0.5);
+      box-shadow: 0 0 16px rgba(239, 68, 68, 0.15);
+      transform: translateY(-1px);
     }
     
     /* Chat Panel */
@@ -679,7 +685,7 @@
         </div>
         <div style="display:flex;gap:0.75rem;align-items:center;">
           <button id="terminateBtn" class="btn-terminate" style="display:none" onclick="terminateRoom()">
-            Terminate Room
+            <i class="fas fa-power-off"></i> End Session
           </button>
           <button class="btn-leave" onclick="leaveRoom()">
             <i class="fas fa-phone-slash"></i> Leave Room
