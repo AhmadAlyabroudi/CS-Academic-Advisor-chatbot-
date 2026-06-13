@@ -17,6 +17,7 @@ from app.api.faculty_controller import router as faculty_router
 from app.models.course import Course
 from app.api.course_controller import router as course_router
 from app.api.roadmap_controller import router as roadmap_router
+from app.api.personalized_plan_controller import router as plan_router
 from app.api.rooms_controller import router as rooms_router
 from app.api.chatbot_controller import router as chatbot_router
 from app.api.gpa_controller import router as gpa_router
@@ -245,6 +246,7 @@ app.include_router(student_router)
 app.include_router(faculty_router)
 app.include_router(course_router)
 app.include_router(roadmap_router)
+app.include_router(plan_router)
 app.include_router(rooms_router)
 app.include_router(chatbot_router)
 app.include_router(gpa_router)
@@ -291,6 +293,10 @@ def get_roadmap():
 @app.get("/signup")
 def get_signup():
     return FileResponse("../frontend/signup.html")
+
+@app.get("/personalized-plan")
+def get_personalized_plan_page():
+    return FileResponse("../frontend/personalized-plan.html")
 
 @app.get("/study-rooms")
 def get_study_rooms():

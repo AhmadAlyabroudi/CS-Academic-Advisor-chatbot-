@@ -57,6 +57,7 @@
 
   const uniLinks = [
     { icon: 'fa-earth-americas', label: 'Course Roadmap', href: '/roadmap', id: 'roadmap' },
+    { icon: 'fa-wand-magic-sparkles', label: 'Personalized Plan', href: '/personalized-plan', id: 'personalized-plan' },
     { icon: 'fa-calculator', label: 'GPA Calculator', href: '/gpa', id: 'gpa' },
     { icon: 'fa-door-open', label: 'Study Rooms', href: '/study-rooms', id: 'study-rooms' },
     { icon: 'fa-users', label: 'Faculty Info', href: '/faculty', id: 'faculty' },

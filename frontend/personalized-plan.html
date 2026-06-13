@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="Auto-generated personalized graduation plan for Computer Science students at JUST."/>
+  <title>Personalized Plan | JUST Advisor</title>
+  <link rel="stylesheet" href="styles.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+</head>
+<body>
+<div class="page-with-sidebar">
+  <aside class="sidebar"></aside>
+  <div class="main-content">
+    <div class="top-bar"></div>
+    <div class="content-area">
+      <div class="section-badge"><i class="fas fa-wand-magic-sparkles"></i> AI-POWERED PLANNING</div>
+      <h1 class="section-title">Personalized Graduation <span>Plan</span></h1>
+      <p class="section-desc">Auto-generated optimal plan to help you graduate on time. Based on your completed courses, prerequisites, and JUST regulations.</p>
+
+      <!-- Generate Button -->
+      <div id="generateSection" style="margin-bottom: 28px;">
+        <button id="generateBtn" class="btn-primary" style="padding: 14px 32px; font-size: 15px; border-radius: var(--radius-md); gap: 10px;">
+          <i class="fas fa-wand-magic-sparkles"></i> Generate My Personalized Plan
+        </button>
+      </div>
+
+      <!-- Loading Skeleton -->
+      <div id="loadingState" style="display: none;">
+        <div class="pp-loading">
+          <div class="pp-loading__spinner"></div>
+          <p>Analyzing your courses and generating the optimal plan...</p>
+        </div>
+      </div>
+
+      <!-- Stats Summary (hidden until generated) -->
+      <div id="planStats" style="display: none;"></div>
+
+      <!-- Plan Container -->
+      <div id="planContainer"></div>
+
+      <!-- Print Button (hidden until generated) -->
+      <div id="printSection" style="display: none; margin-top: 24px; margin-bottom: 32px; text-align: center;">
+        <button id="printBtn" class="btn-outline" style="gap: 8px; padding: 12px 28px;">
+          <i class="fas fa-print"></i> Print Plan
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="sidebar.js?v=8"></script>
+<script src="personalized-plan.js"></script>
+</body>
+</html>
