@@ -158,7 +158,7 @@ def seed():
             Course(code="CS442", id_reg="1734421", name="Wireless Networks", prerequisites="CS342", plan_type="Department Compulsory Req.", credit_hours=3, suggested_year=4, suggested_semester="Spring"),
             Course(code="CS475", id_reg="1734751", name="Distributed Computer Systems", prerequisites="CS375&CS451", plan_type="Department Compulsory Req.", credit_hours=3, suggested_year=4, suggested_semester="Spring"),
             Course(code="CS492", id_reg="1734921", name="Graduation Project 2", prerequisites="CS491", plan_type="Department Compulsory Req.", credit_hours=3, suggested_year=4, suggested_semester="Spring"),
-            Course(code="CIS341", id_reg="1743410", name="Web Applications Development", prerequisites="CIS201&SC318", plan_type="Department Compulsory Req.", credit_hours=3, suggested_year=4, suggested_semester="Spring"),
+            Course(code="CIS341", id_reg="1743410", name="Web Applications Development", prerequisites="CIS201&CS318", plan_type="Department Compulsory Req.", credit_hours=3, suggested_year=4, suggested_semester="Spring"),
             Course(code="DeptElec3", id_reg="1734751", name="Department Elective Requisite", prerequisites="None", plan_type="Department Elective", credit_hours=3, suggested_year=4, suggested_semester="Spring"),
         ]
         for course in courses_data:
