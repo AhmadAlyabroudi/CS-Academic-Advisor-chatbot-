@@ -1,0 +1,79 @@
+Jordan University of Science and Technology (JUST)
+Computer Science Department — Elective Courses Catalog
+====================================================================
+UNIVERSITY ELECTIVES — (9 Credit Hours Required)
+====================================================================
+- ARB200 (Appreciation of Literary Texts) | Credits: 3 | Prereq: None | Type: University Elective
+- HSS100NUR (Health Promotion) | Credits: 3 | Prereq: None | Type: University Elective | Note: For non-medicine, nursing and midwifery students.
+- HSS100O.T (Disability and the Society) | Credits: 3 | Prereq: None | Type: University Elective | Note: Not allowed for rehabilitation science department students.
+- HSS100P.T (Wellness and Life Styles) | Credits: 3 | Prereq: None | Type: University Elective | Note: Not for physical and occupational therapy students.
+- HSS100ADS (Oral & Dental Health) | Credits: 3 | Prereq: None | Type: University Elective
+- HSS101AI (AI Applications) | Credits: 3 | Prereq: None | Type: University Elective
+- HSS102ME (Introduction to Renewable Energy) | Credits: 3 | Prereq: None | Type: University Elective | Note: For non-mechanical engineering students.
+- HSS103 (The Palestinian Issue) | Credits: 3 | Prereq: None | Type: University Elective
+- HSS104 (Tourism and Museums in Jordan) | Credits: 3 | Prereq: None | Type: University Elective
+- HSS104PH (Community Health and Nutrition) | Credits: 3 | Prereq: None | Type: University Elective
+- HSS105 (Road Safety) | Credits: 3 | Prereq: None | Type: University Elective
+- HSS109NUR (Family Health) | Credits: 3 | Prereq: None | Type: University Elective
+- HSS115 (Islam and Recent Problems) | Credits: 3 | Prereq: None | Type: University Elective
+- HSS116 (Economic System in Islam) | Credits: 3 | Prereq: None | Type: University Elective
+- HSS117 (Media and Information Literacy) | Credits: 3 | Prereq: None | Type: University Elective
+- HSS121 (Principles of Sociology) | Credits: 3 | Prereq: None | Type: University Elective
+- HSS126 (Principles of Psychology) | Credits: 3 | Prereq: None | Type: University Elective
+- HSS127 (Educational Technology) | Credits: 3 | Prereq: None | Type: University Elective
+- HSS130 (Digital Skills) | Credits: 3 | Prereq: None | Type: University Elective
+- HSS131 (Islamic Civilization) | Credits: 3 | Prereq: None | Type: University Elective
+- HSS132 (The History of the City of Jerusalem) | Credits: 3 | Prereq: None | Type: University Elective
+- HSS133 (Civilization and Recent Cultures) | Credits: 3 | Prereq: None | Type: University Elective
+- HSS135 (Islamic Culture) | Credits: 3 | Prereq: None | Type: University Elective
+- HSS136 (The Law in Our Life) | Credits: 3 | Prereq: None | Type: University Elective
+- HSS137 (Human Rights) | Credits: 3 | Prereq: None | Type: University Elective
+- HSS153 (Islam and Contemporary Challenges) | Credits: 3 | Prereq: None | Type: University Elective
+- HSS161 (Contemporary Problems) | Credits: 3 | Prereq: None | Type: University Elective
+- HSS177NF (Food Preservation) | Credits: 3 | Prereq: None | Type: University Elective | Note: For non-nutrition and food technology students. Conducted in English.
+- HSS191CHE (Introduction to Nanotechnology) | Credits: 3 | Prereq: None | Type: University Elective
+- HSS200AP (Farm Animal Products) | Credits: 3 | Prereq: None | Type: University Elective | Note: For non-animal production and nutrition and food technology students.
+- HSS200PP (Home Gardens) | Credits: 3 | Prereq: None | Type: University Elective | Note: For non-plant production and soil and irrigation students.
+- HSS200NR (Natural Resources and Human) | Credits: 3 | Prereq: None | Type: University Elective | Note: For non-plant production and soil and irrigation students.
+- HSS200NE (Principles in Nuclear Energy and its Peaceful Applications) | Credits: 3 | Prereq: None | Type: University Elective
+- HSS201PP (Beekeeping) | Credits: 3 | Prereq: None | Type: University Elective | Note: For non-plant production students.
+- HSS202PP (Natural Plants of Jordan) | Credits: 3 | Prereq: None | Type: University Elective | Note: For non-agriculture students.
+- HSS207NR (Plant Earth Problems & Solutions) | Credits: 3 | Prereq: None | Type: University Elective | Note: For non-agriculture students.
+- HSS211 (Sociology) | Credits: 3 | Prereq: None | Type: University Elective | Note: Conducted in English.
+- HSS211VM (Animal Health) | Credits: 3 | Prereq: None | Type: University Elective | Note: Not for veterinary medical and agriculture students.
+- HSS212VM (Pet Animal Care) | Credits: 3 | Prereq: None | Type: University Elective
+- HSS213 (Individual and Society) | Credits: 3 | Prereq: None | Type: University Elective
+- HSS213VM (Animal Behaviour and Welfare) | Credits: 3 | Prereq: None | Type: University Elective
+- HSS214VM (Animal Products and Public Health) | Credits: 3 | Prereq: None | Type: University Elective | Note: For non-veterinary students.
+- HSS216 (International Global Issues) | Credits: 3 | Prereq: None | Type: University Elective
+- HSS221 (Introduction to Psychology) | Credits: 3 | Prereq: None | Type: University Elective | Note: Conducted in English.
+- HSS231 (History of Sciences in Islam) | Credits: 3 | Prereq: None | Type: University Elective
+- HSS251 (Music Tasting) | Credits: 3 | Prereq: None | Type: University Elective
+- ES103 (Sustainable Development and Environment) | Credits: 3 | Prereq: None | Type: University Elective
+- LG104 (Basic Skills in the Chinese Language) | Credits: 3 | Prereq: None | Type: University Elective
+- LG105 (Basic French Language) | Credits: 3 | Prereq: None | Type: University Elective
+- LG106 (Basic German Language) | Credits: 3 | Prereq: None | Type: University Elective
+- LG107 (Spanish Language) | Credits: 3 | Prereq: None | Type: University Elective
+- LG108 (Turkish Language) | Credits: 3 | Prereq: None | Type: University Elective
+- LG109 (Basic Skills in the Korean Language) | Credits: 3 | Prereq: None | Type: University Elective
+
+====================================================================
+DEPARTMENT ELECTIVES — COMPUTER SCIENCE (9 Credit Hours Required)
+====================================================================
+- CS411 (Mobile Applications Design and Development) | Credits: 3 | Prereq: None | Type: Department Elective
+- CS415 (Contemporary Programming Techniques) | Credits: 3 | Prereq: None | Type: Department Elective
+- CS422 (Information Retrieval Systems) | Credits: 3 | Prereq: None | Type: Department Elective
+- CS441 (Network Programming) | Credits: 3 | Prereq: None | Type: Department Elective
+- CS463 (Knowledge Engineering) | Credits: 3 | Prereq: None | Type: Department Elective
+- CS464 (Game Design and Development) | Credits: 3 | Prereq: None | Type: Department Elective
+- CS464L (Game Design Lab) | Credits: 0 | Prereq: None | Type: Department Elective
+- CS472 (Compiler Design) | Credits: 3 | Prereq: None | Type: Department Elective
+- CS476 (High Performance Computing) | Credits: 3 | Prereq: None | Type: Department Elective
+- CS481 (Computer Graphics) | Credits: 3 | Prereq: None | Type: Department Elective
+- CS482 (Image Processing) | Credits: 3 | Prereq: None | Type: Department Elective
+- CS483 (Fundamentals of Bioinformatics) | Credits: 3 | Prereq: None | Type: Department Elective
+- CS486 (Simulation and Modeling) | Credits: 3 | Prereq: None | Type: Department Elective
+- CS496 (Special Topics in Computer Science 1) | Credits: 3 | Prereq: None | Type: Department Elective
+- CS497 (Special Topics in Computer Science 2) | Credits: 3 | Prereq: None | Type: Department Elective
+- CS498 (Special Topics in Computer Science 3) | Credits: 3 | Prereq: None | Type: Department Elective
+- SE412 (Selected Programming Languages) | Credits: 3 | Prereq: None | Type: Department Elective
