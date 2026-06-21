@@ -310,5 +310,6 @@ def get_room():
 app.mount("/", StaticFiles(directory="../frontend"), name="frontend")
 
 
-# Wrap FastAPI with Socket.IO — this is the ASGI app that uvicorn/gunicorn runs
+# Wrap FastAPI with Socket.IO — this is the ASGI app that uvicorn/gunicorn run
 socket_app = socketio.ASGIApp(sio, other_asgi_app=app)
+
