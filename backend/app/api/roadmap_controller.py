@@ -80,15 +80,19 @@ def update_course_roadmap(student_id: str, payload: UpdateCourseRoadmapRequest, 
     def normalize_code(code: str) -> str:
         return code.strip().replace(" ", "").upper()
 
-    # Calculate completed credits for PASS 90 check
+    # Calculate completed credits for PASS 90 check, and build completed/enrolled sets
     completed_credits = 0
-    completed_set = set()
+    completed_or_enrolled_set = set()
     for item in all_roadmap:
+        # Credits are only counted for completed courses
         if item.status == "Completed":
-            completed_set.add(normalize_code(item.course_code))
             c_info = course_map.get(item.course_code)
             if c_info:
                 completed_credits += int(c_info.credit_hours or 0)
+        
+        # Prerequisite validation accepts both Completed and Currently Enrolled
+        if item.status in ("Completed", "Currently Enrolled"):
+            completed_or_enrolled_set.add(normalize_code(item.course_code))
 
     # Prerequisite verification helper
     def is_prereq_satisfied(prereq_str: str) -> bool:
@@ -99,7 +103,7 @@ def update_course_roadmap(student_id: str, payload: UpdateCourseRoadmapRequest, 
         
         parts = prereq_str.split("&")
         for part in parts:
-            if normalize_code(part) not in completed_set:
+            if normalize_code(part) not in completed_or_enrolled_set:
                 return False
         return True
 
