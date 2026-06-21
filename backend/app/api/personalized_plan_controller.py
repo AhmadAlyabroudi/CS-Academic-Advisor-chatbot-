@@ -1,15 +1,19 @@
 """
-Personalized Road Map Generator
-================================
-Auto-generates an optimal semester-by-semester graduation plan based on:
-  - Student's completed / currently-enrolled courses
-  - Prerequisite chains (DAG)
-  - JUST regulations: 18 hrs Fall/Spring, 9 hrs Summer, 132 total
+Personalized Graduation Plan Generator (v2)
+=============================================
+Generates a semester-by-semester graduation plan that **follows the official
+JUST CS study plan**.  Key rules:
+
+  ✅ Courses are placed according to suggested_year + suggested_semester
+  ✅ Co-requisite (concurrent) courses are always scheduled together
+  ✅ Semester-locked courses can only appear in their designated semester
+  ✅ Summer is *optional*: only for CS391 (alone) or delayed courses
+  ✅ Graduation projects never in summer
+  ✅ Max 18 hrs Fall/Spring, 9 hrs Summer, 132 total for graduation
 """
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from collections import defaultdict, deque
 from typing import Dict, List, Set, Tuple
 
 from app.core.database import get_db
@@ -19,27 +23,48 @@ from app.models.student import Student
 
 router = APIRouter(prefix="/personalized-plan", tags=["Personalized Plan"])
 
-# ── Constants (JUST Regulations) ────────────────────────────────────────────
-MAX_CREDITS_REGULAR = 18   # Fall / Spring
-MAX_CREDITS_SUMMER  = 9    # Summer
-TOTAL_GRADUATION    = 132
-CREDIT_GATE_90      = 90   # CS391, CS491 require >= 90 completed hours
+# ── JUST Regulations ────────────────────────────────────────────────────────
+MAX_CREDITS_REGULAR = 18          # Fall / Spring cap
+MAX_CREDITS_SUMMER  = 9           # Summer cap
+CREDIT_GATE_90      = 90          # CS391, CS491 require ≥ 90 completed hours
 
-# Semester ordering within an academic year
 SEMESTER_ORDER = ["Fall", "Spring", "Summer"]
 
+# ── Co-requisite pairs — must be registered in the same semester ────────────
+CO_REQUISITES: Dict[str, str] = {
+    "CS101":  "CS106",       # Intro to Programming  ↔  Lab
+    "CS106":  "CS101",
+    "SE112":  "SE113",       # Intro to OOP          ↔  Lab
+    "SE113":  "SE112",
+    "BT401":  "BT401L",     # Computational Biology  ↔  Lab
+    "BT401L": "BT401",
+}
 
-# ── Helpers ─────────────────────────────────────────────────────────────────
+# ── Semester-locked — can ONLY be offered in this specific semester type ────
+SEMESTER_LOCKED: Dict[str, str] = {
+    "BT401":  "Fall",        # Computational Biology — Fall only
+    "BT401L": "Fall",        # Computational Biology Lab — Fall only
+    "CS475":  "Spring",      # Distributed Computer Systems — Spring only
+    "CS442":  "Spring",      # Wireless Networks — Spring only
+    "CS385":  "Spring",      # Fundamentals of Multimedia — Spring only
+}
+
+# ── Special courses ─────────────────────────────────────────────────────────
+TRAINING_COURSE = "CS391"                            # Practical Training
+GRADUATION_PROJECTS: Set[str] = {"CS491", "CS492"}   # Never in summer
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+#  Helpers
+# ═══════════════════════════════════════════════════════════════════════════
+
 def _normalize(code: str) -> str:
-    """Normalize a course code for comparison: strip, collapse spaces, upper."""
+    """Normalize a course code: strip spaces, uppercase."""
     return code.strip().replace(" ", "").upper()
 
 
 def _parse_prerequisites(prereq_str: str) -> Tuple[List[str], bool]:
-    """
-    Parse a prerequisite string.
-    Returns (list_of_course_codes, requires_90_credits).
-    """
+    """Return (list_of_prerequisite_codes, requires_90_credits)."""
     if not prereq_str or prereq_str.strip().lower() in ("none", "none "):
         return [], False
 
@@ -48,7 +73,6 @@ def _parse_prerequisites(prereq_str: str) -> Tuple[List[str], bool]:
 
     if "PASS 90 Credit" in prereq_str:
         requires_90 = True
-        # Some entries are *only* "PASS 90 Credit", others combine with courses
         remaining = prereq_str.replace("PASS 90 Credit", "").strip("& ").strip()
         if remaining:
             codes = [_normalize(c) for c in remaining.split("&") if c.strip()]
@@ -58,78 +82,63 @@ def _parse_prerequisites(prereq_str: str) -> Tuple[List[str], bool]:
     return codes, requires_90
 
 
-def _build_dag(courses: List[Course]) -> Dict[str, List[str]]:
-    """
-    Build adjacency list:  prereq → [courses that depend on it]
-    """
-    graph: Dict[str, List[str]] = defaultdict(list)
-    for c in courses:
-        prereq_codes, _ = _parse_prerequisites(c.prerequisites)
-        for p in prereq_codes:
-            graph[p].append(_normalize(c.code))
-    return graph
-
-
-def _compute_critical_path(
-    courses_map: Dict[str, Course],
-    dag: Dict[str, List[str]],
-) -> Dict[str, int]:
-    """
-    For each course compute the length of the longest dependency chain that
-    *starts from it*.  Courses with longer chains should be scheduled first
-    because delaying them delays the entire graduation.
-    """
-    memo: Dict[str, int] = {}
-
-    def dfs(code: str) -> int:
-        if code in memo:
-            return memo[code]
-        children = dag.get(code, [])
-        if not children:
-            memo[code] = 0
-            return 0
-        best = max(dfs(ch) for ch in children)
-        memo[code] = best + 1
-        return memo[code]
-
-    for code in courses_map:
-        dfs(_normalize(code))
-
-    return memo
-
-
-def _priority_key(
+def _prereqs_met(
     code: str,
     courses_map: Dict[str, Course],
-    critical: Dict[str, int],
-) -> Tuple:
+    done: Set[str],
+    same_semester: Set[str],
+    cumulative_credits: int,
+) -> bool:
     """
-    Sorting key — lower = higher priority.
-    1. Longer critical path first  (negate for descending)
-    2. Earlier suggested year
-    3. Earlier semester  (Fall < Spring < Summer)
-    4. Compulsory before elective
+    Check whether *code*'s prerequisites are satisfied.
+
+    Parameters
+    ----------
+    done           : courses completed or scheduled in *prior* semesters.
+    same_semester  : courses being taken *concurrently* (for co-requisite bypass).
+    cumulative_credits : total credits completed so far (for 90-hr gate).
     """
     c = courses_map.get(code)
-    cp = critical.get(_normalize(code), 0)
-    sem_idx = SEMESTER_ORDER.index(c.suggested_semester) if c and c.suggested_semester in SEMESTER_ORDER else 1
-    is_elective = 1 if c and c.plan_type and "Elective" in c.plan_type else 0
-    year = c.suggested_year if c else 4
-    return (-cp, year, sem_idx, is_elective, code)
+    if not c:
+        return False
+
+    prereq_codes, needs_90 = _parse_prerequisites(c.prerequisites)
+
+    # 90-credit gate
+    if needs_90 and cumulative_credits < CREDIT_GATE_90:
+        return False
+
+    co_partner = CO_REQUISITES.get(code)
+    co_nc = _normalize(co_partner) if co_partner else None
+
+    for p in prereq_codes:
+        # External prerequisite not in our catalog (e.g. LG099) → assume satisfied
+        if p not in courses_map:
+            continue
+        # Co-requisite being taken concurrently → OK
+        if co_nc and p == co_nc and p in same_semester:
+            continue
+        # Normal prerequisite: must be completed
+        if p not in done:
+            return False
+
+    return True
 
 
-# ── Main endpoint ───────────────────────────────────────────────────────────
+# ═══════════════════════════════════════════════════════════════════════════
+#  Main endpoint
+# ═══════════════════════════════════════════════════════════════════════════
+
 @router.get("/{student_id}/generate")
 def generate_personalized_plan(student_id: str, db: Session = Depends(get_db)):
-    """
-    Generate an optimal semester-by-semester graduation plan for the student.
-    """
-    # ── 1. Validate student ──────────────────────────────────────────────────
+    """Generate a semester-by-semester graduation plan following the official roadmap."""
+
+    # ── 1. Validate student ─────────────────────────────────────────────────
     student = db.query(Student).filter(Student.university_id == student_id).first()
     if not student:
         raise HTTPException(status_code=404, detail="Student not found")
 
-    # ── 2. Gather data ───────────────────────────────────────────────────────
+    # ── 2. Gather data ──────────────────────────────────────────────────────
     all_courses = db.query(Course).all()
     courses_map: Dict[str, Course] = {_normalize(c.code): c for c in all_courses}
 
@@ -137,9 +146,8 @@ def generate_personalized_plan(student_id: str, db: Session = Depends(get_db)):
         StudentRoadmap.student_id == student_id
     ).all()
 
-    # Sets of normalized codes
     completed_set: Set[str] = set()
-    enrolled_set: Set[str] = set()
+    enrolled_set:  Set[str] = set()
     completed_credits = 0
 
     for item in roadmap_items:
@@ -147,28 +155,23 @@ def generate_personalized_plan(student_id: str, db: Session = Depends(get_db)):
         status = (item.status or "").lower()
         if status == "completed":
             completed_set.add(nc)
-            c_info = courses_map.get(nc)
-            if c_info:
-                completed_credits += int(c_info.credit_hours or 0)
+            if nc in courses_map:
+                completed_credits += int(courses_map[nc].credit_hours or 0)
         elif status == "currently enrolled":
             enrolled_set.add(nc)
 
-    # Credits for currently enrolled (will be completed after current semester)
-    enrolled_credits = 0
-    for nc in enrolled_set:
-        c_info = courses_map.get(nc)
-        if c_info:
-            enrolled_credits += int(c_info.credit_hours or 0)
+    enrolled_credits = sum(
+        int(courses_map[nc].credit_hours or 0)
+        for nc in enrolled_set if nc in courses_map
+    )
 
-    # ── 3. Determine remaining courses ───────────────────────────────────────
-    # All courses in the catalog that the student hasn't completed and isn't
-    # currently enrolled in.
-    remaining_codes: List[str] = []
-    for nc, c in courses_map.items():
-        if nc not in completed_set and nc not in enrolled_set:
-            remaining_codes.append(nc)
+    # ── 3. Remaining courses ────────────────────────────────────────────────
+    remaining = {
+        nc for nc in courses_map
+        if nc not in completed_set and nc not in enrolled_set
+    }
 
-    if not remaining_codes:
+    if not remaining:
         return {
             "student_id": student_id,
             "completed_credits": completed_credits,
@@ -176,161 +179,243 @@ def generate_personalized_plan(student_id: str, db: Session = Depends(get_db)):
             "remaining_credits": 0,
             "plan": [],
             "total_semesters": 0,
-            "message": "Congratulations! You have completed all courses."
+            "message": "Congratulations! You have completed all courses.",
         }
 
-    # ── 4. Build DAG & critical paths ────────────────────────────────────────
-    dag = _build_dag(all_courses)
-    critical = _compute_critical_path(courses_map, dag)
-
-    # ── 5. Determine starting semester ───────────────────────────────────────
-    # We assume "currently enrolled" courses finish at the end of the current
-    # semester.  The plan starts from the *next* semester.
-    # We'll use today's date to guess the current semester, but a simple
-    # heuristic is fine — the student can see the labels.
+    # ── 4. Determine starting semester ──────────────────────────────────────
     import datetime
     now = datetime.datetime.now()
     month = now.month
 
     if month >= 9 or month <= 1:
         current_sem = "Fall"
-    elif month >= 2 and month <= 5:
+    elif 2 <= month <= 5:
         current_sem = "Spring"
     else:
         current_sem = "Summer"
 
-    # Academic year: if Fall → year = calendar year, else year = calendar year - 1
-    if current_sem == "Fall":
-        academic_year_start = now.year
-    elif current_sem == "Spring":
-        academic_year_start = now.year - 1
-    else:
-        academic_year_start = now.year - 1
+    academic_year = now.year if current_sem == "Fall" else now.year - 1
 
-    # Next semester after current
-    current_idx = SEMESTER_ORDER.index(current_sem)
-    next_idx = current_idx + 1
+    next_idx = SEMESTER_ORDER.index(current_sem) + 1
     if next_idx >= len(SEMESTER_ORDER):
         next_idx = 0
-        academic_year_start += 1
+        academic_year += 1
 
-    # ── 6. Greedy semester-by-semester scheduling ────────────────────────────
+    # ── 5. Semester-by-semester scheduling ──────────────────────────────────
     plan_semesters: List[dict] = []
-    scheduled_set: Set[str] = set(completed_set)
-    # Assume enrolled courses will be done after current semester
-    post_current_credits = completed_credits + enrolled_credits
-    post_current_completed = completed_set | enrolled_set
-    scheduled_set = set(post_current_completed)
+    done:          Set[str] = set(completed_set | enrolled_set)
+    credits_so_far: int     = completed_credits + enrolled_credits
+    to_schedule:   Set[str] = set(remaining)
 
-    sem_pointer = next_idx
-    year_pointer = academic_year_start
+    sem_ptr  = next_idx
+    year_ptr = academic_year
 
-    remaining_to_schedule = set(remaining_codes)
-    max_iterations = 20  # Safety: max 20 semesters
+    training_nc      = _normalize(TRAINING_COURSE)
+    grad_projects_nc = {_normalize(gp) for gp in GRADUATION_PROJECTS}
 
-    for _ in range(max_iterations):
-        if not remaining_to_schedule:
+    for _ in range(20):                                   # safety cap
+        if not to_schedule:
             break
 
-        sem_name = SEMESTER_ORDER[sem_pointer]
-        max_credits = MAX_CREDITS_SUMMER if sem_name == "Summer" else MAX_CREDITS_REGULAR
+        sem_name = SEMESTER_ORDER[sem_ptr]
+        max_cr   = MAX_CREDITS_SUMMER if sem_name == "Summer" else MAX_CREDITS_REGULAR
+        is_summer = (sem_name == "Summer")
 
-        # Determine which courses can be taken this semester
-        eligible: List[str] = []
-        for code in remaining_to_schedule:
-            c = courses_map.get(code)
+        # ── 5a. Build candidate list ────────────────────────────────────────
+        candidates: List[str] = []
+
+        if is_summer:
+            # ── SUMMER RULES ────────────────────────────────────────────────
+            # Rule 1: CS391 (training) goes ALONE — no other courses with it
+            if training_nc in to_schedule:
+                if _prereqs_met(training_nc, courses_map, done, set(), credits_so_far):
+                    candidates = [training_nc]
+
+            # Rule 2: if no training, allow delayed courses only
+            if not candidates:
+                # A course is "delayed" if we've already generated at least one
+                # semester of its home type, meaning its official slot has passed.
+                already_had_fall = any(
+                    s["semester_type"] == "Fall" for s in plan_semesters
+                )
+                already_had_spring = any(
+                    s["semester_type"] == "Spring" for s in plan_semesters
+                )
+
+                for nc in to_schedule:
+                    if nc == training_nc:
+                        continue
+                    if nc in grad_projects_nc:                # no grad projects in summer
+                        continue
+                    locked = SEMESTER_LOCKED.get(nc)
+                    if locked:                                # semester-locked → not in summer
+                        continue
+                    c = courses_map.get(nc)
+                    if not c:
+                        continue
+                    if c.suggested_semester == "Summer":       # CS391 handled above
+                        continue
+                    # Only truly delayed courses
+                    if c.suggested_semester == "Fall" and not already_had_fall:
+                        continue
+                    if c.suggested_semester == "Spring" and not already_had_spring:
+                        continue
+                    candidates.append(nc)
+
+            # Nothing eligible for summer → skip it entirely
+            if not candidates:
+                sem_ptr += 1
+                if sem_ptr >= len(SEMESTER_ORDER):
+                    sem_ptr = 0
+                    year_ptr += 1
+                continue
+
+        else:
+            # ── FALL / SPRING ───────────────────────────────────────────────
+            for nc in to_schedule:
+                c = courses_map.get(nc)
+                if not c:
+                    continue
+                # Semester-locked to a different type → skip
+                locked = SEMESTER_LOCKED.get(nc)
+                if locked and locked != sem_name:
+                    continue
+                # Summer-only courses (CS391) don't go in Fall/Spring
+                if c.suggested_semester == "Summer":
+                    continue
+                candidates.append(nc)
+
+        # ── 5b. Sort candidates by priority ─────────────────────────────────
+        #   1. Home-semester courses first (suggested_semester matches)
+        #   2. Earlier suggested_year first (lower year = more urgent)
+        #   3. Compulsory before elective
+        def _sort_key(nc: str) -> tuple:
+            c = courses_map.get(nc)
             if not c:
+                return (1, 4, 1, 1, nc)
+            is_home = 0 if c.suggested_semester == sem_name else 1
+            yr = c.suggested_year or 4
+            sem_idx = (
+                SEMESTER_ORDER.index(c.suggested_semester)
+                if c.suggested_semester in SEMESTER_ORDER else 1
+            )
+            is_elective = 1 if c.plan_type and "Elective" in c.plan_type else 0
+            return (is_home, yr, sem_idx, is_elective, nc)
+
+        candidates.sort(key=_sort_key)
+
+        # ── 5c. Pick courses (respecting co-requisites + credit cap) ───────
+        picked:      Set[str]   = set()
+        sem_courses: List[dict] = []
+        sem_credits              = 0
+
+        for nc in candidates:
+            if nc in picked:
                 continue
 
-            prereq_codes, needs_90 = _parse_prerequisites(c.prerequisites)
-
-            # Check prerequisite courses
-            prereqs_met = all(p in scheduled_set for p in prereq_codes)
-            if not prereqs_met:
-                continue
-
-            # Check 90-credit gate
-            if needs_90 and post_current_credits < CREDIT_GATE_90:
-                continue
-
-            eligible.append(code)
-
-        if not eligible:
-            # No eligible courses this semester — but there are still remaining
-            # courses. This can happen if we need more credits to unlock 90-gate.
-            # Advance to next semester.
-            # But if we're stuck forever, break.
-            sem_pointer += 1
-            if sem_pointer >= len(SEMESTER_ORDER):
-                sem_pointer = 0
-                year_pointer += 1
-            continue
-
-        # Sort by priority
-        eligible.sort(key=lambda c: _priority_key(c, courses_map, critical))
-
-        # Fill semester up to max credits
-        semester_courses: List[dict] = []
-        semester_credits = 0
-
-        for code in eligible:
-            c = courses_map.get(code)
+            c = courses_map.get(nc)
             if not c:
                 continue
             ch = int(c.credit_hours or 0)
 
-            # Special: 0-credit courses (like BT401L) don't consume credit slots
-            if ch > 0 and semester_credits + ch > max_credits:
-                continue
+            # Check for a co-requisite partner that also needs scheduling
+            co_raw = CO_REQUISITES.get(nc)
+            co_nc  = _normalize(co_raw) if co_raw else None
+            has_co = (
+                co_nc is not None
+                and co_nc in to_schedule
+                and co_nc not in picked
+                and co_nc not in done
+            )
 
-            semester_courses.append({
-                "course_code": c.code,
-                "course_name": c.name,
-                "credit_hours": ch,
-                "prerequisites": c.prerequisites or "None",
-                "plan_type": c.plan_type or "",
-            })
-            semester_credits += ch
-            scheduled_set.add(code)
-            remaining_to_schedule.discard(code)
+            if has_co:
+                # ── Schedule the pair together ──────────────────────────────
+                co_c  = courses_map.get(co_nc)
+                co_ch = int(co_c.credit_hours or 0) if co_c else 0
+                pair_total = ch + co_ch
 
-        if semester_courses:
-            # Build label
-            if sem_name == "Fall":
-                label = f"Fall {year_pointer}/{year_pointer + 1}"
-            elif sem_name == "Spring":
-                label = f"Spring {year_pointer}/{year_pointer + 1}"
+                if pair_total > 0 and sem_credits + pair_total > max_cr:
+                    continue
+
+                pair = {nc, co_nc}
+                if not _prereqs_met(nc, courses_map, done, pair, credits_so_far):
+                    continue
+                if co_c and not _prereqs_met(co_nc, courses_map, done, pair, credits_so_far):
+                    continue
+
+                sem_courses.append({
+                    "course_code":  c.code,
+                    "course_name":  c.name,
+                    "credit_hours": ch,
+                    "prerequisites": c.prerequisites or "None",
+                    "plan_type":    c.plan_type or "",
+                })
+                if co_c:
+                    sem_courses.append({
+                        "course_code":  co_c.code,
+                        "course_name":  co_c.name,
+                        "credit_hours": co_ch,
+                        "prerequisites": co_c.prerequisites or "None",
+                        "plan_type":    co_c.plan_type or "",
+                    })
+                sem_credits += pair_total
+                picked.add(nc)
+                picked.add(co_nc)
+
             else:
-                label = f"Summer {year_pointer + 1}"
+                # ── Schedule single course ──────────────────────────────────
+                if ch > 0 and sem_credits + ch > max_cr:
+                    continue
+                if not _prereqs_met(nc, courses_map, done, picked, credits_so_far):
+                    continue
+
+                sem_courses.append({
+                    "course_code":  c.code,
+                    "course_name":  c.name,
+                    "credit_hours": ch,
+                    "prerequisites": c.prerequisites or "None",
+                    "plan_type":    c.plan_type or "",
+                })
+                sem_credits += ch
+                picked.add(nc)
+
+        # ── 5d. Finalize semester ───────────────────────────────────────────
+        if sem_courses:
+            if sem_name == "Fall":
+                label = f"Fall {year_ptr}/{year_ptr + 1}"
+            elif sem_name == "Spring":
+                label = f"Spring {year_ptr}/{year_ptr + 1}"
+            else:
+                label = f"Summer {year_ptr + 1}"
 
             plan_semesters.append({
                 "semester_label": label,
-                "semester_type": sem_name,
-                "courses": semester_courses,
-                "total_hours": semester_credits,
+                "semester_type":  sem_name,
+                "courses":        sem_courses,
+                "total_hours":    sem_credits,
             })
 
-            # Update cumulative credits for 90-gate checks
-            post_current_credits += semester_credits
+            done.update(picked)
+            to_schedule -= picked
+            credits_so_far += sem_credits
 
         # Advance to next semester
-        sem_pointer += 1
-        if sem_pointer >= len(SEMESTER_ORDER):
-            sem_pointer = 0
-            year_pointer += 1
+        sem_ptr += 1
+        if sem_ptr >= len(SEMESTER_ORDER):
+            sem_ptr = 0
+            year_ptr += 1
 
-    # ── 7. Build response ────────────────────────────────────────────────────
+    # ── 6. Build response ───────────────────────────────────────────────────
     total_remaining = sum(
-        int(courses_map[c].credit_hours or 0)
-        for c in remaining_codes
-        if c in courses_map
+        int(courses_map[nc].credit_hours or 0)
+        for nc in remaining if nc in courses_map
     )
 
     return {
-        "student_id": student_id,
+        "student_id":       student_id,
         "completed_credits": completed_credits,
-        "enrolled_credits": enrolled_credits,
+        "enrolled_credits":  enrolled_credits,
         "remaining_credits": total_remaining,
-        "total_semesters": len(plan_semesters),
-        "plan": plan_semesters,
+        "total_semesters":   len(plan_semesters),
+        "plan":              plan_semesters,
     }
