@@ -19,12 +19,10 @@ logger = logging.getLogger(__name__)
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 KNOWLEDGE_BASE_DIR = BASE_DIR / "knowledge_base"
-load_dotenv(BASE_DIR / ".env")
-
-# ── Model configuration ──────────────────────────────────────────────────────
-GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
-GROQ_TEMPERATURE = 0.3
-GROQ_MAX_TOKENS = 800          # Reduced to fit within Groq's TPM limits (6000)
+load_dotenv(BASE_DIR / ".env")# ── Model configuration ──────────────────────────────────────────────────────
+GEMINI_MODEL = "gemini-1.5-flash"
+GEMINI_TEMPERATURE = 0.3
+GEMINI_MAX_TOKENS = 1200
 MAX_HISTORY_MESSAGES = 6       # Max previous messages to include as context
 
 # Heuristic threshold for classifying answers as official vs general
@@ -125,18 +123,18 @@ def _tokenize(text: str) -> set[str]:
     }
 
 
-class GroqAdvisorChain:
-    """Groq-backed academic advisor with conversation memory.
+class GeminiAdvisorChain:
+    """Gemini-backed academic advisor with conversation memory.
 
-    The full knowledge base is included in the system prompt (it's small
-    enough to fit). For each question we compute a keyword-overlap score
-    against the knowledge base to classify the answer source.
+    The full knowledge base is included in the system prompt. For each
+    question we compute a keyword-overlap score against the knowledge base
+    to classify the answer source.
     """
 
-    def __init__(self, groq_key: str) -> None:
-        from groq import Groq
+    def __init__(self, gemini_key: str) -> None:
+        import google.generativeai as genai
 
-        self.client = Groq(api_key=groq_key)
+        genai.configure(api_key=gemini_key)
         self.knowledge_base = _load_knowledge_base()
         self.kb_tokens = _tokenize(self.knowledge_base)
 
@@ -146,8 +144,8 @@ class GroqAdvisorChain:
         )
 
         logger.info(
-            "GroqAdvisorChain initialised (model=%s, kb=%d chars, %d tokens)",
-            GROQ_MODEL,
+            "GeminiAdvisorChain initialised (model=%s, kb=%d chars, %d tokens)",
+            GEMINI_MODEL,
             len(self.knowledge_base),
             len(self.kb_tokens),
         )
@@ -164,66 +162,63 @@ class GroqAdvisorChain:
         return source, round(overlap, 3)
 
     def query(self, question: str, history: list[dict] | None = None, student_context: str | None = None) -> dict:
-        """Send a question to Groq with optional conversation history.
+        import google.generativeai as genai
 
-        Args:
-            question: The current user question.
-            history: Optional list of previous messages, each with
-                     {"role": "user"|"assistant", "content": "..."}.
-            student_context: Optional structured text with the student's
-                             profile data (GPA, courses, etc.).
-
-        Returns:
-            dict with keys: answer, source, confidence.
-        """
         source, confidence = self._classify(question)
 
-        # Build messages array with conversation context
-        messages: list[dict] = [
-            {"role": "system", "content": self.system_prompt},
-        ]
-
-        # Inject student profile data so the AI can answer personal questions
+        # Combine main system prompt with student context for this run
+        system_instruction = self.system_prompt
         if student_context:
-            messages.append({
-                "role": "system",
-                "content": (
-                    "--- BEGIN STUDENT PROFILE ---\n"
-                    f"{student_context}\n"
-                    "--- END STUDENT PROFILE ---\n"
-                    "Use the above student profile data to answer any personalised "
-                    "questions about the student's GPA, remaining credit hours, "
-                    "completed courses, enrolled courses, etc. "
-                    "NEVER reveal or mention the student's password."
-                ),
-            })
+            system_instruction += (
+                "\n\n--- BEGIN STUDENT PROFILE ---\n"
+                f"{student_context}\n"
+                "--- END STUDENT PROFILE ---\n"
+                "Use the above student profile data to answer any personalised "
+                "questions about the student's GPA, remaining credit hours, "
+                "completed courses, enrolled courses, etc. "
+                "NEVER reveal or mention the student's password."
+            )
 
-        # Add conversation history for context (capped)
+        # Instantiate Gemini model with dynamic system instruction
+        model = genai.GenerativeModel(
+            model_name=GEMINI_MODEL,
+            system_instruction=system_instruction
+        )
+
+        # Build contents array
+        contents = []
+
+        # Add history
         if history:
-            # Take only the last N messages to stay within context limits
             recent = history[-MAX_HISTORY_MESSAGES:]
             for msg in recent:
                 role = msg.get("role", "user")
                 content = msg.get("content", "")
                 if role in ("user", "assistant") and content:
-                    messages.append({"role": role, "content": content})
+                    role_name = "user" if role == "user" else "model"
+                    contents.append({
+                        "role": role_name,
+                        "parts": [content]
+                    })
 
         # Add the current question
-        messages.append({"role": "user", "content": question})
+        contents.append({
+            "role": "user",
+            "parts": [question]
+        })
 
-        completion = self.client.chat.completions.create(
-            model=GROQ_MODEL,
-            temperature=GROQ_TEMPERATURE,
-            max_tokens=GROQ_MAX_TOKENS,
-            messages=messages,
-        )
-
-        answer = (completion.choices[0].message.content or "").strip()
-        if not answer:
-            answer = (
-                "I couldn't generate an answer for that question. "
-                "Please try rephrasing it."
+        try:
+            response = model.generate_content(
+                contents,
+                generation_config=genai.types.GenerationConfig(
+                    temperature=GEMINI_TEMPERATURE,
+                    max_output_tokens=GEMINI_MAX_TOKENS,
+                )
             )
+            answer = response.text.strip()
+        except Exception as exc:
+            logger.error("Failed to generate content via Gemini: %s", exc)
+            answer = "I couldn't generate an answer for that question. Please try rephrasing it."
 
         return {
             "answer": answer,
@@ -241,7 +236,7 @@ def _is_valid_key(key: str | None) -> bool:
 
 
 def get_advisor() -> Optional[AdvisorChain]:
-    """Return a Groq advisor, building it on first call.
+    """Return a Gemini advisor, building it on first call.
 
     Only successful instances are cached. If init fails (missing key,
     network blip, SDK error) we return None and try again on the next
@@ -253,15 +248,15 @@ def get_advisor() -> Optional[AdvisorChain]:
 
     load_dotenv(BASE_DIR / ".env")
 
-    groq_key = os.getenv("GROQ_API_KEY", "").strip() or os.getenv("GEMINI_API_KEY", "").strip()
+    gemini_key = os.getenv("GEMINI_API_KEY", "").strip() or os.getenv("GROQ_API_KEY", "").strip()
 
-    if not _is_valid_key(groq_key):
-        logger.warning("GROQ_API_KEY not set — running demo mode.")
+    if not _is_valid_key(gemini_key):
+        logger.warning("GEMINI_API_KEY not set — running demo mode.")
         return None
 
     try:
-        _advisor_instance = GroqAdvisorChain(groq_key)
+        _advisor_instance = GeminiAdvisorChain(gemini_key)
         return _advisor_instance
     except Exception as exc:
-        logger.error("Failed to initialise GroqAdvisorChain: %s", exc)
+        logger.error("Failed to initialise GeminiAdvisorChain: %s", exc)
         return None

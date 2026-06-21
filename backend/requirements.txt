@@ -10,7 +10,7 @@ python-socketio==5.11.4
 python-dotenv==1.0.1
 gunicorn==23.0.0
 passlib[bcrypt]==1.7.4
-# ── AI stack (Groq) ───────────────────────────────────────────────────────────
-groq>=0.11.0                    # Official Groq Python SDK (chat completions)
+# ─── AI stack (Gemini) ─────────────────────────────────────────────────────────
+google-generativeai>=0.8.0      # Official Google Gemini Python SDK
 livekit
 livekit.api
