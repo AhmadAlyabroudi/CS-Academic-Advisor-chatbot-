@@ -19,12 +19,11 @@ logger = logging.getLogger(__name__)
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 KNOWLEDGE_BASE_DIR = BASE_DIR / "knowledge_base"
-load_dotenv(BASE_DIR / ".env")# ── Model configuration ──────────────────────────────────────────────────────
-GEMINI_MODEL = "gemini-1.5-flash"
+# Model configuration
+GEMINI_MODEL = "gemini-2.5-flash"
 GEMINI_TEMPERATURE = 0.3
 GEMINI_MAX_TOKENS = 1200
-MAX_HISTORY_MESSAGES = 6       # Max previous messages to include as context
-
+MAX_HISTORY_MESSAGES = 6
 # Heuristic threshold for classifying answers as official vs general
 OFFICIAL_OVERLAP_THRESHOLD = 0.30
 
