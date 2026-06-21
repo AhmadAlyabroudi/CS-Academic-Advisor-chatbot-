@@ -183,19 +183,38 @@ def generate_personalized_plan(student_id: str, db: Session = Depends(get_db)):
         }
 
     # ── 4. Determine starting semester ──────────────────────────────────────
+    # Detect the current semester based on the student's current enrollment majority.
+    enrolled_fall_count = 0
+    enrolled_spring_count = 0
+    for nc in enrolled_set:
+        c_info = courses_map.get(nc)
+        if c_info:
+            if c_info.suggested_semester == "Fall":
+                enrolled_fall_count += 1
+            elif c_info.suggested_semester == "Spring":
+                enrolled_spring_count += 1
+
     import datetime
     now = datetime.datetime.now()
     month = now.month
 
-    if month >= 9 or month <= 1:
-        current_sem = "Fall"
-    elif 2 <= month <= 5:
-        current_sem = "Spring"
+    if enrolled_fall_count > 0 or enrolled_spring_count > 0:
+        if enrolled_fall_count >= enrolled_spring_count:
+            current_sem = "Fall"
+        else:
+            current_sem = "Spring"
     else:
-        current_sem = "Summer"
+        # Fallback to calendar month
+        if month >= 9 or month <= 1:
+            current_sem = "Fall"
+        elif 2 <= month <= 5:
+            current_sem = "Spring"
+        else:
+            current_sem = "Summer"
 
     academic_year = now.year if current_sem == "Fall" else now.year - 1
 
+    # The graduation plan begins in the semester immediately following the current one
     next_idx = SEMESTER_ORDER.index(current_sem) + 1
     if next_idx >= len(SEMESTER_ORDER):
         next_idx = 0
