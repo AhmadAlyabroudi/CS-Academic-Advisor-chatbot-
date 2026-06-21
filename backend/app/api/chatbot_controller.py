@@ -24,7 +24,7 @@ from app.models.cs_faculty_info import CsFacultyInfo
 router = APIRouter(prefix="/chat", tags=["Chatbot"])
 
 # Maximum number of past messages to load as AI context
-MAX_CONTEXT_MESSAGES = 20
+MAX_CONTEXT_MESSAGES = 6
 
 DEMO_RESPONSES = [
     "I'm your AI Academic Advisor at JUST! To enable full AI capabilities, please "

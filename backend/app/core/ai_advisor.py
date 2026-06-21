@@ -25,7 +25,7 @@ load_dotenv(BASE_DIR / ".env")
 GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
 GROQ_TEMPERATURE = 0.3
 GROQ_MAX_TOKENS = 800          # Reduced to fit within Groq's TPM limits (6000)
-MAX_HISTORY_MESSAGES = 20       # Max previous messages to include as context
+MAX_HISTORY_MESSAGES = 6       # Max previous messages to include as context
 
 # Heuristic threshold for classifying answers as official vs general
 OFFICIAL_OVERLAP_THRESHOLD = 0.30
