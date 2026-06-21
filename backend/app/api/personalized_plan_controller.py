@@ -125,6 +125,18 @@ def _prereqs_met(
     return True
 
 
+def get_semester_index(year: int, semester: str) -> int:
+    """Map year (1-4) and semester (Fall/Spring/Summer) to a chronological index (0 to 11)."""
+    sem_val = 0
+    if semester == "Fall":
+        sem_val = 0
+    elif semester == "Spring":
+        sem_val = 1
+    elif semester == "Summer":
+        sem_val = 2
+    return (year - 1) * 3 + sem_val
+
+
 # ═══════════════════════════════════════════════════════════════════════════
 #  Main endpoint
 # ═══════════════════════════════════════════════════════════════════════════
@@ -182,52 +194,71 @@ def generate_personalized_plan(student_id: str, db: Session = Depends(get_db)):
             "message": "Congratulations! You have completed all courses.",
         }
 
-    # ── 4. Determine starting semester ──────────────────────────────────────
-    # Detect the current semester based on the student's current enrollment majority.
-    enrolled_fall_count = 0
-    enrolled_spring_count = 0
-    for nc in enrolled_set:
-        c_info = courses_map.get(nc)
-        if c_info:
-            if c_info.suggested_semester == "Fall":
-                enrolled_fall_count += 1
-            elif c_info.suggested_semester == "Spring":
-                enrolled_spring_count += 1
+    # ── 4. Determine starting year and semester ─────────────────────────────
+    # Detect the current academic year and semester based on the student's
+    # current enrollment. If no enrolled courses exist, estimate from the first incomplete semester.
+    student_current_year = 1
+    student_current_semester = "Fall"
+    has_active_enrollment = False
+
+    if enrolled_set:
+        from collections import Counter
+        enrolled_years = []
+        enrolled_sems = []
+        for nc in enrolled_set:
+            c_info = courses_map.get(nc)
+            if c_info:
+                enrolled_years.append(c_info.suggested_year)
+                enrolled_sems.append(c_info.suggested_semester)
+        if enrolled_years:
+            student_current_year = Counter(enrolled_years).most_common(1)[0][0]
+            student_current_semester = Counter(enrolled_sems).most_common(1)[0][0]
+            has_active_enrollment = True
+
+    if not has_active_enrollment:
+        # Find first incomplete semester chronologically
+        first_incomplete_idx = 11  # Year 4 Summer max index
+        for nc in remaining:
+            c_info = courses_map.get(nc)
+            if c_info:
+                idx = get_semester_index(c_info.suggested_year or 4, c_info.suggested_semester or "Fall")
+                if idx < first_incomplete_idx:
+                    first_incomplete_idx = idx
+
+        # Decode index back to year and semester
+        student_current_year = (first_incomplete_idx // 3) + 1
+        sem_val = first_incomplete_idx % 3
+        if sem_val == 0:
+            student_current_semester = "Fall"
+        elif sem_val == 1:
+            student_current_semester = "Spring"
+        else:
+            student_current_semester = "Summer"
 
     import datetime
     now = datetime.datetime.now()
-    month = now.month
 
-    if enrolled_fall_count > 0 or enrolled_spring_count > 0:
-        if enrolled_fall_count >= enrolled_spring_count:
-            current_sem = "Fall"
-        else:
-            current_sem = "Spring"
-    else:
-        # Fallback to calendar month
-        if month >= 9 or month <= 1:
-            current_sem = "Fall"
-        elif 2 <= month <= 5:
-            current_sem = "Spring"
-        else:
-            current_sem = "Summer"
+    # The graduation plan begins in the semester immediately following the current active enrollment.
+    # If the student is not currently enrolled, the plan starts in the current estimated semester itself.
+    plan_sem = student_current_semester
+    plan_year = student_current_year
+    academic_year = now.year if plan_sem == "Fall" else now.year - 1
 
-    academic_year = now.year if current_sem == "Fall" else now.year - 1
-
-    # The graduation plan begins in the semester immediately following the current one
-    next_idx = SEMESTER_ORDER.index(current_sem) + 1
-    if next_idx >= len(SEMESTER_ORDER):
-        next_idx = 0
-        academic_year += 1
+    if has_active_enrollment:
+        if plan_sem == "Fall":
+            plan_sem = "Spring"
+        elif plan_sem == "Spring":
+            plan_sem = "Summer"
+        elif plan_sem == "Summer":
+            plan_sem = "Fall"
+            plan_year += 1
+            academic_year += 1
 
     # ── 5. Semester-by-semester scheduling ──────────────────────────────────
     plan_semesters: List[dict] = []
     done:          Set[str] = set(completed_set | enrolled_set)
     credits_so_far: int     = completed_credits + enrolled_credits
     to_schedule:   Set[str] = set(remaining)
-
-    sem_ptr  = next_idx
-    year_ptr = academic_year
 
     training_nc      = _normalize(TRAINING_COURSE)
     grad_projects_nc = {_normalize(gp) for gp in GRADUATION_PROJECTS}
@@ -236,9 +267,73 @@ def generate_personalized_plan(student_id: str, db: Session = Depends(get_db)):
         if not to_schedule:
             break
 
-        sem_name = SEMESTER_ORDER[sem_ptr]
-        max_cr   = MAX_CREDITS_SUMMER if sem_name == "Summer" else MAX_CREDITS_REGULAR
-        is_summer = (sem_name == "Summer")
+        is_summer = (plan_sem == "Summer")
+        current_plan_index = get_semester_index(plan_year, plan_sem)
+
+        # Calculate credit limits (max_cr) dynamically
+        if not is_summer:
+            # Calculate standard credit hours for this semester in the official roadmap
+            official_sem_credits = sum(
+                int(c.credit_hours or 0)
+                for c in courses_map.values()
+                if c.suggested_year == plan_year and c.suggested_semester == plan_sem
+            )
+            if official_sem_credits == 0:
+                official_sem_credits = 15
+
+            # Find all unlocked delayed courses for this semester
+            unlocked_delayed = []
+            for nc in to_schedule:
+                c_info = courses_map.get(nc)
+                if c_info:
+                    c_idx = get_semester_index(c_info.suggested_year or 4, c_info.suggested_semester or "Fall")
+                    if c_idx < current_plan_index:
+                        if _prereqs_met(nc, courses_map, done, set(), credits_so_far):
+                            unlocked_delayed.append(nc)
+
+            if unlocked_delayed:
+                # Check if we can defer all delayed courses to summer
+                must_schedule_now = False
+                total_delayed_credits = 0
+                for nc in unlocked_delayed:
+                    c_info = courses_map[nc]
+                    total_delayed_credits += int(c_info.credit_hours or 0)
+
+                    # 1. Graduation projects and semester-locked courses cannot be deferred to summer
+                    if nc in grad_projects_nc or SEMESTER_LOCKED.get(nc):
+                        must_schedule_now = True
+
+                    # 2. Final year courses should be finished immediately (don't delay graduation to a summer after Year 4)
+                    if plan_year >= 4:
+                        must_schedule_now = True
+
+                    # 3. Prerequisites for the immediate next semester cannot wait for summer
+                    if plan_sem == "Fall":
+                        for other_nc in to_schedule:
+                            if other_nc == nc:
+                                continue
+                            other_c = courses_map.get(other_nc)
+                            if other_c:
+                                prereqs, _ = _parse_prerequisites(other_c.prerequisites)
+                                if nc in prereqs:
+                                    other_idx = get_semester_index(other_c.suggested_year or 4, other_c.suggested_semester or "Fall")
+                                    if other_idx <= current_plan_index + 1:
+                                        must_schedule_now = True
+                                        break
+
+                # Upcoming summer capacity is 9 credits (adjusted for Year 3 Training CS391)
+                summer_capacity = 9
+                if plan_year == 3 and training_nc in to_schedule:
+                    summer_capacity -= 3
+
+                if must_schedule_now or total_delayed_credits > summer_capacity:
+                    max_cr = MAX_CREDITS_REGULAR
+                else:
+                    max_cr = official_sem_credits
+            else:
+                max_cr = official_sem_credits
+        else:
+            max_cr = MAX_CREDITS_SUMMER
 
         # ── 5a. Build candidate list ────────────────────────────────────────
         candidates: List[str] = []
@@ -252,15 +347,6 @@ def generate_personalized_plan(student_id: str, db: Session = Depends(get_db)):
 
             # Rule 2: if no training, allow delayed courses only
             if not candidates:
-                # A course is "delayed" if we've already generated at least one
-                # semester of its home type, meaning its official slot has passed.
-                already_had_fall = any(
-                    s["semester_type"] == "Fall" for s in plan_semesters
-                )
-                already_had_spring = any(
-                    s["semester_type"] == "Spring" for s in plan_semesters
-                )
-
                 for nc in to_schedule:
                     if nc == training_nc:
                         continue
@@ -274,19 +360,21 @@ def generate_personalized_plan(student_id: str, db: Session = Depends(get_db)):
                         continue
                     if c.suggested_semester == "Summer":       # CS391 handled above
                         continue
-                    # Only truly delayed courses
-                    if c.suggested_semester == "Fall" and not already_had_fall:
-                        continue
-                    if c.suggested_semester == "Spring" and not already_had_spring:
-                        continue
-                    candidates.append(nc)
+                    # Only delayed courses
+                    c_idx = get_semester_index(c.suggested_year or 4, c.suggested_semester or "Fall")
+                    if c_idx < current_plan_index:
+                        candidates.append(nc)
 
             # Nothing eligible for summer → skip it entirely
             if not candidates:
-                sem_ptr += 1
-                if sem_ptr >= len(SEMESTER_ORDER):
-                    sem_ptr = 0
-                    year_ptr += 1
+                if plan_sem == "Fall":
+                    plan_sem = "Spring"
+                elif plan_sem == "Spring":
+                    plan_sem = "Summer"
+                elif plan_sem == "Summer":
+                    plan_sem = "Fall"
+                    plan_year += 1
+                    academic_year += 1
                 continue
 
         else:
@@ -297,7 +385,7 @@ def generate_personalized_plan(student_id: str, db: Session = Depends(get_db)):
                     continue
                 # Semester-locked to a different type → skip
                 locked = SEMESTER_LOCKED.get(nc)
-                if locked and locked != sem_name:
+                if locked and locked != plan_sem:
                     continue
                 # Summer-only courses (CS391) don't go in Fall/Spring
                 if c.suggested_semester == "Summer":
@@ -305,25 +393,29 @@ def generate_personalized_plan(student_id: str, db: Session = Depends(get_db)):
                 candidates.append(nc)
 
         # ── 5b. Sort candidates by priority ─────────────────────────────────
-        #   1. Home-semester courses first (suggested_semester matches)
-        #   2. Earlier suggested_year first (lower year = more urgent)
-        #   3. Compulsory before elective
+        #   1. Delayed courses first (is_delayed = 0, else 1)
+        #   2. Chronological suggested year
+        #   3. Chronological suggested semester index
+        #   4. Home semester matching
+        #   5. Compulsory before elective
         def _sort_key(nc: str) -> tuple:
             c = courses_map.get(nc)
             if not c:
-                return (1, 4, 1, 1, nc)
-            is_home = 0 if c.suggested_semester == sem_name else 1
+                return (1, 4, 1, 1, 1, nc)
+            c_idx = get_semester_index(c.suggested_year or 4, c.suggested_semester or "Fall")
+            is_delayed = 0 if c_idx < current_plan_index else 1
+            is_home = 0 if c.suggested_semester == plan_sem else 1
             yr = c.suggested_year or 4
             sem_idx = (
                 SEMESTER_ORDER.index(c.suggested_semester)
                 if c.suggested_semester in SEMESTER_ORDER else 1
             )
             is_elective = 1 if c.plan_type and "Elective" in c.plan_type else 0
-            return (is_home, yr, sem_idx, is_elective, nc)
+            return (is_delayed, yr, sem_idx, is_home, is_elective, nc)
 
         candidates.sort(key=_sort_key)
 
-        # ── 5c. Pick courses (respecting co-requisites + credit cap) ───────
+        # ── 5c. Pick courses (respecting co-requisites + credit cap) ────────
         picked:      Set[str]   = set()
         sem_courses: List[dict] = []
         sem_credits              = 0
@@ -400,16 +492,16 @@ def generate_personalized_plan(student_id: str, db: Session = Depends(get_db)):
 
         # ── 5d. Finalize semester ───────────────────────────────────────────
         if sem_courses:
-            if sem_name == "Fall":
-                label = f"Fall {year_ptr}/{year_ptr + 1}"
-            elif sem_name == "Spring":
-                label = f"Spring {year_ptr}/{year_ptr + 1}"
+            if plan_sem == "Fall":
+                label = f"Fall {academic_year}/{academic_year + 1}"
+            elif plan_sem == "Spring":
+                label = f"Spring {academic_year}/{academic_year + 1}"
             else:
-                label = f"Summer {year_ptr + 1}"
+                label = f"Summer {academic_year + 1}"
 
             plan_semesters.append({
                 "semester_label": label,
-                "semester_type":  sem_name,
+                "semester_type":  plan_sem,
                 "courses":        sem_courses,
                 "total_hours":    sem_credits,
             })
@@ -419,10 +511,14 @@ def generate_personalized_plan(student_id: str, db: Session = Depends(get_db)):
             credits_so_far += sem_credits
 
         # Advance to next semester
-        sem_ptr += 1
-        if sem_ptr >= len(SEMESTER_ORDER):
-            sem_ptr = 0
-            year_ptr += 1
+        if plan_sem == "Fall":
+            plan_sem = "Spring"
+        elif plan_sem == "Spring":
+            plan_sem = "Summer"
+        elif plan_sem == "Summer":
+            plan_sem = "Fall"
+            plan_year += 1
+            academic_year += 1
 
     # ── 6. Build response ───────────────────────────────────────────────────
     total_remaining = sum(
